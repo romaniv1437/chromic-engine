@@ -1,0 +1,128 @@
+name: Build & Release Chromic Engine
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build (e.g., v1.0.55)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: true
+
+env:
+  RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+jobs:
+  # Ensure a draft release exists so all build jobs upload to the same one
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create or reuse GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # If a release (draft or published) already exists for this tag, skip creation
+          if gh release view "${{ env.RELEASE_TAG }}" --repo "${{ github.repository }}" > /dev/null 2>&1; then
+            echo "✅ Release ${{ env.RELEASE_TAG }} already exists, skipping creation"
+          else
+            gh release create "${{ env.RELEASE_TAG }}" --repo "${{ github.repository }}" \
+              --title "${{ env.RELEASE_TAG }}" --draft --generate-notes
+            echo "✅ Created draft release ${{ env.RELEASE_TAG }}"
+          fi
+
+  build:
+    needs: create-release
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Python needed for node-gyp native module rebuilds
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # Linux: install system deps for electron-builder (AppImage, deb)
+      - name: Install Linux build deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dpkg fakeroot rpm
+
+      # macOS: Skip code signing (not notarized, users use xattr -cr)
+      # This avoids Team ID mismatch issues with self-signed certs
+
+      # Windows: Create self-signed certificate for code signing
+      - name: Create self-signed certificate (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          # Create a self-signed code signing certificate
+          # This will show "romaniv1437 (Chromic Engine)" as the publisher
+          $cert = New-SelfSignedCertificate `
+            -Type CodeSigningCert `
+            -Subject "CN=romaniv1437, O=Chromic Engine" `
+            -KeyUsage DigitalSignature `
+            -KeyAlgorithm RSA `
+            -KeyLength 2048 `
+            -CertStoreLocation Cert:\CurrentUser\My `
+            -NotAfter (Get-Date).AddYears(1)
+          
+          # Export to PFX for signtool
+          $certPassword = ConvertTo-SecureString -String "cert123" -Force -AsPlainText
+          $certPath = "$env:RUNNER_TEMP\codesign.pfx"
+          Export-PfxCertificate -Cert $cert -FilePath $certPath -Password $certPassword
+          
+          # Set environment variable for electron-builder
+          echo "WIN_CSC_LINK=$certPath" >> $env:GITHUB_ENV
+          echo "WIN_CSC_KEY_PASSWORD=cert123" >> $env:GITHUB_ENV
+          
+          Write-Host "✅ Self-signed certificate created: romaniv1437"
+          Write-Host "Certificate thumbprint: $($cert.Thumbprint)"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build & Publish
+        run: |
+          node -e "const {execSync}=require('child_process'); const tag='${{ env.RELEASE_TAG }}'; const version=tag.replace(/^v/,''); if(!/^\d+\.\d+\.\d+([-.].+)?$/.test(version)){throw new Error('Invalid release tag: '+tag);} console.log('[release] tag='+tag+' version='+version); execSync('npx electron-builder build --publish always --config.extraMetadata.version='+version,{stdio:'inherit'});"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # macOS: skip signing (self-signed causes Team ID issues; users use xattr -cr)
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          CSC_LINK: ''
+
+  # Publish the draft release after all builds complete
+  publish-release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          draft: false
+

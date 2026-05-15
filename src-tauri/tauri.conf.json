@@ -1,0 +1,41 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "Chromic Engine",
+  "version": "0.1.0",
+  "identifier": "com.tauri.dev",
+  "build": {
+    "beforeDevCommand": "node index.js &",
+    "frontendDist": "../public",
+    "devUrl": "http://localhost:1437"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Chromic Engine",
+        "width": 1000,
+        "height": 800,
+        "minWidth": 940,
+        "minHeight": 720,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "android": {
+      "debugApplicationIdSuffix": ".debug"
+    }
+  }
+}

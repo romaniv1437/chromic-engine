@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>MyMedia - Math Visualizer Overlay</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { overflow: hidden; background: #0a0a12; font-family: -Chromic-system, BlinkMacSystemFont, monospace; }
+    #visualizer-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      /* Simulated album art / video background */
+      background: radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a12 100%);
+    }
+    #ui {
+      position: fixed; top: 10px; left: 10px; color: #fff; font-size: 13px; z-index: 50;
+      transition: opacity 0.4s;
+    }
+    #ui button { margin: 2px; padding: 5px 10px; cursor: pointer; background: #1a1a2e; color: #aaa; border: 1px solid #333; border-radius: 4px; transition: all 0.2s; }
+    #ui button:hover { background: #2a2a4e; color: #fff; }
+    #ui button.active { background: #4466ff; color: #fff; border-color: #4466ff; }
+    #scene-info { position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); color: #555; font-size: 11px; z-index: 50; }
+  </style>
+</head>
+<body>
+  <div id="visualizer-container"></div>
+  <div id="ui">
+    <div>
+      <button data-scene="0" class="active">Lava Flow</button>
+      <button data-scene="1">Julia 4D</button>
+      <button data-scene="2">Lorenz</button>
+      <button data-scene="3">Riemann</button>
+      <button data-scene="4">Reaction-Diff</button>
+      <button data-scene="5">Hyperbolic</button>
+      <button data-scene="6">Living Canvas</button>
+      <button data-scene="7">Fractal ∞</button>
+      <button data-scene="8">Terrain</button>
+      <button data-scene="9">Biopunk Ocean</button>
+      <button data-scene="10">Void Archipelago</button>
+      <button data-scene="11">Saturn Discs</button>
+      <button data-scene="12">Soap Bubbles</button>
+      <button data-scene="13">Fractal Unfold</button>
+      <button data-scene="14">Infinite Cavern</button>
+      <button data-scene="15">Spongy Tunnel</button>
+      <button data-scene="16">Optic Fibre</button>
+      <button data-scene="17">Mood Fractal</button>
+      <button data-scene="18">Aethelgard</button>
+    </div>
+    <div style="margin-top:6px; opacity: 0.6; font-size: 11px;">Drop audio file or press 1-9/0 to switch scenes • Z for Zen mode</div>
+  </div>
+  <div id="scene-info">Math Overlay • Keys 1-9, 0 • Z = Zen • Drag audio to start</div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

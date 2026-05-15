@@ -1,0 +1,71 @@
+/* Base styles loaded directly from HTML to avoid @import waterfall */
+
+/* Contextual shell spacing and baseline layout for refactored media modes. */
+body[data-section='music'] .app-shell,
+  transition: background 260ms ease, color 220ms ease, box-shadow 220ms ease;
+}
+
+/* Keep one global player source of truth in the bottom area while in music context. */
+body[data-section='music'] .global-player {
+  pointer-events: auto;
+}
+
+/* ─── Skeleton Loading Screens ─── */
+@keyframes skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-card {
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--panel-solid, #222);
+  opacity: 0.6;
+}
+
+.skeleton-thumb {
+  aspect-ratio: 2 / 3;
+  background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.04) 50%, transparent 75%);
+  background-size: 200% 100%;
+  background-color: rgba(255,255,255,0.06);
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-text {
+  height: 14px;
+  margin: 12px 16px 8px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.04) 50%, transparent 75%);
+  background-size: 200% 100%;
+  background-color: rgba(255,255,255,0.06);
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-text.short {
+  width: 60%;
+  height: 10px;
+  margin-bottom: 16px;
+}
+
+/* Glass panel utility (Chromic Materials) */
+.glass-panel {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent, #5e9eff) 8%, rgba(0, 0, 0, 0.55)),
+    color-mix(in srgb, var(--accent, #5e9eff) 3%, rgba(0, 0, 0, 0.55))
+  );
+  backdrop-filter: blur(40px) saturate(220%) brightness(80%);
+  -webkit-backdrop-filter: blur(40px) saturate(220%) brightness(80%);
+  border: 1px solid color-mix(in srgb, var(--accent, #5e9eff) 10%, rgba(255, 255, 255, 0.08));
+  box-shadow:
+    0 8px 32px 0 rgba(0, 0, 0, 0.4),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 0 20px color-mix(in srgb, var(--accent, #5e9eff) 8%, transparent);
+  border-radius: 16px;
+}
+
+/* Skeleton → content transition */
+.grid[data-loaded] .skeleton-card {
+  display: none;
+}
+

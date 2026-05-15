@@ -1,0 +1,2157 @@
+/* ═══ CHROMIC SPECTRUM — Global Glow & Refraction System ═══ */
+
+/* ── STRATEGY 1: Dynamic Luma-Aware Contrast ── */
+:root {
+  --text-high-contrast: #fff;
+  --text-on-accent: #000;
+  --glass-tint: color-mix(in srgb, var(--accent, #5e9eff) 8%, rgba(0, 0, 0, 0.9));
+}
+
+/* Light themes: dark text */
+[data-theme='chromic-silver'],
+[data-theme='Chromic-silver'],
+[data-theme='cloud-white'],
+[data-theme='sakura-bloom'],
+[data-theme='lemon-sorbet'],
+[data-theme='ocean-breeze'],
+[data-theme='sage-garden'],
+[data-theme='lavender-haze'],
+[data-theme='peach-cream'],
+[data-theme='arctic-blue'] {
+  --text-high-contrast: #1a1a2e;
+  --text-on-accent: #fff;
+}
+
+/* ── STRATEGY 2: Halo Text Protection ── */
+.brand h1,
+.section-title,
+.global-player-title,
+.album-view-title,
+.music-player-track-title,
+.header-search-result-title {
+  text-shadow:
+    0 0 20px color-mix(in srgb, var(--bg-main, #0c0c14) 50%, transparent),
+    0 1px 2px rgba(0, 0, 0, 0.3);
+  letter-spacing: -0.01em;
+}
+
+/* Header & nav text separation from glass */
+.chromic-glass-header .brand h1,
+.chromic-glass-header .brand .kicker,
+.chromic-glass-header .header-ai-btn {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+/* Global text clarity: all body text gets subtle depth shadow */
+body {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15), 0 0 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Smart contrast: primary text absorbs a hint of theme color */
+h1, h2, h3, h4,
+.global-player-title,
+.music-player-track-title,
+.album-view-title {
+  color: color-mix(in srgb, var(--accent, #5e9eff) 5%, var(--text-high-contrast, #fff));
+}
+
+/* ── .rich-glass-deep — Deep Vibrant Material for floating UI ── */
+.rich-glass-deep {
+  background: var(--glass-tint);
+  backdrop-filter: blur(40px) saturate(220%) brightness(80%);
+  -webkit-backdrop-filter: blur(40px) saturate(220%) brightness(80%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top-color: rgba(255, 255, 255, 0.18);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 0 20px 0 color-mix(in srgb, var(--accent, #5e9eff) 12%, transparent),
+    0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+/* Secondary / muted text: tinted, not just grey */
+.global-player-subtitle,
+.album-view-meta,
+.music-track-artist,
+.header-search-result-meta {
+  color: color-mix(in srgb, var(--accent, #5e9eff) 20%, var(--muted, rgba(255,255,255,0.5)));
+  filter: saturate(1.5);
+}
+
+/* ── STRATEGY 3: Color-Reactive UI ("Ink" Effect) ── */
+
+/* Icons absorb accent color */
+.header-ai-btn svg,
+.player-control svg,
+.ai-hub-icon svg {
+  color: color-mix(in srgb, var(--accent, #5e9eff) 50%, currentColor);
+  transition: color 0.3s ease, filter 0.3s ease;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--accent, #5e9eff) 20%, transparent));
+}
+
+.player-control:hover svg,
+.header-ai-btn:hover svg,
+.ai-hub-icon:hover svg {
+  color: var(--accent, #5e9eff);
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent, #5e9eff) 60%, transparent));
+}
+
+/* Active track row: accent gradient hover (not just grey) */
+.music-track-row:hover,
+.header-search-result:hover,
+.header-search-result.is-active {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--accent, #5e9eff) 10%, transparent),
+    color-mix(in srgb, var(--accent, #5e9eff) 4%, transparent)
+  ) !important;
+}
+
+/* Selection */
+::selection {
+  background: var(--accent, #5e9eff);
+  color: var(--text-on-accent, #000);
+}
+
+/* ═══ CHROMIC SCROLL ENGINE ═══ */
+
+/* Global thin glass scrollbar — theme-reactive */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent, #5e9eff) 30%, transparent) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--accent, #5e9eff) 30%, rgba(255,255,255,0.06)) !important;
+  border-radius: 999px;
+  transition: background 0.2s;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--accent, #5e9eff) 60%, rgba(255,255,255,0.12)) !important;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Scroll isolation — prevent bubbling from nested scrollable containers */
+[data-scroll-contain],
+.header-search-results,
+.music-album-nav-list,
+.chromic-shortcuts-panel,
+.chromic-search-results,
+.album-results-list,
+.music-queue-sheet,
+.music-queue,
+.up-next-panel,
+.up-next-list,
+.music-immersive-lyrics-panel,
+.ai-hub-dropdown,
+.chromic-theme-panel,
+.music-player-settings,
+.music-settings-groups,
+.music-track-list-container {
+  overscroll-behavior: contain;
+}
+
+/* Ensure scrollable containers can actually scroll */
+.up-next-list,
+.music-settings-groups {
+  overflow-y: auto;
+}
+
+/* Chromic Search overlay — lock page scroll */
+.chromic-search-overlay {
+  overflow: hidden;
+}
+
+/* GPU hint for long scrollable lists */
+.music-albums-grid,
+.music-track-list-container,
+.chromic-search-results,
+.album-results-list,
+.music-queue-sheet,
+.music-queue,
+.up-next-panel,
+.up-next-list,
+.music-settings-groups,
+.header-search-results {
+  will-change: scroll-position;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Adaptive shadows: accent-tinted */
+.ui-btn,
+.expand-fullscreen-btn,
+.album-shuffle-btn {
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--accent, #5e9eff) 20%, transparent);
+}
+.ui-btn:hover,
+.expand-fullscreen-btn:hover,
+.album-shuffle-btn:hover {
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--accent, #5e9eff) 30%, transparent);
+}
+
+/* Active tab/icon glow for neon themes */
+[data-theme='cinema-crimson'] .tab.active,
+[data-theme='galactic-violet'] .tab.active,
+[data-theme='sunset-flamingo'] .tab.active,
+[data-theme='emerald-forest'] .tab.active,
+[data-theme='toxic-flow'] .tab.active,
+[data-theme='crystal-glass'] .tab.active {
+  filter: drop-shadow(var(--accent-glow, 0 0 12px currentColor));
+}
+
+/* ── VIGNETTE OVERLAY (Visualizer content compression) ── */
+.music-player-layer .music-player-stage::after {
+  display: none;
+}
+
+/* ── Toxic Flow: Neon border overrides ── */
+[data-theme='toxic-flow'] .chromic-glass-header {
+  border-bottom-color: rgba(0, 255, 65, 0.2) !important;
+}
+[data-theme='toxic-flow'] .header-search-input-wrap {
+  border-color: rgba(0, 255, 65, 0.15);
+}
+[data-theme='toxic-flow'] .header-search-input-wrap:focus-within {
+  border-color: rgba(0, 255, 65, 0.4);
+  box-shadow: 0 0 12px rgba(0, 255, 65, 0.15);
+}
+
+/* --- ChromicEditor Pro Mode --- */
+.chromic-pro-badge {
+  position: fixed;
+  top: 72px;
+  right: 16px;
+  z-index: 2147483647;
+  padding: 6px 14px;
+  font: 600 11px/1 'SF Mono', 'Fira Code', monospace;
+  letter-spacing: 1.5px;
+  color: var(--mood-color, #0f0);
+  background: color-mix(in srgb, var(--mood-color, #00ff3c) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mood-color, #00ff3c) 50%, transparent);
+  border-radius: 6px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--mood-color, #00ff3c) 20%, transparent), inset 0 0 12px color-mix(in srgb, var(--mood-color, #00ff3c) 6%, transparent);
+  animation: chromic-badge-pulse 2s ease-in-out infinite;
+  pointer-events: auto;
+  transition: color 2s ease, background 2s ease, border-color 2s ease, box-shadow 2s ease;
+}
+
+@keyframes chromic-badge-pulse {
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 1; box-shadow: 0 0 30px rgba(0, 255, 60, 0.3), inset 0 0 12px rgba(0, 255, 60, 0.08); }
+}
+
+.chromic-editable {
+  outline: 1px dashed color-mix(in srgb, var(--mood-color, #00ff78) 35%, transparent) !important;
+  border-radius: 4px;
+  transition: outline-color 2s ease;
+}
+
+.chromic-editable:focus {
+  outline-color: rgba(0, 255, 120, 0.7) !important;
+}
+
+.chromic-edit-active {
+  background: rgba(0, 255, 120, 0.15) !important;
+  border-radius: 3px;
+}
+
+/* --- Pro Mode: make all lyrics text fully visible for editing --- */
+.chromic-pro-active .lyrics-line,
+.chromic-pro-active .lyrics-line .lyric-word {
+  color: rgba(255, 255, 255, 0.85) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.85) !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* Active/selected word stands out even more */
+.chromic-pro-active .lyric-word.chromic-edit-active {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  background: rgba(0, 255, 120, 0.2) !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  outline: 1px solid rgba(0, 255, 120, 0.5);
+  border-radius: 3px;
+  padding: 1px 2px;
+  margin: -1px -2px;
+}
+
+/* Focused editable line gets a visible caret and brighter text */
+.chromic-pro-active .lyrics-line.chromic-editable:focus {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  caret-color: #0f0;
+  outline: 2px solid rgba(0, 255, 120, 0.6) !important;
+}
+
+.chromic-pro-active .lyrics-line.chromic-editable:focus .lyric-word {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+/* Translation text visible in pro mode */
+.chromic-pro-active .lyrics-translation.chromic-editable {
+  opacity: 0.7 !important;
+  color: rgba(200, 220, 255, 0.8) !important;
+  pointer-events: auto !important;
+}
+
+.chromic-pro-active .lyrics-translation.chromic-editable:focus {
+  opacity: 1 !important;
+  color: #fff !important;
+  caret-color: #0ff;
+  outline: 2px solid rgba(0, 200, 255, 0.5) !important;
+}
+
+/* --- AI Bridge Overlay --- */
+.chromic-ai-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(20px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: all;
+}
+
+.chromic-ai-overlay.is-visible {
+  opacity: 1;
+}
+
+.chromic-ai-overlay-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.chromic-ai-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  border-top-color: #0f0;
+  border-radius: 50%;
+  animation: chromic-spin 0.8s linear infinite;
+}
+
+@keyframes chromic-spin {
+  to { transform: rotate(360deg); }
+}
+
+.chromic-ai-status {
+  color: #e0e0e0;
+  font: 500 15px/1.4 -Chromic-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: 0.3px;
+}
+
+/* ═══════════════════════════════════════ */
+/* ██  FLOW MODE — Live Word Tapper       */
+/* ═══════════════════════════════════════ */
+
+.chromic-flow-toggle {
+  background: color-mix(in srgb, var(--mood-color, #00ff78) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mood-color, #00ff78) 35%, transparent);
+  color: var(--mood-color, #00ff78);
+  font: 600 11px/1 -apple-system, BlinkMacSystemFont, sans-serif;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: all 0.15s ease, color 2s ease, background 2s ease, border-color 2s ease;
+  white-space: nowrap;
+}
+.chromic-flow-toggle:hover {
+  background: color-mix(in srgb, var(--mood-color, #00ff78) 28%, transparent);
+  border-color: color-mix(in srgb, var(--mood-color, #00ff78) 55%, transparent);
+}
+.chromic-flow-active .chromic-flow-toggle {
+  background: rgba(0, 255, 120, 0.3);
+  color: #fff;
+}
+
+.chromic-flow-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 999999;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--mood-color, var(--accent, #00ff78)) 8%, rgba(0, 0, 0, 0.88)),
+    color-mix(in srgb, var(--mood-color, var(--accent, #00ff78)) 3%, rgba(0, 0, 0, 0.88))
+  );
+  backdrop-filter: blur(50px) saturate(250%) brightness(90%);
+  -webkit-backdrop-filter: blur(50px) saturate(250%) brightness(90%);
+  border-top: 1px solid color-mix(in srgb, var(--mood-color, var(--accent, #00ff78)) 20%, rgba(255, 255, 255, 0.08));
+  box-shadow:
+    0 -4px 24px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 30px color-mix(in srgb, var(--mood-color, var(--accent, #00ff78)) 5%, transparent);
+  padding: 10px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  font: 500 13px/1.3 -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #e0e0e0;
+  animation: chromic-flow-slide-up 0.25s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: background 2s ease, border-color 2s ease, box-shadow 2s ease;
+}
+
+/* Only show flow bar when inside the music overlay */
+body > .chromic-flow-bar {
+  display: none;
+}
+body.music-overlay-open #musicOverlayHost.is-active .chromic-flow-bar {
+  display: flex;
+}
+/* Instantly hide flow bar when overlay close animation starts */
+#musicOverlayHost.flip-closing .chromic-flow-bar,
+#musicOverlayHost.is-closing .chromic-flow-bar,
+#musicOverlayHost.flip-closing .chromic-inspector-report,
+#musicOverlayHost.is-closing .chromic-inspector-report {
+  display: none !important;
+}
+/* Keep flow bar visible in fullscreen overlay; closing states above handle instant hide */
+
+/* Waveform strip inside flow bar */
+.chromic-flow-waveform {
+  width: 100%;
+  order: -1;
+  height: 160px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--mood-color, var(--accent, #00ff78)) 4%, rgba(10, 12, 18, 0.95)),
+    color-mix(in srgb, var(--mood-color, var(--accent, #00ff78)) 2%, rgba(6, 8, 14, 0.98))
+  );
+  border: 1px solid color-mix(in srgb, var(--mood-color, var(--accent, #00ff78)) 10%, rgba(255, 255, 255, 0.06));
+  cursor: grab;
+  touch-action: none;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 40px color-mix(in srgb, var(--mood-color, var(--accent, #00ff78)) 4%, transparent);
+  transition: background 2s ease, border-color 2s ease, box-shadow 2s ease;
+}
+
+.chromic-flow-waveform:active {
+  cursor: grabbing;
+}
+
+.chromic-waveform-canvas {
+  display: block;
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+  touch-action: none;
+  box-shadow: inset 0 0 20px color-mix(in srgb, var(--mood-color, #00ff78) 6%, transparent);
+  transition: box-shadow 2s ease;
+}
+
+@keyframes chromic-flow-slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.chromic-flow-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.chromic-flow-indicator .flow-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--mood-color, rgba(0, 255, 120, 0.6));
+  transition: background 2s ease;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.chromic-flow-indicator.is-recording .flow-dot {
+  background: #ff3b30;
+  box-shadow: 0 0 8px rgba(255, 59, 48, 0.8);
+  animation: chromic-flow-pulse 0.5s ease infinite;
+}
+
+@keyframes chromic-flow-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+}
+
+.chromic-flow-indicator .flow-label {
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--mood-color, var(--accent, #00ff78)) 80%, #fff);
+  transition: color 2s ease;
+}
+
+.chromic-flow-indicator.is-recording .flow-label {
+  color: #ff3b30;
+}
+
+.chromic-flow-playpause {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--mood-color, #00ff78) 50%, transparent);
+  background: color-mix(in srgb, var(--mood-color, #00ff78) 10%, transparent);
+  color: var(--mood-color, #00ff78);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease, border-color 2s ease, background 2s ease, color 2s ease;
+  line-height: 1;
+}
+.chromic-flow-playpause:hover {
+  background: color-mix(in srgb, var(--mood-color, #00ff78) 25%, transparent);
+  border-color: color-mix(in srgb, var(--mood-color, #00ff78) 70%, transparent);
+  transform: scale(1.08);
+}
+.chromic-flow-playpause:active {
+  transform: scale(0.95);
+}
+
+.chromic-flow-input {
+  flex: 1;
+  min-width: 0;
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 6%, rgba(255, 255, 255, 0.06));
+  border: 1px solid color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 15%, rgba(255, 255, 255, 0.1));
+  border-radius: 6px;
+  padding: 8px 14px;
+  color: #fff;
+  font: 500 16px/1.3 -apple-system, BlinkMacSystemFont, sans-serif;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s, background 2s ease;
+  caret-color: var(--mood-color, var(--accent, #00ff78));
+}
+
+.chromic-flow-input:focus {
+  border-color: color-mix(in srgb, var(--mood-color, #00ff78) 60%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--mood-color, #00ff78) 20%, transparent);
+}
+
+.chromic-flow-input.is-tapping {
+  border-color: #ff3b30;
+  background: rgba(255, 59, 48, 0.1);
+  box-shadow: 0 0 0 2px rgba(255, 59, 48, 0.3);
+}
+
+.chromic-flow-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.chromic-flow-style-select {
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 6%, rgba(255, 255, 255, 0.06));
+  border: 1px solid color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 15%, rgba(255, 255, 255, 0.1));
+  border-radius: 6px;
+  padding: 6px 8px;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  outline: none;
+  flex-shrink: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color 0.15s, background 2s ease;
+}
+.chromic-flow-style-select:focus {
+  border-color: color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 50%, rgba(255, 255, 255, 0.2));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 15%, transparent);
+}
+.chromic-flow-style-select option {
+  background: color-mix(in srgb, var(--accent, #5e9eff) 5%, #1a1a2e);
+  color: #fff;
+}
+
+.chromic-flow-save {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 8%, color-mix(in srgb, var(--accent, #00c878) 12%, transparent)),
+    color-mix(in srgb, var(--mood-color, var(--accent, #00c878)) 12%, transparent)) !important;
+  border-color: color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 15%, color-mix(in srgb, var(--accent, #00c878) 30%, transparent)) !important;
+  color: var(--mood-color, var(--accent, #00c878)) !important;
+  transition: all 0.15s ease, background 2s ease, border-color 2s ease, color 2s ease;
+}
+.chromic-flow-save:hover {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 15%, color-mix(in srgb, var(--accent, #00c878) 25%, transparent)),
+    color-mix(in srgb, var(--mood-color, var(--accent, #00c878)) 25%, transparent)) !important;
+  color: #fff !important;
+}
+
+/* Gold verify button — theme→gold gradient */
+.chromic-flow-gold {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 8%, rgba(255, 215, 0, 0.08)),
+    rgba(255, 215, 0, 0.08)) !important;
+  border-color: color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 15%, rgba(255, 215, 0, 0.25)) !important;
+  color: rgba(255, 215, 0, 0.7) !important;
+  transition: all 0.25s ease, background 2s ease, border-color 2s ease !important;
+}
+.chromic-flow-gold:hover {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 15%, rgba(255, 215, 0, 0.18)),
+    rgba(255, 215, 0, 0.18)) !important;
+  border-color: color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 20%, rgba(255, 215, 0, 0.5)) !important;
+  color: #FFD700 !important;
+}
+.chromic-flow-gold.gold-active {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 20%, rgba(255, 215, 0, 0.3)),
+    rgba(255, 165, 0, 0.3)) !important;
+  border-color: color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 15%, rgba(255, 215, 0, 0.6)) !important;
+  color: #FFD700 !important;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 15%, rgba(255, 215, 0, 0.3)),
+    inset 0 0 8px rgba(255, 215, 0, 0.1) !important;
+  text-shadow: 0 0 6px rgba(255, 215, 0, 0.5);
+}
+.chromic-flow-gold.gold-active svg {
+  fill: #FFD700;
+  filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.6));
+}
+
+.chromic-flow-train {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 10%, rgba(255, 107, 53, 0.12)),
+    rgba(255, 107, 53, 0.12)) !important;
+  border-color: color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 12%, rgba(255, 107, 53, 0.35)) !important;
+  color: rgba(255, 180, 120, 0.9) !important;
+  transition: all 0.15s ease, background 2s ease, border-color 2s ease;
+}
+
+.chromic-flow-train:hover {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 18%, rgba(255, 107, 53, 0.22)),
+    rgba(255, 107, 53, 0.22)) !important;
+  border-color: color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 20%, rgba(255, 107, 53, 0.55)) !important;
+  color: #fff !important;
+}
+
+/* ─── Backup Dropdown ─────────────────────────────────────────────────── */
+.chromic-flow-backup-dropdown {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  width: 320px;
+  max-height: 400px;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 5%, rgba(20, 20, 28, 0.97)),
+    color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 2%, rgba(16, 16, 24, 0.98)));
+  border: 1px solid color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 12%, rgba(255, 255, 255, 0.1));
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6),
+    inset 0 0 20px color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 4%, transparent);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  z-index: 10000;
+  overflow: hidden;
+  font-size: 12px;
+  transition: background 2s ease, border-color 2s ease, box-shadow 2s ease;
+}
+.backup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 8%, rgba(255, 255, 255, 0.06));
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+}
+.backup-create-btn {
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #64c8ff)) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mood-color, var(--accent, #64c8ff)) 30%, transparent);
+  color: var(--mood-color, var(--accent, #64c8ff));
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 2s ease, color 2s ease;
+}
+.backup-create-btn:hover { background: color-mix(in srgb, var(--mood-color, var(--accent, #64c8ff)) 25%, transparent); }
+.backup-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+.backup-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.15s;
+}
+.backup-item:hover { background: rgba(255, 255, 255, 0.05); }
+.backup-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.backup-item-time {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+}
+.backup-item-meta {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 10px;
+}
+.backup-restore-btn {
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 6%, rgba(255, 255, 255, 0.06));
+  border: 1px solid color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 12%, rgba(255, 255, 255, 0.1));
+  color: rgba(255, 255, 255, 0.6);
+  border-radius: 5px;
+  padding: 3px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s, border-color 2s ease, background 2s ease;
+  flex-shrink: 0;
+}
+.backup-restore-btn:hover {
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #64c8ff)) 20%, transparent);
+  color: rgba(255, 255, 255, 0.9);
+  border-color: color-mix(in srgb, var(--mood-color, var(--accent, #64c8ff)) 40%, transparent);
+}
+.backup-empty, .backup-loading {
+  padding: 20px 14px;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  font-size: 12px;
+}
+.backup-empty.backup-notice {
+  color: rgba(255, 200, 100, 0.7);
+  background: rgba(255, 180, 50, 0.08);
+  border-radius: 6px;
+  margin: 8px 10px 10px;
+  padding: 12px;
+}
+
+.chromic-flow-status {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  color: color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 15%, rgba(255, 255, 255, 0.5));
+  min-width: 120px;
+  flex-shrink: 0;
+  transition: color 2s ease;
+}
+
+.chromic-flow-status .flow-word-count {
+  font-weight: 600;
+  color: color-mix(in srgb, var(--mood-color, var(--accent, #00ff78)) 70%, #fff);
+  transition: color 2s ease;
+}
+
+.chromic-flow-status .flow-gold-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 15%, rgba(255, 215, 0, 0.35));
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 8%, rgba(255, 215, 0, 0.12)),
+    rgba(255, 215, 0, 0.12));
+  color: rgba(255, 230, 140, 0.95);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  user-select: none;
+  transition: background 2s ease, border-color 2s ease;
+}
+
+.chromic-flow-status .flow-gold-badge:hover {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 15%, rgba(255, 215, 0, 0.22)),
+    rgba(255, 215, 0, 0.22));
+  border-color: color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 20%, rgba(255, 215, 0, 0.5));
+}
+
+.chromic-flow-status .flow-gold-badge.is-strict {
+  border-color: color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 15%, rgba(0, 255, 160, 0.45));
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 8%, rgba(0, 255, 160, 0.12)),
+    rgba(0, 255, 160, 0.12));
+  color: rgba(170, 255, 220, 0.95);
+}
+
+.chromic-flow-status .flow-gold-badge.is-relaxed {
+  border-color: color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 15%, rgba(255, 180, 80, 0.45));
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 8%, rgba(255, 180, 80, 0.14)),
+    rgba(255, 180, 80, 0.14));
+  color: rgba(255, 220, 170, 0.95);
+}
+
+.chromic-flow-status .flow-last-word {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.35);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
+}
+
+.chromic-flow-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.chromic-flow-actions button {
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 6%, rgba(255, 255, 255, 0.06));
+  border: 1px solid color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 15%, rgba(255, 255, 255, 0.08));
+  border-radius: 4px;
+  color: color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 20%, #ccc);
+  font-size: 11px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 2s ease;
+}
+
+.chromic-flow-actions button:hover {
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 15%, rgba(255, 255, 255, 0.08));
+  color: #fff;
+}
+
+.chromic-flow-bar.flow-word-sent {
+  border-top-color: color-mix(in srgb, var(--mood-color, var(--accent, #00ff78)) 70%, transparent);
+  transition: border-top-color 0.3s ease;
+}
+
+.chromic-flow-bar.flow-paused .flow-label {
+  position: relative;
+}
+.chromic-flow-bar.flow-paused .flow-label::after {
+  display: none;
+}
+
+/* Hide player controls when flow mode is active — flow bar replaces them */
+.chromic-flow-active .music-track-controls,
+.chromic-flow-active .glass-panel.zen-ui-element {
+  display: none !important;
+}
+
+/* Ensure lyrics panel doesn't overlap flow bar */
+.chromic-flow-active .music-immersive-lyrics-panel {
+  padding-bottom: 280px !important;
+}
+
+/* Ensure flow bar always receives pointer events */
+.chromic-flow-bar {
+  pointer-events: auto;
+}
+.chromic-flow-bar * {
+  pointer-events: auto;
+}
+
+/* ═══════════════════════════════════════════════ */
+/* ██  FLOW MODE — Raw Data View (kill animations) */
+/* ═══════════════════════════════════════════════ */
+
+/* Kill ALL blur, transforms, opacity animations on lyrics */
+.chromic-flow-active .lyrics-line,
+.chromic-flow-active .lyrics-line.active,
+.chromic-flow-active .lyrics-line.past,
+.chromic-flow-active .lyrics-line.future,
+.chromic-flow-active .lyrics-line.future-1,
+.chromic-flow-active .lyrics-line.future-2,
+.chromic-flow-active .lyrics-line.future-3,
+.chromic-flow-active .lyrics-line.future-4 {
+  opacity: 1 !important;
+  filter: none !important;
+  transform: none !important;
+  transition: none !important;
+  will-change: auto !important;
+  animation: none !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+  line-height: 1.3 !important;
+  margin-bottom: 0 !important;
+  padding: 1px 4px !important;
+  border-radius: 2px !important;
+  color: color-mix(in srgb, var(--mood-color, var(--accent, #8cb4ff)) 60%, rgba(200, 210, 255, 0.7)) !important;
+  cursor: pointer !important;
+  border: none !important;
+  display: inline !important;
+}
+
+/* Separate lines visually with a subtle break */
+.chromic-flow-active .lyrics-line::after {
+  content: '\A';
+  white-space: pre;
+}
+
+/* Active line gets subtle highlight */
+.chromic-flow-active .lyrics-line.active {
+  color: color-mix(in srgb, var(--mood-color, var(--accent, #8cb4ff)) 80%, rgba(220, 230, 255, 0.95)) !important;
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 5%, transparent) !important;
+}
+
+/* Cues (vocal_cue / intro dots) in flow mode — purple */
+.chromic-flow-active .lyrics-intro-dots,
+.chromic-flow-active .lyrics-intro-dots.active,
+.chromic-flow-active .lyrics-intro-dots.past,
+.chromic-flow-active .lyrics-intro-dots.future {
+  opacity: 1 !important;
+  filter: none !important;
+  transform: none !important;
+  transition: none !important;
+  animation: none !important;
+  display: inline-block !important;
+  padding: 1px 6px !important;
+  margin: 0 !important;
+  border-radius: 3px !important;
+  border: 1px solid color-mix(in srgb, var(--mood-color, var(--accent, #b480ff)) 30%, transparent) !important;
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #b480ff)) 6%, transparent) !important;
+  cursor: pointer !important;
+  font-size: 0.7rem !important;
+  color: color-mix(in srgb, var(--mood-color, var(--accent, #b480ff)) 60%, rgba(200, 170, 255, 0.8)) !important;
+}
+.chromic-flow-active .lyrics-intro-dots::after {
+  content: '\A';
+  white-space: pre;
+}
+.chromic-flow-active .lyrics-intro-dots .dot {
+  display: inline-block !important;
+  width: 5px !important;
+  height: 5px !important;
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #b480ff)) 50%, transparent) !important;
+  border-radius: 50% !important;
+  margin: 0 2px !important;
+  animation: none !important;
+}
+.chromic-flow-active .lyrics-intro-dots .dot::after {
+  display: none !important;
+}
+.chromic-flow-active .lyrics-intro-dots:hover {
+  border-color: color-mix(in srgb, var(--mood-color, var(--accent, #b480ff)) 60%, transparent) !important;
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #b480ff)) 12%, transparent) !important;
+}
+.chromic-flow-active .lyrics-intro-dots.flow-selected {
+  border-color: color-mix(in srgb, var(--mood-color, var(--accent, #b480ff)) 80%, transparent) !important;
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #b480ff)) 20%, transparent) !important;
+  box-shadow: 0 0 6px color-mix(in srgb, var(--mood-color, var(--accent, #b480ff)) 30%, transparent) !important;
+}
+
+/* Kill word animations — raw text in blue tint */
+.chromic-flow-active .lyric-word,
+.chromic-flow-active .lyric-word.active,
+.chromic-flow-active .lyric-word.past,
+.chromic-flow-active .lyrics-line.active .lyric-word {
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  transform: none !important;
+  transition: none !important;
+  animation: none !important;
+  text-shadow: none !important;
+  cursor: pointer !important;
+  padding: 0 2px !important;
+  border-radius: 2px !important;
+  border: 1px solid transparent !important;
+  display: inline !important;
+}
+
+/* Word style indicators (color coded) */
+.chromic-flow-active .lyric-word[data-style="stretch"] { color: rgba(255, 200, 80, 0.8) !important; -webkit-text-fill-color: rgba(255, 200, 80, 0.8) !important; }
+.chromic-flow-active .lyric-word[data-style="ad-lib"] { color: rgba(255, 130, 180, 0.8) !important; -webkit-text-fill-color: rgba(255, 130, 180, 0.8) !important; font-style: italic !important; }
+.chromic-flow-active .lyric-word[data-style="spoken"] { color: rgba(180, 220, 180, 0.8) !important; -webkit-text-fill-color: rgba(180, 220, 180, 0.8) !important; }
+.chromic-flow-active .lyric-word[data-style="whisper"] { color: rgba(200, 200, 200, 0.5) !important; -webkit-text-fill-color: rgba(200, 200, 200, 0.5) !important; }
+.chromic-flow-active .lyric-word[data-vocal-stretch="true"] { color: rgba(255, 200, 80, 0.8) !important; -webkit-text-fill-color: rgba(255, 200, 80, 0.8) !important; }
+
+/* Word hover — theme highlight */
+.chromic-flow-active .lyric-word:hover {
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 10%, transparent) !important;
+  border-color: color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 40%, transparent) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+/* Selected word in flow mode — theme accent */
+.chromic-flow-active .lyric-word.flow-selected {
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 15%, transparent) !important;
+  border-color: color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 70%, transparent) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  box-shadow: 0 0 6px color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 30%, transparent) !important;
+}
+
+/* Kill lyrics container perspective and padding in flow mode */
+.chromic-flow-active .lyrics-container {
+  perspective: none !important;
+  padding-top: 4px !important;
+  padding-bottom: 140px !important;
+  line-height: 1.5 !important;
+}
+
+/* When ELRC or Translation panel is open, add extra bottom padding */
+.chromic-flow-panel-open .lyrics-container {
+  padding-bottom: 340px !important;
+}
+.chromic-flow-panel-open .music-immersive-lyrics-panel {
+  padding-bottom: 340px !important;
+}
+
+/* Scrolling state adjustments when panel is open */
+.chromic-flow-panel-open .is-scrolling-active .lyrics-line,
+.chromic-flow-panel-open .is-scrolling-active .lyrics-line.active,
+.chromic-flow-panel-open .is-scrolling-active .lyrics-line.past {
+  transition: opacity 0.1s ease, filter 0.1s ease !important;
+}
+
+/* Kill album art animation */
+.chromic-flow-active .music-track-art-wrap {
+  animation: none !important;
+}
+
+/* Translation visible in raw view */
+.chromic-flow-active .lyrics-translation {
+  opacity: 0.4 !important;
+  pointer-events: auto !important;
+  font-style: normal !important;
+  font-size: 0.75em !important;
+}
+
+/* ═══════════════════════════════════════════════ */
+/* ██  FLOW MODE STUDIO — ELRC & Translation Editors */
+/* ═══════════════════════════════════════════════ */
+
+.chromic-flow-elrc-toggle,
+.chromic-flow-translation-toggle,
+.chromic-flow-snapper-toggle {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+.chromic-flow-elrc-toggle.active,
+.chromic-flow-translation-toggle.active,
+.chromic-flow-snapper-toggle.active {
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #00ff78)) 15%, transparent) !important;
+  border-color: color-mix(in srgb, var(--mood-color, var(--accent, #00ff78)) 40%, transparent) !important;
+  color: var(--mood-color, var(--accent, #00ff78)) !important;
+  transition: all 0.15s ease, background 2s ease, border-color 2s ease, color 2s ease;
+}
+
+.chromic-flow-elrc-panel,
+.chromic-flow-lrc-panel,
+.chromic-flow-translation-panel,
+.chromic-flow-snapper-panel {
+  width: 100%;
+  order: 10;
+  padding: 8px 0 0;
+  animation: chromic-flow-slide-up 0.2s ease;
+}
+
+.chromic-flow-snapper-panel .snapper-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.chromic-flow-snapper-panel .snapper-title {
+  font: 600 13px/1 system-ui, sans-serif;
+  color: var(--mood-color, var(--accent, #00e5ff));
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: color 2s ease;
+}
+.chromic-flow-snapper-panel .snapper-view-toggle {
+  display: flex;
+  gap: 2px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 6px;
+  padding: 2px;
+}
+.chromic-flow-snapper-panel .snapper-view-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.5);
+  font: 500 11px/1 system-ui, sans-serif;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s, color 2s ease;
+}
+.chromic-flow-snapper-panel .snapper-view-btn:hover {
+  color: rgba(255,255,255,0.8);
+}
+.chromic-flow-snapper-panel .snapper-view-btn.active {
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #00e5ff)) 20%, transparent);
+  color: var(--mood-color, var(--accent, #00e5ff));
+}
+.chromic-flow-snapper-panel .snapper-content {
+  min-height: 80px;
+  max-height: 200px;
+  overflow-y: auto;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid color-mix(in srgb, var(--mood-color, var,--accent, #00e5ff) 15%, transparent);
+  border-radius: 6px;
+  padding: 10px;
+  transition: border-color 2s ease;
+}
+.chromic-flow-snapper-panel .snapper-word-bank {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.chromic-flow-snapper-panel .snapper-word-chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3px 8px;
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #00e5ff)) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mood-color, var(--accent, #00e5ff)) 20%, transparent);
+  border-radius: 4px;
+  color: color-mix(in srgb, var(--mood-color, var,--accent, #00e5ff) 30%, #e0f0ff);
+  font: 500 12px/1.3 'SF Mono', 'Fira Code', monospace;
+  cursor: pointer;
+  transition: all 0.12s, background 2s ease, border-color 2s ease, color 2s ease;
+  user-select: none;
+  gap: 1px;
+}
+
+.chromic-flow-snapper-panel .snapper-chip-ts {
+  font-size: 8px;
+  font-weight: 400;
+  color: color-mix(in srgb, var(--mood-color, var(--accent, #00e5ff)) 50%, #335560);
+  line-height: 1;
+  letter-spacing: 0.3px;
+}
+
+.chromic-flow-snapper-panel .snapper-chip-text {
+  line-height: 1.2;
+}
+
+/* Reference word selected */
+.chromic-flow-snapper-panel .snapper-word-chip.snapper-ref-selected {
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #00e5ff)) 35%, transparent);
+  border-color: color-mix(in srgb, var(--mood-color, var,--accent, #00e5ff) 60%, transparent);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--mood-color, var,--accent, #00e5ff) 30%, transparent);
+}
+.chromic-flow-snapper-panel .snapper-word-chip:hover {
+  background: color-mix(in srgb, var(--mood-color, var,--accent, #00e5ff) 25%, transparent);
+  border-color: color-mix(in srgb, var(--mood-color, var,--accent, #00e5ff) 50%, transparent);
+  transform: scale(1.05);
+}
+.chromic-flow-snapper-panel .snapper-word-chip:active {
+  background: color-mix(in srgb, var(--mood-color, var,--accent, #00e5ff) 40%, transparent);
+  transform: scale(0.97);
+}
+
+/* Copied word (clipboard source) */
+.chromic-flow-snapper-panel .snapper-word-chip.snapper-copied {
+  background: color-mix(in srgb, var(--mood-color, var,--accent, #00e5ff) 30%, transparent);
+  border-color: color-mix(in srgb, var(--mood-color, var,--accent, #00e5ff) 60%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--mood-color, var,--accent, #00e5ff) 25%, transparent);
+  outline: 1.5px dashed color-mix(in srgb, var(--mood-color, var,--accent, #00e5ff) 50%, transparent);
+  outline-offset: 1px;
+}
+
+/* Pasted word (flash feedback) */
+.chromic-flow-snapper-panel .snapper-word-chip.snapper-pasted {
+  animation: snapper-paste-flash 0.6s ease;
+}
+@keyframes snapper-paste-flash {
+  0% { background: color-mix(in srgb, var(--mood-color, var,--accent, #00ff78) 50%, transparent); }
+  100% { background: color-mix(in srgb, var(--mood-color, var,--accent, #00e5ff) 10%, transparent); }
+}
+
+/* Snapper toast notification */
+.snapper-toast {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: color-mix(in srgb, var(--mood-color, var,--accent, #00e5ff) 15%, rgba(10, 12, 20, 0.92));
+  border: 1px solid color-mix(in srgb, var(--mood-color, var,--accent, #00e5ff) 30%, rgba(255, 255, 255, 0.1));
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 8px;
+  padding: 6px 16px;
+  color: color-mix(in srgb, var(--mood-color, var,--accent, #00e5ff) 40%, #e0f0ff);
+  font: 500 11px/1.4 -apple-system, BlinkMacSystemFont, sans-serif;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: none;
+  z-index: 10;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), inset 0 0 20px color-mix(in srgb, var(--mood-color, var,--accent, #00e5ff) 5%, transparent);
+}
+.snapper-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.chromic-flow-snapper-panel .snapper-empty,
+.chromic-flow-snapper-panel .snapper-loading {
+  color: rgba(255,255,255,0.4);
+  font: 400 12px/1.4 system-ui, sans-serif;
+  font-style: italic;
+}
+.chromic-flow-snapper-panel .snapper-hint {
+  margin-top: 6px;
+  color: rgba(255,255,255,0.3);
+  font: 400 11px/1 system-ui, sans-serif;
+}
+
+.chromic-flow-snapper-panel .snapper-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.chromic-flow-snapper-panel .snapper-load-source-btn {
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #00c878)) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mood-color, var(--accent, #00c878)) 30%, transparent);
+  border-radius: 4px;
+  color: var(--mood-color, var(--accent, #00c878));
+  font-size: 11px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 2s ease;
+}
+
+.chromic-flow-snapper-panel .snapper-load-source-btn:hover {
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #00c878)) 25%, transparent);
+}
+
+.chromic-flow-elrc-textarea,
+.chromic-flow-translation-textarea {
+  width: 100%;
+  min-height: 160px;
+  max-height: 300px;
+  resize: vertical;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid color-mix(in srgb, var(--mood-color, var,--accent, #00ff78)) 15%, transparent);
+  border-radius: 6px;
+  padding: 12px 16px;
+  color: color-mix(in srgb, var(--mood-color, var,--accent, #00ff78)) 25%, #e0ffe8);
+  font: 500 13px/1.6 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Cascadia Code', monospace;
+  outline: none;
+  caret-color: var(--mood-color, var,--accent, #00ff78);
+  tab-size: 4;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-x: hidden;
+  overflow-y: auto;
+  transition: border-color 2s ease, color 2s ease, caret-color 2s ease;
+}
+
+/* ELRC syntax-highlight wrapper */
+.chromic-flow-elrc-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.chromic-flow-lrc-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.chromic-flow-lrc-wrap .chromic-flow-lrc-textarea {
+  width: 100%;
+  min-height: 200px;
+  max-height: 400px;
+  resize: vertical;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 12px 16px;
+  font: 500 13px/1.6 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Cascadia Code', monospace;
+  color: color-mix(in srgb, var(--mood-color, var(--accent, #f0a040)) 30%, #ffe8c0);
+  caret-color: var(--mood-color, var(--accent, #f0a040));
+  transition: border-color 0.15s, color 2s ease;
+}
+
+.chromic-flow-lrc-textarea:focus {
+  border-color: color-mix(in srgb, var(--mood-color, var(--accent, #f0a040)) 40%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--mood-color, var(--accent, #f0a040)) 8%, transparent);
+  outline: none;
+}
+
+.chromic-flow-lrc-hint {
+  font-size: 11px;
+  opacity: 0.5;
+}
+
+.chromic-flow-lrc-source-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px;
+  margin-bottom: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.chromic-flow-lrc-source-label {
+  opacity: 0.6;
+  flex: 1;
+}
+
+.chromic-flow-lrc-use-embedded {
+  background: rgba(240, 160, 64, 0.12) !important;
+  border: 1px solid rgba(240, 160, 64, 0.3) !important;
+  border-radius: 4px;
+  color: #f0a040 !important;
+  font-size: 11px;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.chromic-flow-lrc-use-embedded:hover {
+  background: rgba(240, 160, 64, 0.25) !important;
+  color: #fff !important;
+}
+
+.chromic-flow-elrc-wrap .chromic-flow-elrc-textarea {
+  color: color-mix(in srgb, var(--mood-color, var,--accent, #00ff78)) 25%, #e0ffe8);
+  -webkit-text-fill-color: transparent;
+  caret-color: var(--mood-color, var,--accent, #00ff78);
+}
+
+.chromic-flow-elrc-highlight {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  padding: 12px 16px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font: 500 13px/1.6 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Cascadia Code', monospace;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow: hidden;
+  color: color-mix(in srgb, var(--mood-color, var,--accent, #00ff78)) 25%, #e0ffe8);
+  transition: color 2s ease;
+}
+
+.chromic-flow-elrc-highlight .elrc-ts {
+  color: color-mix(in srgb, var(--mood-color, var,--accent, #00ff78)) 50%, #335540);
+  font-weight: 400;
+}
+
+.chromic-flow-translation-textarea {
+  color: color-mix(in srgb, var(--mood-color, var,--accent, #a78bfa)) 20%, #e0e0ff);
+  border-color: color-mix(in srgb, var(--mood-color, var,--accent, #a78bfa)) 20%, transparent);
+  caret-color: var(--mood-color, var,--accent, #a78bfa);
+}
+
+.chromic-flow-elrc-textarea:focus {
+  border-color: color-mix(in srgb, var(--mood-color, var,--accent, #00ff78)) 40%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--mood-color, var,--accent, #00ff78)) 8%, transparent);
+}
+
+.chromic-flow-translation-textarea:focus {
+  border-color: color-mix(in srgb, var(--mood-color, var,--accent, #a78bfa)) 40%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--mood-color, var,--accent, #a78bfa)) 8%, transparent);
+}
+
+.chromic-flow-elrc-actions,
+.chromic-flow-lrc-actions,
+.chromic-flow-translation-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.chromic-flow-elrc-apply,
+.chromic-flow-lrc-save-btn,
+.chromic-flow-translation-save-btn {
+  background: color-mix(in srgb, var(--mood-color, var,--accent, #00c878)) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mood-color, var,--accent, #00c878)) 30%, transparent);
+  border-radius: 4px;
+  color: var(--mood-color, var,--accent, #00c878);
+  font-size: 11px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 2s ease;
+}
+.chromic-flow-elrc-apply:hover,
+.chromic-flow-lrc-save-btn:hover,
+.chromic-flow-translation-save-btn:hover {
+  background: color-mix(in srgb, var(--mood-color, var,--accent, #00c878)) 25%, transparent);
+  color: #fff;
+}
+
+.chromic-flow-translation-save-btn {
+  background: color-mix(in srgb, var(--mood-color, var,--accent, #a78bfa)) 12%, transparent);
+  border-color: color-mix(in srgb, var(--mood-color, var,--accent, #a78bfa)) 30%, transparent);
+  color: var(--mood-color, var,--accent, #a78bfa);
+}
+.chromic-flow-translation-save-btn:hover {
+  background: color-mix(in srgb, var(--mood-color, var,--accent, #a78bfa)) 25%, transparent);
+  color: #fff;
+}
+
+.chromic-flow-elrc-hint,
+.chromic-flow-translation-hint {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+/* Track status badges (SVG icons) */
+.track-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  vertical-align: middle;
+  opacity: 0.55;
+  cursor: default;
+}
+.track-status-badge.synced { opacity: 0.7; }
+.track-status-badge.synced svg { stroke: color-mix(in srgb, var(--accent, #5e9eff) 70%, #60cfff); }
+.track-status-badge.synced-plain { opacity: 0.7; }
+.track-status-badge.synced-plain svg { stroke: color-mix(in srgb, var(--accent, #5e9eff) 55%, #8ecfff); }
+.track-status-badge.translated { opacity: 0.7; }
+.track-status-badge.translated svg { stroke: color-mix(in srgb, var(--accent, #a78bfa) 60%, #a78bfa); }
+
+/* User Edited badge */
+.track-status-badge.user-edited {
+  font-size: 9px;
+  background: color-mix(in srgb, var(--mood-color, var,--accent, #00c878)) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mood-color, var,--accent, #00c878)) 30%, transparent);
+  color: var(--mood-color, var,--accent, #00c878);
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-left: 6px;
+  vertical-align: middle;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: color 2s ease, background 2s ease, border-color 2s ease;
+}
+
+/* ═══ INSPECTOR REPORT PANEL ═══ */
+.chromic-inspector-report {
+  position: fixed;
+  bottom: 260px;
+  left: 16px;
+  right: 16px;
+  max-width: 560px;
+  max-height: 280px;
+  z-index: 999998;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent, #00ff78) 8%, rgba(12, 12, 18, 0.92)),
+    color-mix(in srgb, var(--accent, #00ff78) 3%, rgba(12, 12, 18, 0.92))
+  );
+  backdrop-filter: blur(50px) saturate(250%) brightness(88%);
+  -webkit-backdrop-filter: blur(50px) saturate(250%) brightness(88%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top-color: rgba(255, 255, 255, 0.2);
+  border-radius: 14px;
+  padding: 0;
+  overflow: hidden;
+  animation: chromic-flow-slide-up 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 24px color-mix(in srgb, var(--accent, #00ff78) 5%, transparent);
+  font: 500 12px/1.4 -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #e0e0e0;
+}
+.chromic-inspector-report.is-blocking {
+  border-color: rgba(255, 59, 48, 0.3);
+  background: color-mix(in srgb, #ff3b30 10%, rgba(12, 12, 18, 0.92));
+  z-index: 1000001;
+  bottom: 320px;
+}
+.inspector-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.inspector-title {
+  flex: 1;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+}
+.inspector-score {
+  font-weight: 700;
+  font-size: 12px;
+  font-family: 'SF Mono', 'Menlo', monospace;
+}
+.inspector-close {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.5);
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.inspector-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+.inspector-list {
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 6px 10px;
+}
+.inspector-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 4px;
+  border-radius: 6px;
+  transition: background 0.12s;
+}
+.inspector-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+.inspector-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+.inspector-badge.error {
+  background: rgba(255, 59, 48, 0.15);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 59, 48, 0.25);
+}
+.inspector-badge.warning {
+  background: rgba(255, 200, 0, 0.12);
+  color: #ffd700;
+  border: 1px solid rgba(255, 200, 0, 0.2);
+}
+.inspector-message {
+  flex: 1;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.inspector-seek {
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #00c8ff)) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mood-color, var(--accent, #00c8ff)) 20%, transparent);
+  border-radius: 4px;
+  color: var(--mood-color, var,--accent, #00c8ff);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: background 0.15s, color 2s ease, border-color 2s ease;
+  font-family: 'SF Mono', 'Menlo', monospace;
+}
+.inspector-seek:hover {
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #00d4ff)) 18%, transparent);
+  color: var(--mood-color, var,--accent, #00d4ff);
+}
+.inspector-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.inspector-partial-gold {
+  padding: 7px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 10px;
+  color: rgba(255, 225, 150, 0.8);
+  letter-spacing: 0.2px;
+}
+.inspector-autofix {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--mood-color, var(--accent, #00c878)) 12%, transparent), color-mix(in srgb, var(--mood-color, var(--accent, #0096ff)) 12%, transparent));
+  border: 1px solid color-mix(in srgb, var(--mood-color, var,--accent, #00c878) 30%, transparent);
+  border-radius: 6px;
+  color: var(--mood-color, var,--accent, #00c878);
+  font: 600 11px/1 -apple-system, BlinkMacSystemFont, sans-serif;
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: all 0.15s ease, border-color 2s ease, color 2s ease;
+}
+.inspector-autofix:hover {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--mood-color, var,--accent, #00c878)) 22%, transparent), color-mix(in srgb, var(--mood-color, var,--accent, #0096ff)) 22%, transparent));
+  color: #fff;
+}
+.inspector-hint {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* ─── Waveform Context Menu ─────────────────────────────────────────── */
+.chromic-waveform-ctx-menu {
+  position: fixed;
+  z-index: 2147483647;
+  min-width: 200px;
+  padding: 6px;
+  border-radius: 12px;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 8%, rgba(15, 15, 22, 0.96)),
+    color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 3%, rgba(10, 10, 18, 0.98)));
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border: 0.5px solid color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 15%, rgba(255, 255, 255, 0.1));
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.04),
+    inset 0 0 20px color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 6%, transparent);
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+  animation: chromic-ctx-reveal 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: auto;
+}
+@keyframes chromic-ctx-reveal {
+  from { opacity: 0; transform: scale(0.95) translateY(-4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.chromic-waveform-ctx-menu .ctx-menu-header {
+  padding: 6px 10px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chromic-waveform-ctx-menu .ctx-time {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 10px;
+  opacity: 0.6;
+}
+.chromic-waveform-ctx-menu .ctx-menu-label {
+  padding: 4px 10px 2px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.3);
+}
+.chromic-waveform-ctx-menu .ctx-divider {
+  border: none;
+  border-top: 0.5px solid rgba(255, 255, 255, 0.08);
+  margin: 4px 0;
+}
+.chromic-waveform-ctx-menu .ctx-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 7px;
+  background: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+  font-weight: 450;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s ease;
+  font-family: inherit;
+}
+.chromic-waveform-ctx-menu .ctx-item:hover {
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 12%, rgba(255, 255, 255, 0.06));
+}
+.chromic-waveform-ctx-menu .ctx-item:active {
+  transform: scale(0.98);
+}
+.chromic-waveform-ctx-menu .ctx-item svg {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+.chromic-waveform-ctx-menu .ctx-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Element type colors — theme-reactive */
+.ctx-item.ctx-word svg, .ctx-item.ctx-word .ctx-dot { color: var(--mood-color, var(--accent, #66ccff)); stroke: var(--mood-color, var(--accent, #66ccff)); background: var(--mood-color, var(--accent, #66ccff)); }
+.ctx-item.ctx-cue svg, .ctx-item.ctx-cue .ctx-dot { color: color-mix(in srgb, var(--mood-color, var(--accent, #b480ff)) 70%, #b480ff); stroke: color-mix(in srgb, var(--mood-color, var(--accent, #b480ff)) 70%, #b480ff); background: color-mix(in srgb, var(--mood-color, var(--accent, #b480ff)) 70%, #b480ff); }
+.ctx-item.ctx-adlib svg, .ctx-item.ctx-adlib .ctx-dot { color: #ff9944; stroke: #ff9944; background: #ff9944; }
+.ctx-item.ctx-marker svg, .ctx-item.ctx-marker .ctx-dot { color: color-mix(in srgb, var(--mood-color, var(--accent, #FFD700)) 40%, #FFD700); stroke: color-mix(in srgb, var(--mood-color, var(--accent, #FFD700)) 40%, #FFD700); background: color-mix(in srgb, var(--mood-color, var(--accent, #FFD700)) 40%, #FFD700); }
+.ctx-item.ctx-stretch .ctx-dot { background: #44ddaa; }
+.ctx-item.ctx-spoken .ctx-dot { background: #ffd080; }
+.ctx-item.ctx-whisper .ctx-dot { background: rgba(255,255,255,0.3); }
+.ctx-item.ctx-delete { color: #ff453a !important; }
+.ctx-item.ctx-delete svg { stroke: #ff453a; }
+.ctx-item.ctx-delete:hover { background: rgba(255, 69, 58, 0.15); }
+
+/* Active style indicator */
+.ctx-item.ctx-active {
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #5e9eff)) 10%, rgba(255, 255, 255, 0.04));
+  font-weight: 600;
+}
+.ctx-item.ctx-active::after {
+  content: '✓';
+  margin-left: auto;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+/* Timestamp row inputs */
+.chromic-waveform-ctx-menu .ctx-timestamp-row {
+  display: flex;
+  gap: 8px;
+  padding: 6px 10px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.chromic-waveform-ctx-menu .ctx-ts-label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.chromic-waveform-ctx-menu .ctx-ts-input {
+  width: 100%;
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--accent, #5e9eff) 20%, rgba(255, 255, 255, 0.08));
+  background: color-mix(in srgb, var(--accent, #5e9eff) 5%, rgba(0, 0, 0, 0.4));
+  backdrop-filter: blur(8px);
+  color: rgba(255, 255, 255, 0.9);
+  font: 500 12px/1 ui-monospace, 'SF Mono', monospace;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  -moz-appearance: textfield;
+}
+
+.chromic-waveform-ctx-menu .ctx-ts-input::-webkit-inner-spin-button,
+.chromic-waveform-ctx-menu .ctx-ts-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.chromic-waveform-ctx-menu .ctx-ts-input:focus {
+  border-color: color-mix(in srgb, var(--accent, #5e9eff) 50%, rgba(255, 255, 255, 0.2));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #5e9eff) 15%, transparent),
+              inset 0 0 8px color-mix(in srgb, var(--accent, #5e9eff) 8%, transparent);
+}
+
+/* ─── Pro / Gold — Theme-Aware Colors ───────────────────────────────── */
+/* Pro badge: use theme accent instead of hardcoded green */
+.chromic-pro-badge {
+  color: var(--mood-color, var(--accent, #0f0)) !important;
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #00ff3c)) 10%, transparent) !important;
+  border-color: color-mix(in srgb, var(--mood-color, var(--accent, #00ff3c)) 50%, transparent) !important;
+  box-shadow: 0 0 20px color-mix(in srgb, var(--mood-color, var(--accent, #00ff3c)) 20%, transparent),
+    inset 0 0 12px color-mix(in srgb, var(--mood-color, var(--accent, #00ff3c)) 6%, transparent) !important;
+  transition: all 2s ease;
+}
+
+/* ═══ Flow Inline Action Buttons (Save/Discard on track end) ═══ */
+.flow-inline-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  margin-left: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  vertical-align: middle;
+  line-height: 1.2;
+  animation: chromic-flow-slide-up 0.2s ease;
+}
+.flow-inline-save {
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #4ade80)) 20%, rgba(0, 0, 0, 0.4));
+  color: color-mix(in srgb, var(--mood-color, var(--accent, #4ade80)) 70%, #aaffcc);
+  border-color: color-mix(in srgb, var(--mood-color, var(--accent, #4ade80)) 30%, transparent);
+  transition: all 0.15s ease, background 2s ease, color 2s ease, border-color 2s ease;
+}
+.flow-inline-save:hover {
+  background: color-mix(in srgb, var(--mood-color, var(--accent, #4ade80)) 35%, rgba(0, 0, 0, 0.4));
+  border-color: color-mix(in srgb, var(--mood-color, var(--accent, #4ade80)) 50%, transparent);
+}
+.flow-inline-discard {
+  background: color-mix(in srgb, #f87171 15%, rgba(0, 0, 0, 0.4));
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.25);
+}
+.flow-inline-discard:hover {
+  background: color-mix(in srgb, #f87171 30%, rgba(0, 0, 0, 0.4));
+  border-color: rgba(248, 113, 113, 0.45);
+}
+
+/* ═══ Python Install Modal ═══ */
+.python-install-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.15s ease;
+}
+
+.python-install-dialog {
+  width: min(560px, 90vw);
+  max-height: 85vh;
+  background: var(--surface-elevated, #1a1a1f);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.python-install-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.python-install-header svg {
+  opacity: 0.8;
+  color: var(--accent, #5e9eff);
+}
+
+.python-install-close {
+  margin-left: auto;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 20px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.python-install-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.python-install-info {
+  padding: 20px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.python-install-info p {
+  margin: 0 0 12px;
+}
+
+.python-install-info .missing-packages {
+  padding: 10px 12px;
+  background: rgba(255, 180, 50, 0.1);
+  border: 1px solid rgba(255, 180, 50, 0.2);
+  border-radius: 6px;
+  color: #ffb432;
+}
+
+.python-install-info .missing-packages code {
+  font-family: var(--font-mono, 'SF Mono', monospace);
+  font-size: 12px;
+}
+
+.python-install-requirements {
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  margin-top: 12px;
+}
+
+.python-install-requirements strong {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.python-install-requirements ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.python-install-requirements li {
+  margin: 4px 0;
+}
+
+.python-install-terminal {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 300px;
+  max-height: 400px;
+}
+
+.terminal-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: #1e1e24;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* macOS-style traffic light dots (default, shown on macOS) */
+.terminal-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.terminal-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.terminal-dot.red { background: #ff5f57; }
+.terminal-dot.yellow { background: #febc2e; }
+.terminal-dot.green { background: #28c840; }
+
+/* Windows-style controls (shown on Windows) */
+.terminal-controls-win {
+  display: none;
+  margin-left: auto;
+  gap: 2px;
+}
+
+.terminal-control-win {
+  width: 28px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: default;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.terminal-control-win svg {
+  width: 10px;
+  height: 10px;
+}
+
+/* OS Detection: Show appropriate controls */
+.is-macos-electron .terminal-dots,
+body:not(.is-windows-electron):not(.is-macos-electron) .terminal-dots {
+  display: flex;
+}
+
+.is-windows-electron .terminal-dots {
+  display: none;
+}
+
+.is-windows-electron .terminal-controls-win {
+  display: flex;
+}
+
+.is-windows-electron .terminal-header {
+  flex-direction: row;
+}
+
+.terminal-title {
+  margin-left: 8px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.is-windows-electron .terminal-title {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.terminal-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.terminal-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.terminal-progress-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: inherit;
+  background: linear-gradient(90deg, var(--accent, #5e9eff), #a78bfa);
+  border-radius: inherit;
+  transition: width 0.3s ease;
+}
+
+.terminal-progress-text {
+  font-size: 11px;
+  font-family: var(--font-mono, 'SF Mono', monospace);
+  color: rgba(255, 255, 255, 0.6);
+  min-width: 80px;
+  text-align: right;
+}
+
+.terminal-output {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 14px;
+  background: #0d0d10;
+  font-family: var(--font-mono, 'SF Mono', Consolas, monospace);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.terminal-line {
+  padding: 2px 0;
+  color: rgba(255, 255, 255, 0.7);
+  word-break: break-word;
+}
+
+.terminal-line.step {
+  color: var(--accent, #5e9eff);
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.terminal-line.success {
+  color: #4ade80;
+}
+
+.terminal-line.error {
+  color: #f87171;
+}
+
+.terminal-line.warn {
+  color: #fbbf24;
+}
+
+.python-install-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.python-install-footer button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.python-install-cancel {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.python-install-cancel:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.python-install-start {
+  background: linear-gradient(135deg, var(--accent, #5e9eff), #a78bfa);
+  color: white;
+  border: none;
+}
+
+.python-install-start:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.python-install-start:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.python-install-start.success {
+  background: linear-gradient(135deg, #22c55e, #10b981);
+}
+
+.python-install-start.error {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.python-install-start .spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+

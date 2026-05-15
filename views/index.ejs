@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en" data-theme="<%= activeTheme || '' %>" data-section="<%= activeTab %>" class="theme-<%= activeTab %><%= activeTab === 'music' ? ' theme-chromic' : '' %>">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Chromic Engine — High-fidelity music player and library manager." />
+    <title>Chromic Engine</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/main.css" />
+    <link rel="stylesheet" href="/themes.css" />
+    <link rel="stylesheet" href="/chromic.css" />
+    <link rel="stylesheet" href="/chromic-header.css" />
+  </head>
+  <body data-theme="<%= activeTheme || '' %>" data-section="<%= activeTab %>" class="theme-<%= activeTab %><%= activeTab === 'music' ? ' theme-chromic' : '' %>">
+    <div class="app-shell">
+
+      <header class="app-header chromic-glass-header">
+        <div class="brand">
+          <p class="kicker">Chromic</p>
+          <h1>Engine</h1>
+        </div>
+        <div class="header-search-container" id="headerSearchContainer">
+          <div class="header-search-input-wrap" id="headerSearchWrap">
+            <svg class="header-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input id="headerSearchInput" class="header-search-real" type="text" placeholder="Search…" autocomplete="off" />
+            <button type="button" id="headerSearchClear" class="header-search-clear" aria-label="Clear search" hidden><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            <kbd>⌘K</kbd>
+          </div>
+          <div id="headerSearchResults" class="header-search-results"></div>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="header-add-music-btn focusable" id="headerAddMusicBtn" title="Add music" aria-label="Add music">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span class="header-add-music-label">Add Music</span>
+          </button>
+          <div id="aiHubContainer" class="ai-hub-container"></div>
+          <div id="themeSwitcher" class="chromic-theme-switcher">
+            <button type="button" class="chromic-theme-trigger focusable" id="themeTriggerBtn" title="Theme" aria-label="Change theme">
+              <span class="chromic-theme-swatch-preview"></span>
+            </button>
+            <div class="chromic-theme-panel" id="themePanel" aria-hidden="true">
+              <div class="theme-category-main">
+                <button type="button" class="chromic-theme-swatch" data-theme="chromic-dark" title="Chromic Dark"><span style="background:#5e9eff"></span></button>
+                <button type="button" class="chromic-theme-swatch" data-theme="chromic-silver" title="Chromic Silver"><span style="background:#5b86bf"></span></button>
+                <button type="button" class="chromic-theme-swatch" data-theme="crystal-glass" title="Crystal Glass"><span style="background:linear-gradient(135deg,#e0e0e8,#888)"></span></button>
+                <button type="button" class="chromic-theme-swatch" data-theme="cinema-crimson" title="Cinema Crimson"><span style="background:#FF0032"></span></button>
+                <button type="button" class="chromic-theme-swatch" data-theme="galactic-violet" title="Galactic Violet"><span style="background:#BF5AF2"></span></button>
+                <button type="button" class="chromic-theme-swatch" data-theme="sunset-flamingo" title="Sunset Flamingo"><span style="background:#FF2D55"></span></button>
+                <button type="button" class="chromic-theme-swatch" data-theme="emerald-forest" title="Emerald Forest"><span style="background:#34C759"></span></button>
+                <button type="button" class="chromic-theme-swatch" data-theme="toxic-flow" title="Toxic Flow"><span style="background:#00FF41"></span></button>
+              </div>
+              <button type="button" class="theme-show-more-btn" id="themeShowMoreBtn" title="Show all themes">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                <span class="label-more">More themes</span>
+                <span class="label-less">Less themes</span>
+              </button>
+              <div class="theme-expanded-grid" id="themeExpandedGrid">
+                <div class="theme-category-label">Neon</div>
+                <div class="theme-category-row">
+                  <button type="button" class="chromic-theme-swatch" data-theme="neon-cyber-blue" title="Neon Cyber Blue"><span style="background:#00d4ff"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="neon-magenta" title="Neon Magenta"><span style="background:#ff00ff"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="neon-amber" title="Neon Amber"><span style="background:#ffaa00"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="neon-coral" title="Neon Coral"><span style="background:#ff4444"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="neon-lime" title="Neon Lime"><span style="background:#aaff00"></span></button>
+                </div>
+                <div class="theme-category-label">Pastel</div>
+                <div class="theme-category-row">
+                  <button type="button" class="chromic-theme-swatch" data-theme="pastel-rose" title="Pastel Rose"><span style="background:#f0a0c8"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="pastel-lavender" title="Pastel Lavender"><span style="background:#c0a8f0"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="pastel-mint" title="Pastel Mint"><span style="background:#88e8b8"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="pastel-sky" title="Pastel Sky"><span style="background:#88c0f0"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="pastel-peach" title="Pastel Peach"><span style="background:#f0c088"></span></button>
+                </div>
+                <div class="theme-category-label">Classic</div>
+                <div class="theme-category-row">
+                  <button type="button" class="chromic-theme-swatch" data-theme="ocean-deep" title="Ocean Deep"><span style="background:#3388cc"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="burgundy-wine" title="Burgundy Wine"><span style="background:#cc3355"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="midnight-indigo" title="Midnight Indigo"><span style="background:#6666dd"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="teal-abyss" title="Teal Abyss"><span style="background:#00b8a0"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="copper-bronze" title="Copper Bronze"><span style="background:#cc8844"></span></button>
+                </div>
+                <div class="theme-category-label">Gradient</div>
+                <div class="theme-category-row">
+                  <button type="button" class="chromic-theme-swatch" data-theme="aurora-borealis" title="Aurora Borealis"><span style="background:linear-gradient(135deg,#44ddaa,#6644ff)"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="sunset-horizon" title="Sunset Horizon"><span style="background:linear-gradient(135deg,#ff6633,#ff2255)"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="twilight-fade" title="Twilight Fade"><span style="background:linear-gradient(135deg,#aa66ee,#ff5588)"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="cosmic-nebula" title="Cosmic Nebula"><span style="background:linear-gradient(135deg,#8844ff,#ff4488)"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="ice-storm" title="Ice Storm"><span style="background:linear-gradient(135deg,#66ccee,#4488cc)"></span></button>
+                </div>
+                <div class="theme-category-label">Luxury</div>
+                <div class="theme-category-row">
+                  <button type="button" class="chromic-theme-swatch" data-theme="gold-luxe" title="Gold Luxe"><span style="background:linear-gradient(135deg,#d4a832,#8a6810)"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="diamond-frost" title="Diamond Frost"><span style="background:linear-gradient(135deg,#b8d0e8,#8898a8)"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="brushed-steel" title="Brushed Steel"><span style="background:linear-gradient(135deg,#a0a0b0,#606068)"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="rose-gold" title="Rose Gold"><span style="background:linear-gradient(135deg,#e0a898,#a06858)"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="gasoline-slick" title="Gasoline Slick — Iridescent"><span style="background:conic-gradient(from 180deg,#ff00aa,#00ccff,#88ff00,#ffcc00,#ff00aa)"></span></button>
+                </div>
+                <div class="theme-category-label">Light & Fresh</div>
+                <div class="theme-category-row">
+                  <button type="button" class="chromic-theme-swatch" data-theme="cloud-white" title="Cloud White"><span style="background:#e8ecf2"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="sakura-bloom" title="Sakura Bloom"><span style="background:#f2a0b8"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="lemon-sorbet" title="Lemon Sorbet"><span style="background:#e8c840"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="ocean-breeze" title="Ocean Breeze"><span style="background:#40b0d8"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="sage-garden" title="Sage Garden"><span style="background:#7ab87a"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="lavender-haze" title="Lavender Haze"><span style="background:#a088d0"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="peach-cream" title="Peach Cream"><span style="background:#f0a870"></span></button>
+                  <button type="button" class="chromic-theme-swatch" data-theme="arctic-blue" title="Arctic Blue"><span style="background:#88b8e0"></span></button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button id="headerAiConfigBtn" type="button" class="header-ai-btn focusable" title="AI & Pro Settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a6 6 0 0 1 6 6c0 2.5-1.5 4.5-3 5.5V16a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-2.5C7.5 12.5 6 10.5 6 8a6 6 0 0 1 6-6z"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="10" y1="23" x2="14" y2="23"/><path d="M12 2V1"/><path d="M4.22 4.22l-.7-.7"/><path d="M19.78 4.22l.7-.7"/><path d="M2 12H1"/><path d="M23 12h-1"/></svg></button>
+        </div>
+      </header>
+
+      <section id="globalMusicPlayer" class="global-player is-idle" aria-label="Global music player">
+        <div class="global-player-art">
+          <img id="globalPlayerArt" alt="Now playing artwork" />
+        </div>
+        <div class="global-player-meta">
+          <button id="globalPlayerTitle" type="button" class="global-player-title track-settings-trigger focusable">No track selected</button>
+          <p id="globalPlayerSubtitle" class="global-player-subtitle">Pick a song in Music</p>
+        </div>
+        <div class="global-player-controls">
+          <button id="playerSettingsBtn" type="button" class="player-control focusable" aria-label="Open track settings">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68 1.65 1.65 0 0 0 10 3.17V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+          <button id="playerPrevBtn" type="button" class="player-control focusable" aria-label="Previous track">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+          </button>
+          <button id="playerPlayPauseBtn" type="button" class="player-control player-control-primary focusable" aria-label="Play or pause">
+            <svg class="icon-play" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+            <svg class="icon-pause" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          </button>
+          <button id="playerNextBtn" type="button" class="player-control focusable" aria-label="Next track">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+          </button>
+          <button id="playerShuffleBtn" type="button" class="player-control player-toggle focusable" aria-label="Shuffle queue">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+          </button>
+          <button id="playerRepeatBtn" type="button" class="player-control player-toggle focusable" aria-label="Repeat mode">
+            <svg class="icon-repeat-all" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+            <svg class="icon-repeat-one" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/><text x="12" y="14" text-anchor="middle" fill="currentColor" stroke="none" font-size="8" font-weight="700">1</text></svg>
+          </button>
+        </div>
+        <div class="global-player-progress" id="globalPlayerProgress">
+          <div class="global-player-progress-fill" id="globalPlayerProgressFill"></div>
+        </div>
+        <audio id="globalAudio" preload="metadata"></audio>
+      </section>
+
+      <main id="appContent">
+      <section id="viewsShell" class="views-shell">
+        <section id="music-view" class="library-view view-active" data-view="music">
+          <section id="musicPlayerArea" class="player-area"></section>
+          <section class="section-head">
+            <h2 id="musicSectionTitle" class="section-title">Music</h2>
+            <div class="section-head-actions">
+              <button id="addMediaBtn" type="button" class="add-media-btn focusable" aria-label="Add Music">+ Add Music</button>
+            </div>
+          </section>
+          <section id="musicGrid" class="grid"></section>
+        </section>
+      </section>
+      </main>
+    </div>
+
+    <% if (typeof ssrData !== 'undefined' && ssrData) { %>
+    <script id="ssr-data" type="application/json"><%- JSON.stringify(ssrData) %></script>
+    <% } %>
+    <% if (typeof debugLogs !== 'undefined' && debugLogs) { %>
+    <script>window.__DEBUG__ = true;</script>
+    <% } %>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
+
+
+
+
+
+

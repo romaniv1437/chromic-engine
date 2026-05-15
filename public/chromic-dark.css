@@ -1,0 +1,562 @@
+/* ══════════════════════════════════════════════════════════════════════════════
+   Chromic Premium Design Layer
+   Chromic-tier Aura Design, typography, and performance optimizations.
+   This file layers ON TOP of styles.css — it overrides only what's needed.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Phase 1: Design Tokens ── */
+:root {
+  /* Glass */
+  --glass-blur: 40px;
+  --glass-saturate: saturate(200%);
+  --glass-bg-dark: rgba(25, 25, 30, 0.5);
+  --glass-bg-light: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.18);
+  --glass-border-subtle: rgba(255, 255, 255, 0.08);
+  --glass-highlight: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 50%, transparent 100%);
+
+  /* Radii */
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
+
+  /* Typography Scale */
+  --font-system: -Chromic-system, BlinkMacSystemFont, 'Inter', 'Inter Text', system-ui, sans-serif;
+  --font-serif: 'New York', 'Iowan Old Style', Georgia, ui-serif, serif;
+  --fs-hero: clamp(32px, 5vw, 52px);
+  --fs-title: clamp(20px, 3vw, 28px);
+  --fs-body: 15px;
+  --fs-caption: 12px;
+  --fs-micro: 10px;
+
+  /* Spring Curves */
+  --spring-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --spring-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Shadows — layered for depth */
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.12);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,0.2);
+  --shadow-glow: 0 0 0 1px var(--glass-border), 0 16px 48px rgba(0,0,0,0.25);
+  --shadow-ambient: 0 20px 60px -10px;
+
+  /* Focus Ring */
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--accent, #2a8ef2) 60%, transparent),
+               0 0 0 6px color-mix(in srgb, var(--accent, #2a8ef2) 20%, transparent);
+}
+
+/* ── Rich Glass Material System ── */
+
+.rich-glass {
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(var(--glass-blur, 40px)) saturate(2.5) brightness(0.9);
+  -webkit-backdrop-filter: blur(var(--glass-blur, 40px)) saturate(2.5) brightness(0.9);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent, #5e9eff) 12%, transparent),
+    color-mix(in srgb, var(--accent, #5e9eff) 5%, transparent)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top-color: rgba(255, 255, 255, 0.25);
+  border-left-color: rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 8px 32px 0 rgba(0, 0, 0, 0.3),
+    inset 0 0 20px 0 color-mix(in srgb, var(--accent, #5e9eff) 8%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Specular shine overlay */
+.rich-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Ensure content sits above the shine */
+.rich-glass > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Apply Rich Glass to Header ── */
+.chromic-glass-header.app-header {
+  backdrop-filter: blur(50px) saturate(250%) brightness(90%) !important;
+  -webkit-backdrop-filter: blur(50px) saturate(250%) brightness(90%) !important;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent, #5e9eff) 8%, rgba(18, 18, 22, 0.72)),
+    color-mix(in srgb, var(--accent, #5e9eff) 3%, rgba(18, 18, 22, 0.72))
+  ) !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent, #5e9eff) 12%, rgba(255, 255, 255, 0.08)) !important;
+  border-top: none !important;
+  box-shadow:
+    0 1px 24px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 0 30px color-mix(in srgb, var(--accent, #5e9eff) 5%, transparent) !important;
+}
+
+/* ── Apply Rich Glass to Global Player ── */
+.global-player {
+  backdrop-filter: blur(40px) saturate(220%) brightness(80%);
+  -webkit-backdrop-filter: blur(40px) saturate(220%) brightness(80%);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent, #5e9eff) 15%, rgba(0, 0, 0, 0.55)),
+    color-mix(in srgb, var(--accent, #5e9eff) 6%, rgba(0, 0, 0, 0.55))
+  );
+  border-color: color-mix(in srgb, var(--accent, #5e9eff) 18%, rgba(255, 255, 255, 0.1));
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 0 24px color-mix(in srgb, var(--accent, #5e9eff) 14%, transparent);
+}
+
+/* ── Deep Glass: Track Controls / Glass Panels / Overlays ── */
+.glass-panel,
+.music-track-controls,
+.music-track-controls.glass-panel {
+  backdrop-filter: blur(40px) saturate(220%) brightness(80%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(220%) brightness(80%) !important;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent, #5e9eff) 10%, rgba(0, 0, 0, 0.55)),
+    color-mix(in srgb, var(--accent, #5e9eff) 4%, rgba(0, 0, 0, 0.55))
+  ) !important;
+  border-color: color-mix(in srgb, var(--accent, #5e9eff) 12%, rgba(255, 255, 255, 0.08)) !important;
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 0 20px color-mix(in srgb, var(--accent, #5e9eff) 10%, transparent) !important;
+}
+
+.music-player-layer .music-track-controls {
+  backdrop-filter: blur(40px) saturate(220%) brightness(80%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(220%) brightness(80%) !important;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent, #5e9eff) 10%, rgba(0, 0, 0, 0.55)),
+    color-mix(in srgb, var(--accent, #5e9eff) 4%, rgba(0, 0, 0, 0.55))
+  ) !important;
+}
+
+/* ── Deep Glass: More Menu, Queue Sheet, Queue Panel, Settings Panel ── */
+.media-more-menu,
+.music-queue-sheet,
+.up-next-panel,
+.music-player-settings {
+  backdrop-filter: blur(40px) saturate(220%) brightness(80%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(220%) brightness(80%) !important;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent, #5e9eff) 10%, rgba(0, 0, 0, 0.9)),
+    color-mix(in srgb, var(--accent, #5e9eff) 4%, rgba(0, 0, 0, 0.9))
+  ) !important;
+  border-color: color-mix(in srgb, var(--accent, #5e9eff) 10%, rgba(255, 255, 255, 0.06)) !important;
+  box-shadow:
+    0 12px 48px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 0 20px color-mix(in srgb, var(--accent, #5e9eff) 8%, transparent) !important;
+}
+
+/* ── Deep Glass: Tabs bar ── */
+.tabs {
+  backdrop-filter: blur(40px) saturate(220%) brightness(80%);
+  -webkit-backdrop-filter: blur(40px) saturate(220%) brightness(80%);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent, #5e9eff) 8%, rgba(0, 0, 0, 0.8)),
+    color-mix(in srgb, var(--accent, #5e9eff) 3%, rgba(0, 0, 0, 0.8))
+  );
+  border-color: color-mix(in srgb, var(--accent, #5e9eff) 10%, rgba(255, 255, 255, 0.08));
+}
+
+/* ── Rich Glass for Dropdowns & Panels ── */
+.ai-hub-dropdown,
+.header-search-results,
+.chromic-theme-panel {
+  backdrop-filter: blur(40px) saturate(220%) brightness(80%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(220%) brightness(80%) !important;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent, #5e9eff) 10%, rgba(0, 0, 0, 0.9)),
+    color-mix(in srgb, var(--accent, #5e9eff) 4%, rgba(0, 0, 0, 0.9))
+  ) !important;
+  border-color: color-mix(in srgb, var(--accent, #5e9eff) 12%, rgba(255, 255, 255, 0.08)) !important;
+  border-top-color: rgba(255, 255, 255, 0.15) !important;
+  box-shadow:
+    0 12px 48px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 0 20px color-mix(in srgb, var(--accent, #5e9eff) 12%, transparent) !important;
+}
+
+/* ── Rich Glass for AI Modal ── */
+#chromic-ai-modal .ai-modal-content {
+  backdrop-filter: blur(40px) saturate(220%) brightness(80%);
+  -webkit-backdrop-filter: blur(40px) saturate(220%) brightness(80%);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent, #5e9eff) 10%, rgba(0, 0, 0, 0.92)),
+    color-mix(in srgb, var(--accent, #5e9eff) 3%, rgba(0, 0, 0, 0.92))
+  );
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 0 20px color-mix(in srgb, var(--accent, #5e9eff) 12%, transparent);
+}
+
+/* ── Phase 1: Typography ── */
+body {
+  font-family: var(--font-system);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.brand h1 {
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.section-head h3 {
+  font-size: var(--fs-title);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+/* Secondary text — Chromic style muted */
+.section-head p,
+.global-player-subtitle {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ── Phase 2: Aura Design Surfaces ── */
+
+/* Header */
+.app-header {
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(var(--glass-blur)) var(--glass-saturate);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) var(--glass-saturate);
+  border: 1px solid var(--glass-border);
+}
+
+/* Tab Bar */
+.tabs {
+  backdrop-filter: blur(16px) var(--glass-saturate);
+  -webkit-backdrop-filter: blur(16px) var(--glass-saturate);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-pill);
+}
+
+/* Status Pill */
+.status-pill {
+  backdrop-filter: blur(12px) var(--glass-saturate);
+  -webkit-backdrop-filter: blur(12px) var(--glass-saturate);
+  border: 1px solid var(--glass-border);
+}
+
+/* ── Phase 3: Cards — Chromic TV Tiles ── */
+
+/* Specular highlight overlay on cards */
+.music-album-grid-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.music-album-grid-item::after {
+  content: "";
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 65%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.music-album-grid-item:hover::after {
+  opacity: 1;
+}
+
+
+/* Music Album Grid Items */
+.music-album-grid-item {
+  border-radius: var(--radius-sm);
+  border: 0.5px solid var(--glass-border);
+  will-change: transform;
+  transition: transform 0.35s var(--spring-bounce);
+}
+
+.music-album-grid-item:hover {
+  transform: scale(1.03);
+}
+
+/* ── Phase 3: More Options Button — Polished Glass Circle ── */
+.media-more-wrap [data-more-toggle] {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px) var(--glass-saturate);
+  -webkit-backdrop-filter: blur(12px) var(--glass-saturate);
+  border: 0.5px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s var(--spring-bounce), background 0.2s ease;
+}
+
+.media-more-wrap [data-more-toggle]:hover {
+  background: rgba(0, 0, 0, 0.6);
+  transform: scale(1.1);
+}
+
+/* More Menu — Glass dropdown */
+.media-more-menu {
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent, #5e9eff) 10%, rgba(20, 20, 28, 0.92)), color-mix(in srgb, var(--accent, #5e9eff) 4%, rgba(20, 20, 28, 0.92)));
+  backdrop-filter: blur(var(--glass-blur)) var(--glass-saturate);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) var(--glass-saturate);
+  border: 0.5px solid color-mix(in srgb, var(--accent, #5e9eff) 15%, var(--glass-border, rgba(255,255,255,0.08)));
+  box-shadow: var(--shadow-lg), inset 0 0 20px color-mix(in srgb, var(--accent, #5e9eff) 8%, transparent);
+}
+
+/* ── Phase 6: Performance ── */
+
+/* Content-visibility for off-screen sections */
+.library-view.view-hidden {
+  content-visibility: hidden;
+}
+
+/* Contain intrinsic size for grids */
+.grid {
+  contain-intrinsic-size: auto 500px;
+}
+
+/* GPU layer promotion for interactive cards — only on hover, not permanent */
+@media (hover: hover) {
+  .music-album-grid-item:hover {
+    will-change: transform;
+  }
+}
+
+/* Remove will-change when not hoverable (mobile) */
+@media (hover: none) {
+  .music-album-grid-item {
+    will-change: auto;
+  }
+}
+
+/* Fixed aspect ratios to prevent layout shifts */
+
+.music-album-grid-open img {
+  aspect-ratio: 1 / 1;
+}
+
+/* ── Focus States — Chromic-style ── */
+.focusable:focus-visible,
+.focusable.is-focused {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  transform: scale(1.03);
+  transition: box-shadow 0.25s ease, transform 0.25s var(--spring-bounce);
+}
+
+/* ── 4K Dark Scene Safe ── */
+
+/* ── Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .music-album-grid-item {
+    transition: none !important;
+    will-change: auto !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   redesignIdea2 additions: DOM Freezing, Cinema Mode, Music Player Padding
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── DOM Freezing: Hidden views are completely frozen ── */
+.library-view.view-hidden {
+  content-visibility: hidden;
+  contain: strict;
+  contain-intrinsic-size: 0 500px;
+}
+
+/* Active views only contain layout + paint (not size) for flexibility */
+.app-shell {
+  padding-bottom: 200px;
+  transition: padding-bottom 0.3s ease;
+}
+
+/* When global player is active (not .is-idle), add clearance */
+body[data-section='music'] .app-shell,
+body:has(.global-player:not(.is-idle)) .app-shell {
+  padding-bottom: 200px;
+}
+
+
+/* ── Grid: Larger gaps ── */
+
+.music-albums-grid {
+  gap: 28px;
+}
+
+/* ── Contain paint on cards for isolation ── */
+.music-album-grid-item {
+  contain: layout;
+}
+
+/* ── Supreme Performance: 8,000 album grid scroll optimization ── */
+.music-album-grid-item {
+  content-visibility: auto;
+  contain-intrinsic-size: 200px 240px;
+  transform: translateZ(0); /* Force GPU compositing layer */
+}
+
+/* Once image is loaded, disable content-visibility to prevent re-decode flicker on fast scroll */
+.music-album-grid-item.img-loaded,
+.music-album-grid-item.img-loaded-instant {
+  content-visibility: visible;
+}
+
+.music-albums-grid {
+  contain: layout style;
+}
+
+/* (Rich Glass system in Phase 1 now handles all glass surfaces globally) */
+
+
+
+.add-media-btn {
+  padding: 12px 28px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px) var(--glass-saturate);
+  -webkit-backdrop-filter: blur(12px) var(--glass-saturate);
+  border: 1px solid var(--glass-border);
+  color: #fff;
+  font-weight: 600;
+  font-size: var(--fs-body);
+  cursor: pointer;
+  transition: all 0.3s var(--spring-bounce);
+}
+
+.btn-pill:hover,
+.add-media-btn:hover {
+  transform: scale(1.05);
+  background: #fff;
+  color: #000;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+.btn-pill:active,
+.add-media-btn:active {
+  transform: scale(0.95);
+  transition-duration: 0.1s;
+}
+
+/* ── Hero Section ── */
+.hero-section {
+  position: relative;
+  width: 100%;
+  min-height: 70vh;
+  display: flex;
+  align-items: flex-end;
+  padding: 60px 80px;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  margin-bottom: 48px;
+}
+
+.hero-section .hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  filter: blur(2px) brightness(0.6);
+  transform: scale(1.05);
+}
+
+.hero-section .hero-gradient {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 40%, transparent 70%);
+}
+
+.hero-section .hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 600px;
+}
+
+.hero-section .hero-title {
+  font-size: var(--fs-hero);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  margin-bottom: 12px;
+  color: #fff;
+}
+
+.hero-section .hero-meta {
+  font-size: var(--fs-body);
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 20px;
+}
+
+.hero-section .hero-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* ── Dynamic Ambient Light (Color glow behind focused cards) ── */
+.card-ambient-glow {
+  position: absolute;
+  inset: -30%;
+  z-index: -1;
+  border-radius: 50%;
+  filter: blur(50px);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.music-album-grid-item:hover .card-ambient-glow {
+  opacity: 0.4;
+}
+
+/* ── Micro-interactions: Tab indicator morph ── */
+.tab-indicator {
+  transition: transform 0.38s cubic-bezier(0.25, 0.8, 0.25, 1), width 0.38s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Bounce on scroll end */
+.views-shell {
+  overscroll-behavior: contain;
+}
+
+/* ── Headers: Inter tight letter-spacing ── */
+h1, h2, h3, h4 {
+  letter-spacing: -0.022em;
+}
+
+/* ── Safe Area for mobile ── */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .global-player {
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+}

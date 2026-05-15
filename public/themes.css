@@ -1,0 +1,10 @@
+/* Chromic Engine — Theme Section Overrides */
+html[data-section='music'],
+body[data-section='music'] {
+  --music-album-view-bg: linear-gradient(to bottom, #cfcfcf, #a1a1a1);
+  --music-track-table-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(214, 231, 247, 0.76));
+  --music-track-table-border: rgba(130, 168, 210, 0.4);
+  --music-track-head-bg: linear-gradient(to bottom, #cfcfcf, #a1a1a1);
+  --music-track-row-odd: rgba(255, 255, 255, 0.9);
+  --music-track-row-even: rgba(215, 235, 255, 0.72);
+}

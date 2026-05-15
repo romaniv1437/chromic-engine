@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+!build/
+build/*
+!build/icon.icns
+!build/icon.ico
+!build/icon.png
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/
+
+# Environment / OS
+.env
+.DS_Store
+Thumbs.db
+*.log
+
+# IDE
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.pyc
+venv/
+lyrics-engine/venv/
+lyrics-engine/node_modules/
+
+# Test outputs
+lyrics-engine/out*.json
+lyrics-engine/test*_stdout.json
+lyrics-engine/aligner_output.json
+
+# Dev scripts (not needed in release)
+_*.py
+
+# Media (user content)
+media/
