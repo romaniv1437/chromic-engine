@@ -31,17 +31,22 @@ float fractalSDF(vec3 p) {
     vec3 p_mod = p;
     p_mod.z = mod(p.z, cellSize) - cellSize * 0.5;
 
-    // Tunnel shape morphs with bass
-    float tunnel = length(p_mod.xy) - (1.2 + u_bass * 0.8 + sin(p.z * 0.5) * 0.4);
+    // Clamp audio for stability
+    float safeBass = min(u_bass, 0.85);
+    float safeMid = min(u_mid, 0.85);
+    float safeTreble = min(u_treble, 0.85);
 
-    float scale = 1.8 + u_mid * 0.4;
+    // Tunnel shape morphs with bass
+    float tunnel = length(p_mod.xy) - (1.2 + safeBass * 0.8 + sin(p.z * 0.5) * 0.4);
+
+    float scale = 1.8 + safeMid * 0.4;
 
     // KIFS (Iterated Function System)
     for (int i = 0; i < 7; i++) {
         p_mod = abs(p_mod) - vec3(0.8, 1.2, 0.6);
 
-        p_mod.xy *= rot(0.5 + u_bass * 0.1 + float(i) * 0.2);
-        p_mod.yz *= rot(0.3 + u_treble * 0.1);
+        p_mod.xy *= rot(0.5 + safeBass * 0.1 + float(i) * 0.2);
+        p_mod.yz *= rot(0.3 + safeTreble * 0.1);
 
         // Kaleidoscopic mirroring
         if (p_mod.x < p_mod.y) p_mod.xy = p_mod.yx;
@@ -60,7 +65,7 @@ void main() {
     vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution.xy) / min(u_resolution.y, u_resolution.x);
 
     // FOV punch on beats (hyperspace zoom effect)
-    float fov = 1.0 - u_rms * 0.3;
+    float fov = 1.0 - min(u_rms, 0.8) * 0.3;
     vec3 rd = normalize(vec3(uv * fov, 1.2));
 
     // Stable base speed + micro-kick from bass (no jitter from u_rms)
@@ -73,7 +78,7 @@ void main() {
     ro.y += cos(u_time * 0.5) * 0.5;
 
     // Dynamic camera tilt
-    rd.xy *= rot(sin(u_time * 0.3) * 0.2 + u_rms * 0.1);
+    rd.xy *= rot(sin(u_time * 0.3) * 0.2 + min(u_rms, 0.8) * 0.1);
     rd.xz *= rot(cos(u_time * 0.2) * 0.1);
 
     float t = 0.05;
@@ -86,7 +91,7 @@ void main() {
         d = fractalSDF(p);
 
         // Glow brighter on treble
-        glow += (0.02 + u_treble * 0.05) / (0.1 + d * d * 15.0);
+        glow += (0.02 + min(u_treble, 0.85) * 0.05) / (0.1 + d * d * 15.0);
 
         if (d < 0.002 || t > 30.0) break;
         t += d * 0.75;
@@ -95,20 +100,20 @@ void main() {
     vec3 col = vec3(0.0);
 
     // Background color gradient
-    vec3 bgCol = mix(u_colors[0], u_colors[2], sin(u_time * 0.2) * 0.5 + 0.5);
+    vec3 bgCol = mix(u_colors[0] * 0.5, u_colors[2] * 0.5, sin(u_time * 0.2) * 0.5 + 0.5);
 
     if (d < 0.1) {
         float edge = smoothstep(0.1, 0.0, d);
-        // Magic depth-based material color
-        vec3 material = mix(u_colors[1], u_colors[2], fract(t * 0.1 + u_time * 0.1));
+        // Magic depth-based material color (darkened palette)
+        vec3 material = mix(u_colors[1] * 0.65, u_colors[2] * 0.65, fract(t * 0.1 + u_time * 0.1));
         col = material * edge;
 
         // Light pulse waves on walls from bass
-        col += u_colors[0] * (1.0 - fract(t * 0.5 - u_time * 2.0)) * u_bass;
+        col += u_colors[0] * 0.6 * (1.0 - fract(t * 0.5 - u_time * 2.0)) * min(u_bass, 0.85);
     }
 
     // Volumetric glow
-    col += glow * mix(u_colors[1], u_colors[0], u_rms);
+    col += glow * mix(u_colors[1] * 0.6, u_colors[0] * 0.6, min(u_rms, 0.8));
 
     // Cosmic fog
     col = mix(col, bgCol * 0.05, smoothstep(5.0, 30.0, t));
@@ -129,4 +134,3 @@ void main() {
     col = pow(col, vec3(1.0 / 2.2));
     gl_FragColor = vec4(col, 1.0);
 }
-

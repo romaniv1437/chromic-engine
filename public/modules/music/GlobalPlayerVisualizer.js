@@ -110,6 +110,7 @@ export class GlobalPlayerVisualizer {
   }
 
   setLowPower(lp) { this._lowPower = lp; }
+  setAudioElement(el) { this._audioElement = el; }
 
   start() {
     if (this._running || !this.gl) return;
@@ -135,7 +136,9 @@ export class GlobalPlayerVisualizer {
       return;
     }
     const now = performance.now();
-    const interval = this._lowPower ? 1000 : 50; // ~1fps vs ~20fps
+    // Use low-power interval when audio is paused (1fps) — saves GPU
+    const audioPaused = this._audioElement?.paused;
+    const interval = (this._lowPower || audioPaused) ? 1000 : 100; // ~1fps vs ~10fps
     if (now - this._lastFrameTime < interval) {
       this._frameId = requestAnimationFrame(() => this._tick());
       return;

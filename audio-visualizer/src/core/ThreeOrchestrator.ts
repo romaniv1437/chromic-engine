@@ -64,6 +64,8 @@ export class ThreeOrchestrator {
   private kineticRibbons: KineticRibbonSystem;
   private maxFps = 0; // 0 = unlimited
   private lastFrameTime = 0;
+  private _scrollPaused = false;
+  private _loopDbg = 0;
   // Time dilation for cinematic engine start
   private timeScale = 1;
   private timeScaleTarget = 1;
@@ -80,6 +82,7 @@ export class ThreeOrchestrator {
       alpha: true,
       antialias: false, // Use SMAA-like post instead for M1 optimization
       powerPreference: 'high-performance',
+      preserveDrawingBuffer: true, // Needed for debug readPixels
     });
     this.renderer.debug.checkShaderErrors = true;
     this.renderer.setClearColor(0x000000, 0);
@@ -147,7 +150,46 @@ export class ThreeOrchestrator {
     // GPU Lyrics Renderer (layer 1 - karaoke-style word fill)
     this.lyricsRenderer = new LyricsRenderer();
     this.lyricsRenderer.addToScene(this.current.scene);
-    this.lyricsRenderer.setVisible(false); // Hidden by default — DOM handles lyrics display
+    this.lyricsRenderer.setVisible(true); // GPU lyrics enabled — gpu-panel styles
+    this.lyricsRenderer.setAspect(initW, initH);
+
+    // Wire lyrics scroll (wheel) and click-to-seek
+    this.container.addEventListener('wheel', (e: WheelEvent) => {
+      // Only handle if click is on right half (text area)
+      const rect = this.container.getBoundingClientRect();
+      const ndcX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      if (ndcX > -0.1) { // Right half = text area
+        e.preventDefault();
+        this.lyricsRenderer.handleWheel(e.deltaY);
+      }
+    }, { passive: false });
+
+    this.container.addEventListener('click', (e: MouseEvent) => {
+      const rect = this.container.getBoundingClientRect();
+      const ndcX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      const ndcY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      console.log(`[Orchestrator] click event: ndcX=${ndcX.toFixed(2)} ndcY=${ndcY.toFixed(2)} target=${(e.target as HTMLElement)?.tagName}`);
+      if (e.shiftKey) {
+        // Shift+Click = debug pixel inspector (reads actual rendered color)
+        this.lyricsRenderer.debugInspectClick(ndcX, ndcY, this.renderer, e.clientX, e.clientY);
+      } else {
+        this.lyricsRenderer.handleClick(ndcX, ndcY);
+      }
+    });
+
+    // Set up seek callback
+    this.lyricsRenderer.onSeek((time: number) => {
+      console.log(`[Orchestrator] seek → ${time.toFixed(3)}s`);
+      // Dispatch a custom event that MusicPlayer can listen for
+      document.dispatchEvent(new CustomEvent('visualizer-seek', { detail: { time } }));
+      // Also directly seek the audio element if accessible
+      const audio = (window as any).musicRuntime?.audioEngine?.audioElement
+        || document.querySelector('audio')
+        || document.getElementById('globalAudio') as HTMLAudioElement | null;
+      if (audio && typeof audio.currentTime === 'number') {
+        audio.currentTime = time;
+      }
+    });
 
     // Kinetic Ribbon System (200 flowing instanced ribbons)
     this.kineticRibbons = new KineticRibbonSystem();
@@ -156,8 +198,12 @@ export class ThreeOrchestrator {
     // Enable layer 1 on current scene camera
     this.current.camera.layers.enable(1);
 
-    console.log(`[Visualizer] Initialized with ${this.sceneFactories.length} scenes (lazy)`);
-    console.log(`[Visualizer] Scenes: Lava, Julia, Lorenz, Riemann, ReactionDiffusion, Hyperbolic, LivingCanvas, FractalInfinity`);
+    if((globalThis as any).__DEBUG__)console.log(`[Visualizer] Initialized with ${this.sceneFactories.length} scenes (lazy)`);
+    if((globalThis as any).__DEBUG__)console.log(`[Visualizer] Scenes: Lava, Julia, Lorenz, Riemann, ReactionDiffusion, Hyperbolic, LivingCanvas, FractalInfinity`);
+
+    // Expose lyrics debug tools on globalThis for console access
+    (globalThis as any).__lyricsDebug = (on = true) => { this.lyricsRenderer.setDebug(on); };
+    (globalThis as any).__lyricsRenderer = this.lyricsRenderer;
 
     // Listen for uiToggle custom event
     document.addEventListener('uiToggle', ((e: CustomEvent) => {
@@ -168,13 +214,14 @@ export class ThreeOrchestrator {
     const ro = new ResizeObserver(() => this.handleResize());
     ro.observe(this.container);
 
-    // Scroll-aware GPU throttle: blur canvas during scroll to mask any compositor jank
+    // Scroll-aware GPU throttle: pause rendering during scroll to prevent thermal throttling
     let scrollThrottleTimer = 0;
     let isScrollBlurred = false;
     const vizCanvas = this.renderer.domElement;
     const onScroll = () => {
       if (!isScrollBlurred && this.running) {
         isScrollBlurred = true;
+        this._scrollPaused = true;
         vizCanvas.style.transition = 'none';
         vizCanvas.style.filter = 'blur(8px) saturate(1.3)';
       }
@@ -182,6 +229,7 @@ export class ThreeOrchestrator {
       scrollThrottleTimer = window.setTimeout(() => {
         if (isScrollBlurred) {
           isScrollBlurred = false;
+          this._scrollPaused = false;
           vizCanvas.style.transition = 'filter 0.3s ease-out';
           vizCanvas.style.filter = '';
           setTimeout(() => { vizCanvas.style.transition = ''; }, 350);
@@ -221,7 +269,7 @@ export class ThreeOrchestrator {
   setScene(idx: number) {
     if (idx < 0 || idx >= this.sceneFactories.length) return;
     if (idx === this.currentIdx && this.scenes[idx]) return;
-    console.log(`[Visualizer] Switching scene: ${this.currentIdx} → ${idx}`);
+    if((globalThis as any).__DEBUG__)console.log(`[Visualizer] Switching scene: ${this.currentIdx} → ${idx}`);
     this.gpuTypography.removeFromScene(this.current.scene);
     this.lyricsRenderer.removeFromScene(this.current.scene);
     this.kineticRibbons.removeFromScene(this.current.scene);
@@ -282,12 +330,13 @@ export class ThreeOrchestrator {
     this.uiVisible = visible;
     this.gpuTypography.setVisible(visible);
     this.lyricsRenderer.setVisible(visible);
+    this.lyricsRenderer.setControlsVisible(visible);
     this.postProcessing.setUiVisibility(visible);
   }
 
   /** Set track info for GPU text */
   setTrack(title: string, artist: string) {
-    console.log(`[Visualizer] setTrack: "${title}" - "${artist}"`);
+    if((globalThis as any).__DEBUG__)console.log(`[Visualizer] setTrack: "${title}" - "${artist}"`);
     this.gpuTypography.setTrack(title, artist);
     // Auto-reset to Lava scene (blurred info view) on track change
     this.setScene(0);
@@ -305,11 +354,13 @@ export class ThreeOrchestrator {
     }
     // Update ribbon accent to match palette highlight
     this.kineticRibbons.setAccentColor(threeColors[2]);
+    // Update lyrics renderer accent color for artist name
+    this.lyricsRenderer.setAccentColor(threeColors[0]);
   }
 
   /** Set album art for Living Canvas scene */
   setAlbumArt(imageUrl: string) {
-    console.log(`[Visualizer] setAlbumArt:`, imageUrl);
+    if((globalThis as any).__DEBUG__)console.log(`[Visualizer] setAlbumArt:`, imageUrl);
     const canvas = this.scenes[6];
     if (canvas instanceof LivingCanvasScene) {
       canvas.setAlbumArt(imageUrl);
@@ -317,8 +368,8 @@ export class ThreeOrchestrator {
   }
 
   /** Set lyrics timeline for GPU karaoke rendering */
-  setLyricsTimeline(timeline: LyricsLine[]) {
-    this.lyricsRenderer.setTimeline(timeline);
+  setLyricsTimeline(timeline: LyricsLine[], artist?: string, album?: string) {
+    this.lyricsRenderer.setTimeline(timeline, artist, album);
     this.gpuTypography.setVisible(false);
     this.lyricsRenderer.setVisible(true);
   }
@@ -332,6 +383,8 @@ export class ThreeOrchestrator {
     if (this.running) return;
     this.running = true;
     this.lastRealTime = performance.now() * 0.001;
+    // Reset dilated time after long idle to prevent GPU float precision issues
+    if (this.dilatedTime > 3600) this.dilatedTime = 0;
     // Ensure correct size on first frame
     requestAnimationFrame(() => this.handleResize());
     this.loop();
@@ -345,15 +398,20 @@ export class ThreeOrchestrator {
     this.lastRealTime = realTime;
     this.timeScale += (this.timeScaleTarget - this.timeScale) * this.timeScaleLerpSpeed;
     this.dilatedTime += realDelta * this.timeScale;
+    if (this.dilatedTime > 10000) this.dilatedTime -= 10000;
     const audio = this.audioProcessor.update();
     this.zenFadeCurrent += (this.zenFadeTarget - this.zenFadeCurrent) * 0.05;
     this.renderer.domElement.style.opacity = String(this.zenFadeCurrent);
     this.current.update(audio, this.dilatedTime);
     this.gpuTypography.update(audio.rms);
+    // Feed audio time directly from audio element every frame
+    const audioEl = (window as any).musicRuntime?.audioEngine?.audioElement;
+    if (audioEl) this.lyricsRenderer.setCurrentTime(audioEl.currentTime);
     this.lyricsRenderer.update(audio.rms);
     this.kineticRibbons.update(audio, this.dilatedTime);
     this.postProcessing.update(audio);
     this.postProcessing.composer.render();
+    this.postProcessing.renderText();
   }
 
   stop() {
@@ -371,6 +429,9 @@ export class ThreeOrchestrator {
   private loop = () => {
     if (!this.running) return;
     this.frameId = requestAnimationFrame(this.loop);
+
+    // Skip rendering entirely during scroll to free GPU for compositor
+    if (this._scrollPaused) return;
 
     // FPS throttle
     if (this.maxFps > 0) {
@@ -393,6 +454,9 @@ export class ThreeOrchestrator {
 
     // Accumulate dilated time — no jumps when timeScale changes
     this.dilatedTime += realDelta * this.timeScale;
+    // Wrap time to prevent GPU float precision degradation after long idle
+    // 10000s cycle is imperceptible for sin/cos/noise patterns
+    if (this.dilatedTime > 10000) this.dilatedTime -= 10000;
 
     const audio = this.audioProcessor.update();
 
@@ -405,10 +469,38 @@ export class ThreeOrchestrator {
 
     this.current.update(audio, this.dilatedTime);
     this.gpuTypography.update(audio.rms);
+    // Feed audio time directly from audio element every frame
+    const audioEl2 = (window as any).musicRuntime?.audioEngine?.audioElement;
+    if (audioEl2) this.lyricsRenderer.setCurrentTime(audioEl2.currentTime);
     this.lyricsRenderer.update(audio.rms);
     this.kineticRibbons.update(audio, this.dilatedTime);
     this.postProcessing.update(audio);
     this.postProcessing.composer.render();
+    this.postProcessing.renderText();
+
+    // Debug logging every 300 frames
+    if (!this._loopDbg) this._loopDbg = 0;
+    this._loopDbg++;
+    if (this._loopDbg % 300 === 1 && false) { // DEBUG: set to true to enable verbose frame logging
+      const ri = this.renderer.info.render;
+      console.log(`[Orchestrator] frame=${this._loopDbg} scene=${this.current.constructor.name} idx=${this.currentIdx} drawCalls=${ri.calls} tris=${ri.triangles} sceneChildren=${this.current.scene.children.length} time=${this.dilatedTime.toFixed(2)}`);
+    }
+
+    // Expose metrics for perf profiler (zero-cost when not read)
+    if ((globalThis as any).__PERF_MODE__) {
+      const w = globalThis as any;
+      if (!w._chromicMathVisualizer) w._chromicMathVisualizer = {};
+      const m = w._chromicMathVisualizer;
+      m.running = this.running;
+      m._sceneIdx = this.currentIdx;
+      m._sceneName = this.current?.constructor?.name || `Scene ${this.currentIdx}`;
+      m._sceneCount = this.sceneFactories.length;
+      m._rendererInfo = {
+        drawCalls: this.renderer.info.render.calls,
+        triangles: this.renderer.info.render.triangles,
+      };
+      m.setScene = (idx: number) => this.setScene(idx);
+    }
   };
 
   private _resizeDebounce = 0;
@@ -434,6 +526,7 @@ export class ThreeOrchestrator {
     this.renderer.setSize(w, h, false);
     this.renderer.setViewport(0, 0, w, h);
     this.postProcessing.setSize(w, h);
+    this.lyricsRenderer.setAspect(w, h);
     const effectiveDpr = window.devicePixelRatio * this.resolutionScale;
     this.current.resize(w, h, effectiveDpr);
 

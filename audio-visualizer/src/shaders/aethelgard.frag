@@ -19,8 +19,8 @@ uniform float u_energy;
 
 varying vec2 vUv;
 
-#define MAX_STEPS 40
-#define SURF_DIST 0.008
+#define MAX_STEPS 55
+#define SURF_DIST 0.003
 #define VOXEL_SIZE 20.0
 #define PI 3.14159265359
 
@@ -174,8 +174,8 @@ vec4 map(vec3 p) {
   // At edges, fade geometry out smoothly (dissolve into dust)
   d = mix(d, d * 0.8, 1.0 - blendEdge);
 
-  // Wide corridor
-  d = smax(d, -(length(q.xy) - (6.0 + safeBass * 3.0)), 1.5);
+  // Narrower corridor for tighter tunnel feel
+  d = smax(d, -(length(q.xy) - (4.0 + safeBass * 2.0)), 1.2);
 
   return vec4(d, mix(entropy, entropyNext, timeFract), entropy2, length(localP));
 }
@@ -198,24 +198,29 @@ void main() {
   for (int i = 0; i < MAX_STEPS; i++) {
     vec3 p = ro + rd * t;
     sceneData = map(p);
-    glow += exp(-sceneData.x * 2.0) * 0.08;
+    glow += exp(-sceneData.x * 4.0) * 0.04;
     if (sceneData.x < SURF_DIST || t > 80.0) break;
     t += sceneData.x;
   }
 
-  vec3 finalCol = u_colors[0] * 0.02;
+  vec3 finalCol = u_colors[0] * 0.05;
   if (t < 80.0) {
-    vec3 baseCol = getCosPalette(sceneData.y + t * 0.02 + sceneData.z * 2.0, u_colors[0], u_colors[1], u_colors[2]);
-    float fog = exp(-t * 0.018);
-    finalCol = baseCol * fog * 1.6;
-    finalCol += u_colors[2] * pow(1.0 - fog, 3.0) * (0.5 + u_bass * 0.6);
-    finalCol += u_colors[2] * pow(fog, 5.0) * u_treble * 1.5;
+    vec3 baseCol = getCosPalette(sceneData.y + t * 0.03 + sceneData.z * 3.0, u_colors[0], u_colors[1], u_colors[2]);
+    float fog = exp(-t * 0.025);
+    finalCol = baseCol * fog * 2.0;
+    // Strong theme-reactive rim glow
+    finalCol += u_colors[1] * pow(1.0 - fog, 2.0) * (0.6 + u_mid * 0.8);
+    finalCol += u_colors[2] * pow(fog, 4.0) * u_treble * 2.5;
+    // Bass-reactive color[0] pulse
+    finalCol += u_colors[0] * pow(u_bass, 2.0) * 0.6 * fog;
   }
 
   finalCol += getCosPalette(u_time * 0.02, u_colors[0], u_colors[1], u_colors[2]) * glow * 0.08;
-  finalCol += u_colors[2] * u_beat * 0.04;
-  finalCol = mix(finalCol, u_colors[0] * 0.03, smoothstep(40.0, 80.0, t));
+  finalCol += u_colors[2] * u_beat * 0.08;
+  // Theme-reactive ambient: blend all 3 colors based on audio
+  finalCol += mix(u_colors[0], u_colors[1], u_bass) * 0.03;
+  finalCol = mix(finalCol, u_colors[0] * 0.05, smoothstep(40.0, 80.0, t));
 
-  gl_FragColor = vec4(pow(finalCol / (1.0 + finalCol), vec3(0.85)), 1.0);
+  gl_FragColor = vec4(pow(finalCol / (1.0 + finalCol), vec3(0.75)), 1.0);
 }
 

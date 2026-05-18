@@ -33,7 +33,8 @@ const ChromaticAberrationShader = {
       float r = texture2D(tDiffuse, vUv + dir).r;
       float g = texture2D(tDiffuse, vUv).g;
       float b = texture2D(tDiffuse, vUv - dir).b;
-      gl_FragColor = vec4(r, g, b, 1.0);
+      float a = texture2D(tDiffuse, vUv).a;
+      gl_FragColor = vec4(r, g, b, a);
     }
   `,
 };
@@ -86,22 +87,39 @@ export class PostProcessing {
   private blurPassH: ShaderPass;
   private blurPassV: ShaderPass;
   private chromaPass: ShaderPass;
-  private textRenderPass: RenderPass | null = null;
   private uiVisibility = 0;
   private uiVisibilityTarget = 0;
   private chromaBeat = 0;
+  private renderer: THREE.WebGLRenderer;
+  private scene: THREE.Scene;
+  private camera: THREE.Camera;
+  _textRenderer: THREE.WebGLRenderer | null = null;
 
   constructor(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.Camera) {
+    this.renderer = renderer;
+    this.scene = scene;
+    this.camera = camera;
     this.composer = new EffectComposer(renderer);
 
-    // Main scene render (layer 0 only - excludes text)
+    // Main scene render — layer 0 only (scene geometry, no text)
     const mainPass = new RenderPass(scene, camera);
     mainPass.clear = true;
     this.composer.addPass(mainPass);
 
+    // Patch main pass to only render layer 0
+    const origMainRender = mainPass.render.bind(mainPass);
+    mainPass.render = (r: any, wb: any, rb: any, dt: any, ma: any) => {
+      const cam = mainPass.camera;
+      const saved = cam.layers.mask;
+      cam.layers.set(0);
+      origMainRender(r, wb, rb, dt, ma);
+      cam.layers.mask = saved;
+    };
+
+    // Unreal-style bloom: tight halo, high threshold so only stretch words glow
     this.bloom = new UnrealBloomPass(
       new THREE.Vector2(window.innerWidth, window.innerHeight),
-      1.5, 0.4, 0.85
+      0.6, 0.4, 0.85
     );
     this.composer.addPass(this.bloom);
 
@@ -110,7 +128,7 @@ export class PostProcessing {
     this.chromaPass.uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
     this.composer.addPass(this.chromaPass);
 
-    // Separable blur: horizontal + vertical (42 samples total vs 441)
+    // Separable blur: horizontal + vertical
     this.blurPassH = new ShaderPass(SeparableBlurShader);
     this.blurPassH.uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
     this.blurPassH.uniforms.u_direction.value.set(1, 0);
@@ -121,31 +139,57 @@ export class PostProcessing {
     this.blurPassV.uniforms.u_direction.value.set(0, 1);
     this.composer.addPass(this.blurPassV);
 
-    // Text render pass (layer 1 - rendered AFTER blur, stays sharp)
-    this.textRenderPass = new RenderPass(scene, camera);
-    this.textRenderPass.clear = false;
-    this.textRenderPass.clearDepth = true;
-    this.composer.addPass(this.textRenderPass);
+    // NO text render pass in composer — text is rendered AFTER composer.render()
   }
+
+  /** Set a dedicated full-DPI renderer for crisp text overlay */
+  setTextRenderer(r: THREE.WebGLRenderer) {
+    this._textRenderer = r;
+  }
+
+  /**
+   * Render text (layer 1) directly on top of the composer output.
+   * Called after composer.render() — uses autoClear=false to preserve the scene.
+   */
+  renderText() {
+    const saved = this.camera.layers.mask;
+    this.camera.layers.set(1); // only text
+    this.renderer.autoClear = false;
+    this.renderer.clearDepth();
+    this.renderer.render(this.scene, this.camera);
+    this.renderer.autoClear = true;
+    this.camera.layers.mask = saved;
+
+    // Debug: log once per 300 frames
+    if (!this._textDbgCount) this._textDbgCount = 0;
+    this._textDbgCount++;
+    if (this._textDbgCount % 300 === 1 && false) { // DEBUG: set to true to enable
+      const cam = this.camera as any;
+      const childCount = this.scene.children.length;
+      const layer1 = this.scene.children.filter((c: any) => c.layers?.mask & 2);
+      console.log(`[renderText] scene=${childCount} children, layer1=${layer1.length}, cam.type=${cam.type || cam.constructor?.name}, near=${cam.near}, far=${cam.far}, pos.z=${cam.position?.z}`);
+    }
+  }
+  private _textDbgCount = 0;
 
   setUiVisibility(visible: boolean) {
     this.uiVisibilityTarget = visible ? 1 : 0;
   }
 
   update(audio: AudioData) {
-    this.bloom.threshold = 0.2 - audio.rms * 0.2;
-    this.bloom.strength = 1.0 + audio.rms * 2.0;
+    this.bloom.threshold = 0.90 - audio.rms * 0.04;
+    this.bloom.strength = 0.45 + audio.rms * 0.2;
 
     // Chromatic aberration: spike on bass hits, decay
     if (audio.bass > 0.5) this.chromaBeat = Math.max(this.chromaBeat, audio.bass);
     this.chromaBeat *= 0.92;
     this.chromaPass.uniforms.u_intensity.value = this.chromaBeat;
 
-    // Lerp blur
+    // Lerp UI visibility (used for other effects, but blur disabled to prevent bloom amplification)
     this.uiVisibility += (this.uiVisibilityTarget - this.uiVisibility) * 0.05;
-    const blurValue = this.uiVisibility * 5.0;
-    this.blurPassH.uniforms.u_blur.value = blurValue;
-    this.blurPassV.uniforms.u_blur.value = blurValue;
+    // Blur passes disabled — they amplify bloom when UI is visible, causing inconsistent look
+    this.blurPassH.uniforms.u_blur.value = 0;
+    this.blurPassV.uniforms.u_blur.value = 0;
   }
 
   setSize(w: number, h: number) {
@@ -153,15 +197,16 @@ export class PostProcessing {
     this.chromaPass.uniforms.u_resolution.value.set(w, h);
     this.blurPassH.uniforms.u_resolution.value.set(w, h);
     this.blurPassV.uniforms.u_resolution.value.set(w, h);
+    if (this._textRenderer) {
+      this._textRenderer.setSize(w, h, false);
+    }
   }
 
   updateScene(scene: THREE.Scene, camera: THREE.Camera) {
+    this.scene = scene;
+    this.camera = camera;
     const mainPass = this.composer.passes[0] as RenderPass;
     mainPass.scene = scene;
     mainPass.camera = camera;
-    if (this.textRenderPass) {
-      this.textRenderPass.scene = scene;
-      this.textRenderPass.camera = camera;
-    }
   }
 }

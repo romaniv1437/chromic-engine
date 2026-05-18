@@ -55,7 +55,7 @@ export function preWarmGPU() {
       _warmGl.deleteProgram(prog);
     }
 
-    console.log('[GPU Pre-Warm] WebGL2 context warmed successfully');
+    if(window.__DEBUG__)console.log('[GPU Pre-Warm] WebGL2 context warmed successfully');
   } catch (e) {
     console.warn('[GPU Pre-Warm] Failed:', e.message);
   }

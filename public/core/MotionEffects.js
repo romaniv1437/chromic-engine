@@ -244,8 +244,16 @@ export function staggeredEntry(
           if (el._staggerVisible) return; // already showing
           el._staggerVisible = true;
 
-          // If element was force-revealed (e.g. after overlay close), skip animation
-          if (el.dataset.staggerRevealed) {
+          // If element was force-revealed or already animated, skip
+          if (el.dataset.staggerRevealed || el._staggerDone) {
+            el.style.opacity = '1';
+            el.style.transform = '';
+            el.style.willChange = '';
+            return;
+          }
+          // During scroll: show instantly (no spring animation per-frame jank)
+          if (scrollGuardian.isScrolling) {
+            el._staggerDone = true;
             el.style.opacity = '1';
             el.style.transform = '';
             el.style.willChange = '';
@@ -253,8 +261,10 @@ export function staggeredEntry(
           }
           appearing.push(el);
         } else {
-          // Element left viewport — reset for re-entry animation
-          if (persistent && el._staggerVisible) {
+          // Element left viewport — never reset once revealed (prevents re-animation blink)
+          if (el._staggerDone) {
+            el._staggerVisible = false;
+          } else if (persistent && el._staggerVisible) {
             el._staggerVisible = false;
             el.style.opacity = '0';
             el.style.transform = `translate3d(0, ${from.y}px, 0) scale(${from.scale})`;

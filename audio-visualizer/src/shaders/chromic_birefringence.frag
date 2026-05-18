@@ -12,9 +12,9 @@ uniform vec3 u_colors[3];
 
 varying vec2 vUv;
 
-#define MAX_STEPS 80
-#define MAX_DIST 25.0
-#define SURF_DIST 0.001
+#define MAX_STEPS 64
+#define MAX_DIST 20.0
+#define SURF_DIST 0.002
 #define PI 3.14159265359
 
 mat2 rot(float a) {
@@ -69,7 +69,7 @@ float map(vec3 p) {
 }
 
 vec3 getNormal(vec3 p) {
-    vec2 e = vec2(0.001, -0.001);
+    vec2 e = vec2(0.002, -0.002);
     return normalize(
         e.xyy * map(p + e.xyy) +
         e.yyx * map(p + e.yyx) +
@@ -78,34 +78,9 @@ vec3 getNormal(vec3 p) {
     );
 }
 
-float calcAO(vec3 p, vec3 n) {
-    float occ = 0.0, sca = 1.0;
-    for (int i = 0; i < 4; i++) {
-        float hr = 0.05 + 0.1 * float(i);
-        float d = map(p + n * hr);
-        occ += -(d - hr) * sca;
-        sca *= 0.85;
-    }
-    return clamp(1.0 - 3.0 * occ, 0.0, 1.0);
-}
-
-// ─── Optical axis — bass rotates it ─────────────────────────────────────────
 vec3 opticalAxis(float t) {
     float angle = t * 0.2 + u_bass * PI;
     return normalize(vec3(sin(angle), cos(angle * 0.7), sin(angle * 0.3 + 0.5)));
-}
-
-// ─── Birefringent refraction ────────────────────────────────────────────────
-// Returns two refracted ray directions (ordinary + extraordinary)
-void birefract(vec3 rd, vec3 n, vec3 axis, float eta_o, float eta_e,
-               out vec3 rd_o, out vec3 rd_e) {
-    rd_o = refract(rd, n, eta_o);
-    // Extraordinary ray: eta depends on angle between ray and optical axis
-    float cosTheta = abs(dot(rd, axis));
-    float eta_eff = mix(eta_e, eta_o, cosTheta * cosTheta);
-    rd_e = refract(rd, n, eta_eff);
-    // Slight axis-dependent deflection for extraordinary ray
-    rd_e = normalize(rd_e + axis * (eta_e - eta_o) * 0.15);
 }
 
 // ─── Thin-film iridescence (gasoline slick) ─────────────────────────────────
@@ -156,49 +131,20 @@ void main() {
     if (t > 0.0) {
         vec3 p = ro + rd * t;
         vec3 n = getNormal(p);
-        float ao = calcAO(p, n);
 
         vec3 axis = opticalAxis(u_time);
 
-        // Birefringent indices — treble drives chromatic split
-        float eta_o = 0.65;
+        // Fake birefringence: use normal+axis to split color channels
+        // instead of tracing 2 extra rays (saves ~2x map evaluations)
         float delta_eta = 0.08 + u_treble * 0.15;
-        float eta_e = eta_o + delta_eta;
+        float splitAngle = dot(n, axis) * delta_eta * 3.0;
+        float cosNR = max(dot(n, -rd), 0.0);
 
-        vec3 rd_o, rd_e;
-        birefract(rd, n, axis, eta_o, eta_e, rd_o, rd_e);
-
-        // Trace ordinary ray color
-        vec3 col_o = vec3(0.0);
-        if (length(rd_o) > 0.5) {
-            float t_o = raymarch(p + n * 0.02, rd_o);
-            if (t_o > 0.0) {
-                vec3 p2 = p + n * 0.02 + rd_o * t_o;
-                vec3 n2 = getNormal(p2);
-                float diff = max(dot(n2, normalize(vec3(1.0, 2.0, 3.0))), 0.0);
-                col_o = u_colors[1] * diff * 0.8;
-            } else {
-                col_o = u_colors[1] * 0.15;
-            }
-        }
-
-        // Trace extraordinary ray color
-        vec3 col_e = vec3(0.0);
-        if (length(rd_e) > 0.5) {
-            float t_e = raymarch(p + n * 0.02, rd_e);
-            if (t_e > 0.0) {
-                vec3 p3 = p + n * 0.02 + rd_e * t_e;
-                vec3 n3 = getNormal(p3);
-                float diff = max(dot(n3, normalize(vec3(-1.0, 1.5, 2.0))), 0.0);
-                col_e = u_colors[2] * diff * 0.8;
-            } else {
-                col_e = u_colors[2] * 0.15;
-            }
-        }
-
-        // Combine ordinary + extraordinary with split visualization
+        // Ordinary vs extraordinary color from palette, split by axis angle
         float splitFactor = 0.5 + 0.3 * dot(n, axis);
-        vec3 refractedCol = mix(col_o, col_e, splitFactor);
+        vec3 col_o = u_colors[1] * (0.5 + 0.3 * cosNR);
+        vec3 col_e = u_colors[2] * (0.5 + 0.3 * cosNR);
+        vec3 refractedCol = mix(col_o, col_e, splitFactor + sin(splitAngle * 6.0) * 0.2);
 
         // Surface lighting
         vec3 lightDir = normalize(vec3(1.0, 2.0, 3.0));
@@ -207,10 +153,13 @@ void main() {
         float spec = pow(max(dot(reflect(-lightDir, n), -rd), 0.0), 32.0 + u_treble * 64.0);
 
         // Thin-film iridescence on surface
-        float fresnel = pow(1.0 - max(dot(n, -rd), 0.0), 4.0);
+        float fresnel = pow(1.0 - cosNR, 4.0);
         float filmThickness = 1.5 + u_mid * 2.0 + length(p) * 0.3;
-        vec3 film = thinFilm(max(dot(n, -rd), 0.0), filmThickness);
+        vec3 film = thinFilm(cosNR, filmThickness);
         vec3 filmColor = mix(u_colors[1], u_colors[2], film);
+
+        // Simple AO approximation (1 sample instead of 4)
+        float ao = clamp(map(p + n * 0.15) / 0.15, 0.0, 1.0);
 
         // Compose
         col = refractedCol * 0.4;
@@ -219,7 +168,7 @@ void main() {
         col += fresnel * filmColor * 0.6;
 
         // Rim glow
-        col += pow(fresnel, 3.0) * u_colors[2] * (0.3 + u_rms * 0.7);
+        col += fresnel * fresnel * fresnel * u_colors[2] * (0.3 + u_rms * 0.7);
     }
 
     // Volumetric glow

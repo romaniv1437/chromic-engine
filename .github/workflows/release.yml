@@ -72,8 +72,66 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y dpkg fakeroot rpm
 
-      # macOS: Skip code signing (not notarized, users use xattr -cr)
-      # This avoids Team ID mismatch issues with self-signed certs
+      # macOS: Create self-signed certificate for code signing
+      - name: Create self-signed certificate (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          # Create a self-signed certificate for code signing
+          # This will show "romaniv1437" as the signer in Finder
+          CERT_NAME="romaniv1437"
+          KEYCHAIN_NAME="build.keychain"
+          KEYCHAIN_PASSWORD="build123"
+          
+          # Create temporary keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
+          security set-keychain-settings -t 3600 -u "$KEYCHAIN_NAME"
+          
+          # Add to search list (REQUIRED for codesign to find it)
+          security list-keychains -d user -s "$KEYCHAIN_NAME" $(security list-keychains -d user | tr -d '"')
+          security default-keychain -s "$KEYCHAIN_NAME"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
+          
+          # Generate self-signed certificate
+          cat > /tmp/cert.conf << EOF
+          [req]
+          distinguished_name = req_distinguished_name
+          x509_extensions = v3_req
+          prompt = no
+          
+          [req_distinguished_name]
+          CN = $CERT_NAME
+          O = Chromic Engine
+          
+          [v3_req]
+          keyUsage = critical, digitalSignature
+          extendedKeyUsage = codeSigning
+          basicConstraints = CA:FALSE
+          EOF
+          
+          # Create certificate and key
+          openssl req -x509 -newkey rsa:2048 -keyout /tmp/key.pem -out /tmp/cert.pem \
+            -days 365 -nodes -config /tmp/cert.conf
+          
+          # Convert to p12
+          openssl pkcs12 -export -out /tmp/cert.p12 -inkey /tmp/key.pem -in /tmp/cert.pem \
+            -passout pass:cert123
+          
+          # Import to keychain with codesign access
+          security import /tmp/cert.p12 -k "$KEYCHAIN_NAME" -P "cert123" \
+            -T /usr/bin/codesign -T /usr/bin/security -T /usr/bin/productbuild
+          
+          # Allow codesign to use the certificate without prompting
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
+          
+          # Find and export the certificate SHA-1 hash for codesign
+          CERT_SHA1=$(security find-identity -v -p codesigning "$KEYCHAIN_NAME" | grep "$CERT_NAME" | head -1 | awk '{print $2}')
+          echo "CODESIGN_IDENTITY=$CERT_SHA1" >> $GITHUB_ENV
+          
+          echo "✅ Self-signed certificate created: $CERT_NAME"
+          echo "📍 Certificate SHA-1: $CERT_SHA1"
+          
+          # Verify certificate is findable
+          security find-identity -v -p codesigning
 
       # Windows: Create self-signed certificate for code signing
       - name: Create self-signed certificate (Windows)
@@ -111,9 +169,9 @@ jobs:
           node -e "const {execSync}=require('child_process'); const tag='${{ env.RELEASE_TAG }}'; const version=tag.replace(/^v/,''); if(!/^\d+\.\d+\.\d+([-.].+)?$/.test(version)){throw new Error('Invalid release tag: '+tag);} console.log('[release] tag='+tag+' version='+version); execSync('npx electron-builder build --publish always --config.extraMetadata.version='+version,{stdio:'inherit'});"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # macOS: skip signing (self-signed causes Team ID issues; users use xattr -cr)
+          # Disable electron-builder auto code signing (we handle it in afterSign hook)
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
-          CSC_LINK: ''
+          # CODESIGN_IDENTITY is set by the certificate creation step (SHA-1 hash on macOS)
 
   # Publish the draft release after all builds complete
   publish-release:

@@ -5,7 +5,7 @@
  */
 
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-console.log('[MotionController] REDUCED_MOTION =', REDUCED_MOTION);
+if(window.__DEBUG__)console.log('[MotionController] REDUCED_MOTION =', REDUCED_MOTION);
 
 // --- Spring Physics ---
 

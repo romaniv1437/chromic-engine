@@ -16,11 +16,17 @@
 const isEnabled = () => {
   if (typeof window === 'undefined') return false;
   if (window.__DEBUG__) return true;
+  if (window.chromicElectron?.isDebug) return true;
   if (new URLSearchParams(window.location.search).get('debug') === 'true') return true;
   try { return localStorage.getItem('debug') === 'true'; } catch (_) { return false; }
 };
 
 const _enabled = isEnabled();
+// Expose globally so hot-path code can check without importing
+if (typeof window !== 'undefined') {
+  window.__DEBUG__ = _enabled;
+  window.__PERF_MODE__ = window.chromicElectron?.isPerfMode || new URLSearchParams(window.location?.search).get('perf') === 'true';
+}
 
 export const debug = {
   get enabled() { return _enabled; },

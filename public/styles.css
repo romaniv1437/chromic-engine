@@ -1840,7 +1840,7 @@ body[data-nav-direction='backward'] .library-view.view-active .player-area {
   width: 100%;
   height: 100%;
   z-index: 0;
-  pointer-events: none;
+  pointer-events: auto;
   overflow: hidden;
   display: block;
 }
@@ -2852,6 +2852,12 @@ body[data-nav-direction='backward'] .library-view.view-active .player-area {
 .music-album-grid-item.img-loaded-instant img {
   opacity: 1 !important;
   animation: none;
+}
+
+/* Prevent content-visibility from re-triggering fade on already-loaded images */
+.music-album-grid-item.img-loaded img,
+.music-album-grid-item.img-loaded-instant img {
+  content-visibility: visible;
 }
 
 /* Chromic Engine: content-visibility for off-screen cards (skip rendering cost) */
@@ -5813,19 +5819,33 @@ body.reading-focus .player-area {
   display: none !important;
 }
 .text-off .music-immersive-shell.has-lyrics {
-  flex-direction: column;
   justify-content: center;
   gap: 0;
 }
 @media (min-width: 901px) {
   .text-off .has-lyrics .music-immersive-art-panel {
-    max-width: 380px;
+    max-width: 600px;
     flex: 0 0 auto;
   }
 }
 .text-off .track-metadata-left {
   display: block;
   text-align: center;
+}
+
+/* GPU lyrics active: art panel left ~25%, lyrics rendered by WebGL on right */
+.gpu-lyrics-active {
+  justify-content: flex-start !important;
+  padding-left: 8% !important;
+}
+@media (min-width: 901px) {
+  .gpu-lyrics-active .music-immersive-art-panel {
+    max-width: 340px;
+    flex: 0 0 auto;
+  }
+}
+.gpu-lyrics-active .music-immersive-lyrics-panel {
+  display: none !important;
 }
 
 #textToggleBtn.text-is-hidden {
@@ -6803,6 +6823,7 @@ body.player-open {
 
 /* ── Dynamic Lyrics — per-word Chromic Stream style ── */
 .lyrics-line {
+  position: relative;
   font-size: clamp(1.6rem, 3.2vw, 2.8rem);
   line-height: 1.3;
   font-weight: 800;
@@ -6960,62 +6981,89 @@ body.player-open {
   position: relative;
   font-kerning: none;
   --progress: 0%;
-  /* Use background-clip: text for ALL words so rendering matches active words */
-  background: var(--lyric-unfilled);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  /* Direct color for unfilled — no background-clip darkening */
+  -webkit-text-fill-color: var(--lyric-unfilled);
+  color: var(--lyric-unfilled);
   transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   transform-origin: center bottom;
   contain: layout style;
 }
 
-/* Fill layer via gradient clip — soft fill edge */
+/* Fill layer — no background-clip:text, uses ::after overlay for exact color match */
 .lyric-word.active {
-  background: linear-gradient(90deg,
-    var(--lyric-filled) 0%,
-    var(--lyric-filled) calc(var(--progress) - 3%),
-    var(--lyric-unfilled) calc(var(--progress) + 3%)
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  -webkit-text-fill-color: var(--lyric-unfilled);
+  color: var(--lyric-unfilled);
+  background: none;
+  position: relative;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Fully filled word — solid color */
+/* Filled overlay — soft feathered mask reveal, no re-rasterization */
+.lyric-word.active::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  left: 0 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  -webkit-mask-image: linear-gradient(90deg,
+    #000000 calc(var(--progress, 0%) - 15%),
+    transparent calc(var(--progress, 0%) + 15%)
+  ) !important;
+  mask-image: linear-gradient(90deg,
+    #000000 calc(var(--progress, 0%) - 15%),
+    transparent calc(var(--progress, 0%) + 15%)
+  ) !important;
+  pointer-events: none;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Char-split words: no pseudo overlay (per-char fill handles it) */
+.lyric-word[data-char-split].active::after {
+  display: none;
+}
+
+/* Fully filled word — direct color, bright white, no gradient */
 .lyric-word.past {
-  background: var(--lyric-filled);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  --progress: 100%;
+  -webkit-text-fill-color: var(--lyric-filled, #fff) !important;
+  color: var(--lyric-filled, #fff) !important;
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+  animation: none !important;
+  transform: none !important;
+  filter: none !important;
+  transition: transform 0.3s ease, filter 0.3s ease;
 }
 
-/* In active line: waiting words same as default */
+/* In active line: waiting words — direct color */
 .lyrics-line.active .lyric-word {
-  background: var(--lyric-unfilled);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  -webkit-text-fill-color: var(--lyric-unfilled);
+  color: var(--lyric-unfilled);
 }
 
-/* Past words in active line must stay filled white */
+/* Past words in active line — bright white */
 .lyrics-line.active .lyric-word.past {
-  -webkit-text-fill-color: transparent;
-  background: var(--lyric-filled);
-  -webkit-background-clip: text;
-  background-clip: text;
+  -webkit-text-fill-color: var(--lyric-filled, #fff) !important;
+  color: var(--lyric-filled, #fff) !important;
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
 }
 
-/* Active (filling) words in active line */
+/* Active (filling) words in active line — uses ::after overlay */
 .lyrics-line.active .lyric-word.active {
-  -webkit-text-fill-color: transparent;
-  background: linear-gradient(90deg,
-    var(--lyric-filled) 0%,
-    var(--lyric-filled) calc(var(--progress) - 3%),
-    var(--lyric-unfilled) calc(var(--progress) + 3%)
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
+  -webkit-text-fill-color: var(--lyric-unfilled);
+  color: var(--lyric-unfilled);
+  background: none;
 }
 
 /* Word playing NOW — smooth transition */
@@ -7024,12 +7072,7 @@ body.player-open {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), text-shadow 0.3s ease;
 }
 
-/* Vocal stretch — gentle scale + soft glow */
-.lyric-word[data-vocal-stretch="true"].active {
-  transform: scale(1.03);
-  text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
-  animation: stretch-glow 2s ease-in-out infinite;
-}
+/* Vocal stretch — handled by .is-stretch.active gradient now */
 
 /* ─── Translation Overlay (Zero GPU overhead) ─────────────────────────────── */
 
@@ -7186,17 +7229,20 @@ body.player-open {
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes stretch-glow {
-  0%, 100% { text-shadow: 0 0 8px rgba(255,255,255,0.3); transform: scale(1.03); }
-  50%      { text-shadow: 0 0 14px rgba(255,255,255,0.5); transform: scale(1.05); }
-}
+/* (stretch-glow keyframes removed — no more shaking animations) */
 
-/* Word already sung — solid white */
+/* Word already sung — solid white, direct color */
 .lyric-word.past {
   --progress: 100%;
-  -webkit-text-fill-color: #fff;
-  color: #fff;
+  -webkit-text-fill-color: var(--lyric-filled, #fff) !important;
+  color: var(--lyric-filled, #fff) !important;
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
   opacity: 1;
+  animation: none !important;
+  transform: none !important;
+  filter: none !important;
 }
 
 /* Background/soft vocals (lines in parentheses) — smaller, lighter feel */
@@ -7211,6 +7257,236 @@ body.player-open {
   transform: scale(1) translateY(0);
   opacity: 0.7;
 }
+
+
+/* ── Two-tier lyrics line: main vocals + adlibs below ── */
+.lyrics-line .main-vocals {
+  display: block;
+}
+
+.lyrics-line .adlibs-wrapper {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  justify-content: center;
+  font-size: 0.8em;
+}
+
+/* ── Adlib Phrase — fly-in from bottom ── */
+.adlib-phrase {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(6px);
+  font-size: 0.88em;
+  will-change: transform, opacity;
+  transition:
+    opacity 0.35s ease-out,
+    transform 0.35s ease-out;
+}
+
+.adlib-phrase.active {
+  opacity: 0.7;
+  transform: translateY(0);
+}
+
+.adlib-phrase.past {
+  opacity: 0.5;
+  transform: translateY(0);
+}
+
+/*
+ * SINGLE-LAYER AD-LIB FILL: No ::after overlay. Zero ghosting.
+ * Fill is driven by background-clip:text gradient on the base text itself.
+ */
+.lyric-word.is-adlib {
+  position: relative;
+  display: inline-block;
+  font-size: 0.88em;
+  opacity: 0;
+  max-width: 0;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+  white-space: nowrap;
+  background: var(--lyric-unfilled) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  transform: translateZ(0) !important;
+  backface-visibility: hidden !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  text-shadow: none !important;
+  filter: none !important;
+  transition:
+    opacity 0.35s ease-out,
+    max-width 0.35s ease-out;
+}
+
+/* Nuke the ::after overlay entirely for ad-libs */
+.lyric-word.is-adlib::after {
+  display: none !important;
+}
+
+/* Strip shadows/filters from all adlib children */
+.is-adlib * {
+  text-shadow: none !important;
+  filter: none !important;
+}
+
+/* Words inside phrase: visible */
+.adlib-phrase .lyric-word.is-adlib {
+  max-width: none;
+  overflow: visible;
+  padding: 0 3px;
+  margin: 0 3px;
+  opacity: 1;
+  font-size: 1em;
+}
+
+.lyric-word.is-adlib.incoming {
+  opacity: 1;
+  max-width: 12em;
+  padding: 0 3px;
+  margin: 0 3px;
+}
+
+/* Active / Filling — single-layer gradient fill with soft feather */
+.lyric-word.is-adlib.active {
+  opacity: 1;
+  max-width: 12em;
+  overflow: visible;
+  padding: 0 3px;
+  margin: 0 3px;
+  background: linear-gradient(90deg,
+    var(--lyric-filled, #fff) calc(var(--progress, 0%) - 15%),
+    var(--lyric-unfilled) calc(var(--progress, 0%) + 15%)
+  ) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* Past / Fully Sung — solid white */
+.lyric-word.is-adlib.past {
+  opacity: 1;
+  max-width: 12em;
+  padding: 0 3px;
+  margin: 0 3px;
+  background: #ffffff !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* Co-active overlapping bg-vocal — slides up from behind the main line */
+.lyrics-line.is-bg-vocal.is-overlap {
+  transform: scale(0.88) translateY(8px);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.lyrics-line.is-bg-vocal.is-overlap.co-active {
+  transform: scale(0.93) translateY(-2px);
+  opacity: 0.6;
+  filter: blur(0);
+  margin-top: -4px;
+  padding-left: 12%;
+}
+
+.lyrics-line.is-bg-vocal.is-overlap.past {
+  transform: scale(0.88) translateY(-4px);
+  opacity: 0;
+}
+
+/* Char-split words: parent must be transparent in ALL states, children render color */
+.lyric-word[data-char-split] {
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+}
+
+/* Char-split active: no parent gradient, chars handle everything */
+.lyric-word[data-char-split].active {
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+}
+
+.lyric-word[data-char-split].past,
+.lyrics-line.active .lyric-word[data-char-split].past {
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+}
+
+/* Character spans inside sung/stretch words — future state uses background-clip:text
+   so there's no rendering path switch when word becomes active (prevents blink) */
+.lyric-char {
+  --wave-weight: 0;
+  --char-progress: 0;
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.5);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Past chars: solid white */
+.lyric-word.past .lyric-char {
+  background: #fff !important;
+}
+
+/* Active chars: per-char gradient fill + wave scaleY + glow */
+.lyric-word.active .lyric-char {
+  display: inline-block;
+  transform-origin: bottom center !important;
+  /* Physical elastic wave */
+  transform: scaleY(calc(1 + 0.10 * var(--wave-weight)));
+  /* Seamless fluid glow */
+  text-shadow: 0 0 calc(12px * var(--wave-weight)) rgba(255, 255, 255, calc(0.5 * var(--wave-weight)));
+  /* Per-char gradient fill — feathered soft edge matching normal word fill */
+  background: linear-gradient(90deg,
+    #ffffff calc((var(--char-progress) * 120%) - 20%),
+    rgba(255, 255, 255, 0.5) calc(var(--char-progress) * 120%)
+  );
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  transition: transform 0.12s cubic-bezier(0.25, 1, 0.5, 1), text-shadow 0.12s ease;
+  will-change: transform;
+}
+
+/* Past: solid filled, no wave, no glow */
+.lyric-word.past .lyric-char {
+  display: inline-block;
+  --char-progress: 1 !important;
+  --wave-weight: 0 !important;
+  background: #fff !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  transform: scaleY(1) !important;
+  text-shadow: none !important;
+  transform-origin: bottom center !important;
+  transition: none;
+}
+
+/* ── Whisper Word — looks normal when not active, soft glow when active ── */
+/* No base styles — future whispers look same as any other word */
+
+.lyric-word.is-whisper.active {
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.35));
+  transition: filter 0.3s ease;
+}
+
+/* ── Spoken Word — no special styles, behaves identically to normal words ── */
+
+
+
 
 /* ── Intro Dots (vocal cues) ── */
 .lyrics-intro-dots {

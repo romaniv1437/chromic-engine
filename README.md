@@ -26,6 +26,13 @@ https://github.com/user-attachments/assets/8e68b9e8-2dae-4b5b-8919-1c1292d02481
 
 > Word-level timeline editing with hotkey calibration, seek-to-line, and LRC/JSON export.
 
+### GPU Lyrics — Troika Text + Unreal Bloom *(v1.0.1)*
+
+
+https://github.com/user-attachments/assets/4680b3fb-2559-417f-83a9-f843364af11e
+
+> GPU-accelerated lyrics renderer using Troika Three Text with EffectComposer UnrealBloomPass. Per-word fill sweep, per-character traveling wave, cue dot animations with individual bloom isolation.
+
 ---
 
 ## Features
@@ -35,6 +42,7 @@ https://github.com/user-attachments/assets/8e68b9e8-2dae-4b5b-8919-1c1292d02481
 | **Playback** | Gapless audio, queue, shuffle, repeat, drag-reorder, Media Session API |
 | **Library** | Album grid, disc-grouped tracks, smart metadata parsing, 8000+ album scroll at 60 FPS |
 | **Visuals** | 19 GPU WebGL2 shader scenes + 15 CPU canvas presets, all audio-reactive at 120 FPS |
+| **GPU Lyrics** | Troika Three Text SDF rendering, UnrealBloomPass glow, per-word karaoke fill, traveling wave animation |
 | **Lyrics** | Word-level sync, auto-scroll with spring physics, real-time translation (13 langs), de-censoring |
 | **AI** | Local Whisper alignment (MLX/faster-whisper/WhisperX), Genius+LRCLIB fetching, mood colors |
 | **Editor** | Pro-mode with `[`/`]` hotkey calibration, Flow tapping, instant LRC/JSON export |
@@ -55,11 +63,11 @@ Download from [Releases](https://github.com/romaniv1437/chromic-engine/releases)
 ### Development
 
 ```bash
-npm run install-all
-npm run dev
+npm install
+npm run electron
 ```
 
-Requirements: Node.js 18+, FFmpeg, Python 3.10+ (for AI lyrics)
+Requirements: Node.js 18+, FFmpeg, Python 3.10+ (for AI lyrics). See [AI Setup](docs/AI_SETUP.md) for details.
 
 ---
 
@@ -74,9 +82,22 @@ Requirements: Node.js 18+, FFmpeg, Python 3.10+ (for AI lyrics)
 
 ---
 
-## License
+## ⚖️ Licensing & Commercial Use
 
-MIT
+Chromic Engine is **free and open-source for personal, private, and educational use**.
+
+| Use Case | Allowed? |
+|----------|----------|
+| 🏠 Personal listening at home | ✅ Free |
+| 🎓 Academic research & coursework | ✅ Free |
+| 🛠️ Learning, forking, tinkering | ✅ Free |
+| 🍸 Bars, lounges, karaoke venues | ❌ Commercial license required |
+| 🏪 Retail, restaurants, gyms, hotels | ❌ Commercial license required |
+| 📦 Bundling in a paid product or SaaS | ❌ Commercial license required |
+
+> **For businesses:** If you'd like to use Chromic Engine in a commercial setting, I offer flexible licensing arrangements. Reach out via [GitHub](https://github.com/romaniv1437) or email **romaniv1437@icloud.com** to discuss terms.
+
+See the full [LICENSE](LICENSE) file for legal details.
 
 ---
 

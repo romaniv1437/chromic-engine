@@ -88,7 +88,8 @@ export class LivingCanvasScene extends BaseScene {
         });
         const displayQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.canvasMaterial);
         this.scene.add(displayQuad);
-        console.log('[LivingCanvas] Scene initialized');
+        if (globalThis.__DEBUG__)
+            console.log('[LivingCanvas] Scene initialized');
     }
     setAlbumArt(imageUrl) {
         const loader = new THREE.TextureLoader();
@@ -97,7 +98,8 @@ export class LivingCanvasScene extends BaseScene {
             tex.magFilter = THREE.LinearFilter;
             this.albumTexture = tex;
             this.canvasMaterial.uniforms.u_albumArt.value = tex;
-            console.log('[LivingCanvas] Album art loaded:', imageUrl);
+            if (globalThis.__DEBUG__)
+                console.log('[LivingCanvas] Album art loaded:', imageUrl);
         }, undefined, () => {
             console.warn('[LivingCanvas] Failed to load album art, using default');
         });

@@ -13,7 +13,7 @@ uniform vec3 u_colors[3];
 varying vec2 vUv;
 
 #define PI 3.14159265359
-#define MAX_STEPS 64
+#define MAX_STEPS 48
 #define MAX_DIST 12.0
 
 mat2 rot(float a) {
@@ -43,13 +43,6 @@ float waveFunction(vec3 p, float phase) {
     float dxz = p.x * p.z / (r * r + 0.01);
     psi += sin(5.0 * r - phase * 1.8) * dxz * 2.0 * exp(-r * 0.7);
 
-    // Orbital 4: f-orbital (complex angular pattern)
-    float fy = (5.0 * p.y * p.y * p.y - 3.0 * p.y * r * r) / (r * r * r + 0.01);
-    psi += sin(3.0 * r - phase) * fy * 0.5 * exp(-r * 0.5);
-
-    // Orbital 5: toroidal mode
-    float ring = length(p.xz) - 1.5;
-    psi += sin(8.0 * ring + p.y * 4.0 - phase * 3.0) * exp(-ring * ring * 2.0 - p.y * p.y * 0.5) * 0.8;
 
     return psi;
 }

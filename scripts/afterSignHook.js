@@ -14,6 +14,8 @@
 
 const { execSync } = require('child_process');
 const path = require('path');
+const fs = require('fs');
+const glob = require('path');
 
 module.exports = async function (context) {
   // Only run on macOS
@@ -27,50 +29,93 @@ module.exports = async function (context) {
     `${context.packager.appInfo.productFilename}.app`
   );
 
-  // Use SHA-1 identity from env, or fall back to ad-hoc
-  // CODESIGN_IDENTITY can be:
-  //   - 40-char SHA-1 hash (from CI)
-  //   - Certificate name (e.g., "romaniv1437")
-  //   - "-" or empty for ad-hoc
   let identity = process.env.CODESIGN_IDENTITY || '-';
-  
-  // Normalize: empty string → ad-hoc
   if (!identity || identity.trim() === '') {
     identity = '-';
   }
-  
-  const identityLabel = identity === '-' ? 'ad-hoc' : 
+
+  const isAdHoc = identity === '-';
+  const identityLabel = isAdHoc ? 'ad-hoc' :
     (identity.length === 40 ? `SHA1:${identity.substring(0, 8)}...` : identity);
 
   console.log(`[afterSign] 🔏 Signing app: ${appPath}`);
   console.log(`[afterSign] 🔑 Identity: ${identityLabel}`);
 
   try {
-    // Remove any existing signature first
+    // Remove ALL existing signatures first (app + nested)
     try {
       execSync(`codesign --remove-signature "${appPath}" 2>/dev/null`, { stdio: 'pipe' });
-      console.log('[afterSign] Removed existing signature');
-    } catch (e) {
-      // Ignore - may not have had a signature
+      console.log('[afterSign] Removed existing app signature');
+    } catch (e) { /* ignore */ }
+
+    // ── Sign inside-out: frameworks and helpers first, then app ──
+    // This ensures all nested code shares the same signing identity.
+    // --deep is unreliable on macOS 13+ and doesn't guarantee consistent Team IDs.
+    const frameworksDir = path.join(appPath, 'Contents', 'Frameworks');
+    const contentsDir = path.join(appPath, 'Contents');
+
+    // Ad-hoc: no --options runtime (causes issues without a real identity)
+    const runtimeFlag = isAdHoc ? '' : '--options runtime';
+
+    // 1. Sign all .framework bundles inside Frameworks/
+    if (fs.existsSync(frameworksDir)) {
+      const items = fs.readdirSync(frameworksDir);
+      for (const item of items) {
+        const fullPath = path.join(frameworksDir, item);
+        if (item.endsWith('.framework') || item.endsWith('.app')) {
+          try {
+            execSync(`codesign --remove-signature "${fullPath}" 2>/dev/null`, { stdio: 'pipe' });
+          } catch (e) { /* ignore */ }
+          const cmd = `codesign --force --sign "${identity}" ${runtimeFlag} "${fullPath}"`;
+          console.log(`[afterSign] Signing: ${item}`);
+          execSync(cmd, { stdio: 'pipe' });
+        }
+      }
+      // Also sign any .dylib in Frameworks/
+      for (const item of items) {
+        const fullPath = path.join(frameworksDir, item);
+        if (item.endsWith('.dylib')) {
+          const cmd = `codesign --force --sign "${identity}" ${runtimeFlag} "${fullPath}"`;
+          execSync(cmd, { stdio: 'pipe' });
+        }
+      }
     }
 
-    // Apply signature
-    // --force: replace any existing signature
-    // --deep: sign nested code (frameworks, helpers)
-    // --sign: identity to use (SHA-1 hash, name, or "-" for ad-hoc)
-    // --timestamp: disabled for self-signed certs (would fail validation)
-    const signCmd = `codesign --force --deep --sign "${identity}" --options runtime "${appPath}"`;
-    console.log(`[afterSign] Running: codesign --force --deep --sign "${identityLabel}" --options runtime ...`);
-    
+    // 2. Sign helper apps inside Frameworks/
+    if (fs.existsSync(frameworksDir)) {
+      const items = fs.readdirSync(frameworksDir);
+      for (const item of items) {
+        const fullPath = path.join(frameworksDir, item);
+        if (item.includes('Helper') && item.endsWith('.app')) {
+          try {
+            execSync(`codesign --remove-signature "${fullPath}" 2>/dev/null`, { stdio: 'pipe' });
+          } catch (e) { /* ignore */ }
+          const cmd = `codesign --force --sign "${identity}" ${runtimeFlag} "${fullPath}"`;
+          console.log(`[afterSign] Signing helper: ${item}`);
+          execSync(cmd, { stdio: 'pipe' });
+        }
+      }
+    }
+
+    // 3. Sign the main app bundle last
+    const signCmd = `codesign --force --sign "${identity}" ${runtimeFlag} "${appPath}"`;
+    console.log(`[afterSign] Signing main app bundle...`);
     execSync(signCmd, { stdio: 'inherit' });
 
     console.log(`[afterSign] ✅ Signature applied successfully (${identityLabel})`);
 
-    // Verify and display signature info
+    // Verify
     try {
-      const result = execSync(`codesign -dvv "${appPath}" 2>&1`, {
-        encoding: 'utf8',
-      });
+      const result = execSync(`codesign --verify --deep --strict "${appPath}" 2>&1`, { encoding: 'utf8' });
+      console.log('[afterSign] ✅ Verification passed');
+    } catch (e) {
+      const errMsg = (e.stderr || e.stdout || e.message || '').toString();
+      console.log('[afterSign] ⚠️ Verification warning:', errMsg.split('\n')[0]);
+    }
+
+    // Display signature info
+    try {
+      const result = execSync(`codesign -dvv "${appPath}" 2>&1`, { encoding: 'utf8' });
       const lines = result.split('\n').filter(l =>
         l.includes('Authority=') || l.includes('Identifier=') || l.includes('TeamIdentifier=') || l.includes('Signature=')
       );
@@ -79,28 +124,16 @@ module.exports = async function (context) {
         lines.forEach(l => console.log('  ' + l));
       }
     } catch (e) {
-      // codesign -dv outputs to stderr
-      if (e.stdout) {
-        console.log('[afterSign] Signature info:', e.stdout.toString().split('\n').slice(0, 6).join('\n'));
-      } else if (e.stderr) {
-        console.log('[afterSign] Signature info:', e.stderr.toString().split('\n').slice(0, 6).join('\n'));
-      }
+      if (e.stderr) console.log('[afterSign] Info:', e.stderr.toString().split('\n').slice(0, 4).join('\n'));
     }
   } catch (error) {
     console.error('[afterSign] ⚠️ Signing failed:', error.message);
-    
-    // Try ad-hoc fallback if custom identity failed
-    if (identity !== '-') {
-      console.log('[afterSign] 🔄 Falling back to ad-hoc signing...');
-      try {
-        execSync(`codesign --force --deep --sign - "${appPath}"`, { stdio: 'inherit' });
-        console.log('[afterSign] ✅ Ad-hoc signature applied as fallback');
-      } catch (fallbackError) {
-        console.error('[afterSign] ⚠️ Ad-hoc fallback also failed:', fallbackError.message);
-      }
+    // Fallback: just force ad-hoc deep sign (better than nothing)
+    try {
+      execSync(`codesign --force --deep --sign - "${appPath}"`, { stdio: 'inherit' });
+      console.log('[afterSign] ✅ Deep ad-hoc fallback applied');
+    } catch (fallbackError) {
+      console.error('[afterSign] ⚠️ Fallback also failed:', fallbackError.message);
     }
-    // Don't fail the build - unsigned app still works with xattr -cr
   }
 };
-
-

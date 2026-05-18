@@ -5,9 +5,16 @@
 
 const { contextBridge, ipcRenderer } = require('electron');
 
+// Set debug flag early so it's available before any module loads
+// Enabled via: npm run electron:debug
+const isDebug = process.argv.includes('--chromic-debug');
+const isPerfMode = process.argv.includes('--chromic-perf');
+
 contextBridge.exposeInMainWorld('chromicElectron', {
   platform: process.platform,
   arch: process.arch,
+  isDebug,
+  isPerfMode,
   versions: {
     electron: process.versions.electron,
     chrome: process.versions.chrome,

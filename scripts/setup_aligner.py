@@ -69,10 +69,8 @@ def detect_best_engine():
 
     if system == "Darwin" and ("arm" in machine or "aarch64" in machine):
         return "mlx"  # Apple Silicon — fastest
-    elif system == "Linux" or system == "Darwin":
-        return "faster-whisper"
     else:
-        return "openai-whisper"  # Windows fallback
+        return "faster-whisper"  # Windows, Linux, macOS Intel
 
 
 def main():
@@ -89,8 +87,8 @@ def main():
         if response != "y":
             sys.exit(1)
 
-    # Determine venv location
-    venv_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "venv_aligner")
+    # Determine venv location — must be lyrics-engine/venv/ for the app to find it
+    venv_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "lyrics-engine", "venv")
     venv_dir = os.path.abspath(venv_dir)
 
     # Create venv
@@ -119,10 +117,10 @@ def main():
         run(f'"{pip_path}" install mlx-whisper -q')
     elif engine == "faster-whisper":
         print("  Installing faster-whisper...")
-        run(f'"{pip_path}" install faster-whisper -q')
+        run(f'"{pip_path}" install faster-whisper==1.0.3 ctranslate2==4.4.0 -q')
     else:
         print("  Installing openai-whisper (CPU)...")
-        run(f'"{pip_path}" install openai-whisper -q')
+        run(f'"{pip_path}" install openai-whisper soundfile imageio-ffmpeg -q')
 
     # Also install requirements.txt from lyrics-engine
     req_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "lyrics-engine", "requirements.txt")
@@ -140,8 +138,13 @@ def main():
         print(f"  Activate: {venv_dir}\\Scripts\\activate")
     else:
         print(f"  Activate: source {venv_dir}/bin/activate")
-    print("\n  Pre-download a Whisper model (optional):")
-    print(f'  {python_path} -c "import whisper; whisper.load_model(\'small\')"')
+    print("\n  Pre-download the Whisper model (optional, ~1.5GB):")
+    if engine == "mlx":
+        print(f'  {python_path} -c "from mlx_whisper import transcribe"')
+    elif engine == "faster-whisper":
+        print(f'  {python_path} -c "from faster_whisper import WhisperModel; WhisperModel(\'medium\', device=\'cpu\', compute_type=\'int8\')"')
+    else:
+        print(f'  {python_path} -c "import whisper; whisper.load_model(\'medium\')"')
     print("\n  Chromic Engine will auto-detect this venv on next launch.\n")
 
 

@@ -136,3 +136,50 @@ Seven built-in color themes: Light Retro, Chromic Silver, Aqua Glass, Vault Red,
 | Audio latency | <10ms (Web Audio API) |
 | Visualizer | 120 FPS WebGL2 (configurable cap) |
 | Lyrics sync | Sub-millisecond word-level accuracy |
+
+---
+
+## GPU Lyrics Panel Migration (DOM → Three.js/Troika)
+
+### Why GPU Replaced DOM
+
+The original DOM-based lyrics engine (`LyricsEngine.js`) used CSS animations for word-level
+fill effects, sung/stretch character waves, and adlib reveal animations. This worked but had
+a critical visual consistency problem:
+
+**Browser gradient rendering inconsistencies with transforms.** When DOM elements have
+different CSS transforms applied (`scale`, `translateY`, `opacity` changes via class toggles),
+the browser's compositor renders `linear-gradient` and `mask-image` differently depending on
+the element's current composite layer state. Specifically:
+
+- A word with `transform: scaleY(1.1)` and a `linear-gradient` fill (via `mask-image` or
+  `background-clip: text`) renders the gradient at a different effective resolution than the
+  same word at `scaleY(1.0)`.
+- During animated transitions between line states (active → past → future), the gradient
+  fill can visually "jump" or appear with slightly different opacity/color because the browser
+  re-rasterizes at different scales.
+- Semi-transparent colors (`rgba(255,255,255,0.5)`) compound this: the same `rgba` value
+  looks different when composited on a GPU layer with `will-change: transform` vs. a regular
+  paint layer. This made past/future line opacity appear inconsistent.
+- These artifacts are browser-specific (Chrome vs. Safari vs. Electron) and impossible to
+  fix at the CSS level.
+
+### The GPU Solution
+
+`chromic-gpu-panel.js` replaces the DOM renderer with a Three.js orthographic scene using
+Troika Text SDF (Signed Distance Field) meshes. Benefits:
+
+- **Pixel-perfect consistency**: All opacity, scale, and color are driven by Three.js material
+  properties — no browser compositor variance.
+- **Per-character clip sweep**: Troika's `clipRect` provides sub-pixel fill animation without
+  any gradient rasterization artifacts.
+- **Unified rendering pipeline**: Wave animations, glow effects, adlib reveals, and line state
+  transitions all happen in the same WebGL draw calls.
+
+### Current Status
+
+| Component | Status |
+|-----------|--------|
+| `chromic-gpu-panel.js` | **Active** — default lyrics renderer, auto-activates on overlay open |
+| `LyricsEngine.js` | **Deprecated** — kept as fallback for non-WebGL environments |
+| DOM lyrics CSS (`.lyric-word`, etc.) | **Deprecated** — styles remain but are hidden when GPU panel is active |

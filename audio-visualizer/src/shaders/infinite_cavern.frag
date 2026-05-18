@@ -29,11 +29,15 @@ float map(vec3 p) {
     float scale = 1.0;
     orbitTrap = vec3(10.0);
 
+    // Clamp audio for stability
+    float safeBass = min(u_bass, 0.85);
+    float safeMid = min(u_mid, 0.85);
+
     for (int i = 0; i < 6; i++) {
-        q = abs(q) - vec3(0.8 + u_bass * 0.5, 1.0 + u_mid * 0.2, 1.2);
+        q = abs(q) - vec3(0.8 + safeBass * 0.5, 1.0 + safeMid * 0.2, 1.2);
 
         float r2 = dot(q, q);
-        float k = (1.6 + u_bass * 0.4) / clamp(r2, 0.15, 1.8);
+        float k = (1.6 + safeBass * 0.4) / clamp(r2, 0.15, 1.8);
         q *= k;
         scale *= k;
 
@@ -45,7 +49,7 @@ float map(vec3 p) {
     float fractal = (abs(length(q.xy) - 0.5) - 0.1) / scale;
 
     // Стіни тунелю
-    float tunnel = -(length(p.xy) - (4.0 + u_bass * 2.0));
+    float tunnel = -(length(p.xy) - (4.0 + safeBass * 2.0));
 
     return max(fractal, tunnel * 0.5);
 }
@@ -76,7 +80,7 @@ void main() {
         else { gl_FragColor = vec4(u_colors[2], 1.0); return; }
     }
 
-    float speed = u_time * 6.0 + u_rms * 3.0;
+    float speed = u_time * 6.0 + min(u_rms, 0.8) * 3.0;
     vec3 ro = vec3(0.0, 0.0, speed);
     vec3 rd = normalize(vec3(uv, 1.2));
 
@@ -105,18 +109,18 @@ void main() {
         float rim = pow(1.0 - max(dot(n, -rd), 0.0), 3.0);
 
         col = baseCol * (diff + 0.3);
-        col += rim * u_colors[1] * (u_bass + 0.5);
+        col += rim * u_colors[1] * (min(u_bass, 0.85) + 0.5);
         col *= ao;
 
         // Підсвітка зсередини
-        col += u_colors[2] * exp(-abs(d) * 50.0) * u_rms;
+        col += u_colors[2] * exp(-abs(d) * 50.0) * min(u_rms, 0.8);
     }
 
     // Туман
     col = mix(col, skyCol, smoothstep(10.0, 40.0, t));
 
     // Центральне світло
-    col += u_colors[1] * 0.2 * exp(-length(uv) * 3.0) * (u_bass + 0.5);
+    col += u_colors[1] * 0.2 * exp(-length(uv) * 3.0) * (min(u_bass, 0.85) + 0.5);
 
     col = smoothstep(-0.1, 1.1, col);
     gl_FragColor = vec4(pow(col, vec3(0.6)), 1.0);

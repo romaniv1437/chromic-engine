@@ -1539,7 +1539,7 @@ export const renderMusicAlbumView = ({
               if (!selectedKeys.length) return;
               if (!confirm(`Delete ${selectedKeys.length} album(s)? This cannot be undone.`)) return;
               for (const key of selectedKeys) {
-                onDeleteAlbum?.(key);
+                onDeleteAlbum?.(key, { skipConfirm: true });
               }
               _deactivateAlbumSelectMode(gridEl);
               break;

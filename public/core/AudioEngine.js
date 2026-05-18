@@ -27,7 +27,7 @@ export class AudioEngine {
       import('./AudioSharedBuffer.js').then(({ AudioSharedBuffer }) => {
         this.sharedBuffer = new AudioSharedBuffer();
         if (this.sharedBuffer.isShared) {
-          console.log('[AudioEngine] SharedArrayBuffer active — zero-copy FFT enabled');
+          if(window.__DEBUG__)console.log('[AudioEngine] SharedArrayBuffer active — zero-copy FFT enabled');
         }
       }).catch(() => {});
     } catch {}

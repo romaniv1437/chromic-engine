@@ -38,10 +38,15 @@ float map(vec3 p) {
     float scale = 1.0;
     orbitTrap = vec3(10.0);
 
+    // Clamp audio for stability
+    float safeBass = min(u_bass, 0.85);
+    float safeRms = min(u_rms, 0.8);
+    float safeTreble = min(u_treble, 0.85);
+
     vec3 nodeGrowth = vec3(
-        0.5 + u_bass * 0.8,
-        0.7 + u_rms * 0.5,
-        0.9 + u_treble * 0.4
+        0.5 + safeBass * 0.8,
+        0.7 + safeRms * 0.5,
+        0.9 + safeTreble * 0.4
     );
 
     for (int i = 0; i < 6; i++) {
@@ -52,7 +57,7 @@ float map(vec3 p) {
         if (q.y < q.z) q.yz = q.zy;
 
         float r2 = dot(q, q);
-        float k = (1.7 + u_rms * 0.25) / clamp(r2, 0.1, 2.0);
+        float k = (1.7 + safeRms * 0.25) / clamp(r2, 0.1, 2.0);
         q *= k;
         scale *= k;
 
@@ -63,7 +68,7 @@ float map(vec3 p) {
     float shapes = (length(q.xz) - 0.2) / abs(scale);
 
     // Вужча печера — ноди заповнюють центр
-    float cavernRadius = 1.8 - u_bass * 0.5;
+    float cavernRadius = 1.8 - safeBass * 0.5;
     float cavern = -(length(p.xy) - cavernRadius);
 
     // smax для м'ясистого переходу
@@ -108,10 +113,10 @@ void main() {
         vec3 objCol = mix(u_colors[1], u_colors[2], fract(orbitTrap.z * 0.4 + t * 0.1));
 
         col = objCol * (diff + 0.1);
-        col += fres * u_colors[1] * u_bass;
+        col += fres * u_colors[1] * min(u_bass, 0.85);
 
         // Гроза всередині маси
-        float glow = exp(-d * 30.0) * u_rms;
+        float glow = exp(-d * 30.0) * min(u_rms, 0.8);
         col += u_colors[2] * glow * 1.5;
 
         col *= exp(-t * 0.08);

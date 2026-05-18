@@ -21,7 +21,7 @@ float julia4D(vec3 p, vec4 c) {
   float md2 = 1.0;
   float mz2 = dot(z, z);
 
-  for (int i = 0; i < 11; i++) {
+  for (int i = 0; i < 8; i++) {
     md2 *= 4.0 * mz2;
     z = qMul(z, z) + c;
     mz2 = dot(z, z);
@@ -50,18 +50,18 @@ void main() {
   float t = 0.0;
   vec3 col = vec3(0.0);
 
-  for (int i = 0; i < 100; i++) {
+  for (int i = 0; i < 64; i++) {
     vec3 p = ro + rd * t;
     float d = julia4D(p, c);
-    if (d < 0.001) {
+    if (d < 0.002) {
       // Palette-driven lighting
-      float glow = 1.0 - float(i) / 100.0;
+      float glow = 1.0 - float(i) / 64.0;
       float colorIdx = glow * 2.0;
       vec3 baseCol = colorIdx < 1.0 ? mix(u_colors[0], u_colors[1], colorIdx) : mix(u_colors[1], u_colors[2], colorIdx - 1.0);
       col = baseCol * (0.4 + glow * 0.8);
       break;
     }
-    t += d;
+    t += d * 0.8;
     if (t > 10.0) break;
   }
 
