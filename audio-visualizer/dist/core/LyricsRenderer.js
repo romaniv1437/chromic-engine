@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { Text } from 'troika-three-text';
 // ── Design tokens — scaled for OrthoCam(-1,1,1,-1) viewport ──
-const FONT = '/chromic-lyrics/vendor/SFNS-ExtraBold.ttf';
+// Default: NotoSans-Bold (bundled, open-source). SFNS-ExtraBold used locally if present (gitignored).
+const FONT = '/chromic-lyrics/vendor/NotoSans-Bold.ttf';
 // CJK fallback: Troika's unicode-font-resolver CDN will auto-fetch bold CJK glyphs
 const UNICODE_FONTS_URL = 'https://cdn.jsdelivr.net/gh/lojjic/unicode-font-resolver@v1.0.1/packages/data';
 const UNFILLED = 0.5;
