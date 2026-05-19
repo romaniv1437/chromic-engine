@@ -1,0 +1,80 @@
+Chromic Engine — Source-Available Non-Commercial License
+Version 1.0, May 2026
+
+Copyright (c) 2024–2026 Illia Romaniv. All rights reserved.
+
+────────────────────────────────────────────────────────────────
+
+1. GRANT OF LICENSE
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to use, copy, modify, merge, and distribute the Software, subject to the
+following conditions:
+
+  (a) The Software may only be used for NON-COMMERCIAL, PERSONAL, and
+      EDUCATIONAL purposes.
+
+  (b) Redistribution of source or binary forms must retain this license
+      notice, the above copyright notice, and this list of conditions in
+      all copies or substantial portions of the Software.
+
+  (c) Modified versions of the Software must be clearly marked as such
+      and must not be misrepresented as the original Software.
+
+2. COMMERCIAL USE RESTRICTIONS
+
+The following activities are STRICTLY PROHIBITED without obtaining a
+separate, written Commercial License Agreement from the copyright holder:
+
+  (a) Deployment or operation of the Software in any public or commercial
+      venue, including but not limited to bars, restaurants, lounges,
+      karaoke establishments, nightclubs, event spaces, retail stores,
+      hotels, gyms, or any place of business open to the public.
+
+  (b) Embedding, bundling, or integrating the Software (in whole or in
+      part) into any product, service, or system that is sold, licensed,
+      rented, leased, or otherwise distributed for financial gain.
+
+  (c) Offering the Software as a hosted service, SaaS platform, or
+      managed service for which fees are charged, directly or indirectly.
+
+  (d) Distributing compiled binaries of the Software for a fee or as
+      part of a paid bundle.
+
+For the avoidance of doubt, "commercial use" includes any use that is
+primarily intended for or directed toward financial gain, revenue
+generation, or commercial advantage, whether or not revenue is actually
+received.
+
+3. COMMERCIAL LICENSING
+
+Organizations or individuals wishing to use the Software for any
+commercial purpose described in Section 2 may obtain a Commercial License
+by contacting the copyright holder:
+
+  GitHub:  https://github.com/romaniv1437
+  Email:   illia@chromicengine.com
+
+Commercial license terms, pricing, and scope are negotiated on a
+case-by-case basis.
+
+4. DISCLAIMER OF WARRANTY
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES,
+OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE,
+ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+5. TERMINATION
+
+Any use of the Software in violation of this license automatically
+terminates the rights granted herein. Upon termination, the violating
+party must immediately cease all use and destroy all copies of the
+Software in their possession.
+
+────────────────────────────────────────────────────────────────
+

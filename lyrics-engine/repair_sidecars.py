@@ -10,7 +10,7 @@ Repairs:
 """
 import json, os, glob, sys, copy
 
-MUSIC_ROOT = '/Users/illiaromaniv/WebstormProjects/claudecode/media/music'
+MUSIC_ROOT = '/path/to/project/media/music'
 DRY_RUN = '--dry-run' in sys.argv
 
 def repair_file(filepath):

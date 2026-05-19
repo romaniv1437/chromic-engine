@@ -28,6 +28,16 @@ export class ProgressBar {
     this.knob.className = 'progress-knob';
     container.appendChild(this.knob);
 
+    // Track hover state to avoid updating knob when invisible
+    this._isHovered = false;
+    container.addEventListener('pointerenter', () => {
+      this._isHovered = true;
+      this._applyKnob(this._lastRatio);
+    });
+    container.addEventListener('pointerleave', () => {
+      if (!this.isDragging) this._isHovered = false;
+    });
+
     // Create time tooltip
     this.tooltip = document.createElement('div');
     this.tooltip.className = 'progress-tooltip';
@@ -63,7 +73,14 @@ export class ProgressBar {
     if (this.fill) {
       this.fill.style.width = `${pct}%`;
     }
-    this.knob.style.left = `${pct}%`;
+    // Only update knob DOM when hovered or dragging (invisible otherwise)
+    if (this._isHovered || this.isDragging) {
+      this.knob.style.left = `${pct}%`;
+    }
+  }
+
+  _applyKnob(ratio) {
+    this.knob.style.left = `${(ratio * 100).toFixed(2)}%`;
   }
 
   _showTooltip(ratio, e) {

@@ -20,6 +20,10 @@ import { preWarmGPU, preLoadVisualizerModule } from './core/GPUPreWarm.js';
 preWarmGPU();
 preLoadVisualizerModule();
 
+// Track first user interaction (needed for vibrate API gating)
+window._userHasInteracted = false;
+document.addEventListener('pointerdown', () => { window._userHasInteracted = true; }, { once: true, passive: true });
+
 if (window.chromicElectron?.platform === 'darwin') {
   document.documentElement.classList.add('is-macos-electron');
   document.body?.classList.add('is-macos-electron');
@@ -785,8 +789,7 @@ const applyMotionEffects = (type) => {
     _activeEffects.push(entry);
     cards.forEach((c) => { c.dataset.staggerDone = '1'; });
   } else {
-    // Already animated — just ensure visible, no re-animation on scroll
-    cards.forEach((c) => { c.style.opacity = '1'; c.style.transform = ''; });
+    // Already animated — nothing to do, cards are already visible
   }
 
 
@@ -960,7 +963,7 @@ const switchCategory = async (type) => {
 
   // On initial render, do instant switch (no animation) and remove anti-flicker CSS
   if (isInitialRender) {
-    console.log('[switchCategory] Initial render:', nextType, '| previous:', previousType);
+    debug.log('[switchCategory] Initial render:', nextType, '| previous:', previousType);
     Object.entries(viewElements).forEach(([viewType, elements]) => {
       const isActive = viewType === nextType;
       elements.root.classList.toggle('view-active', isActive);
@@ -988,7 +991,7 @@ const switchCategory = async (type) => {
     musicRuntime?.lyrics?.stop();
   }
 
-  if (document.hasFocus()) { try { navigator.vibrate?.(6); } catch (_) {} }
+  if (window._userHasInteracted && document.hasFocus()) { try { navigator.vibrate?.(6); } catch (_) {} }
 
   const cachedItems = libraryCache[nextType] || [];
   await refreshCategory(nextType, { force: !cachedItems.length });
@@ -1085,7 +1088,7 @@ const handleFocusBack = () => {
   const themePanelOpen = themePanel?.classList.contains('is-open');
   const aiHubOpen = window.aiHub?._visible;
   if (floating || inlineMenus.length || gridCtx || themePanelOpen || aiHubOpen) {
-    console.log('[ESC-app] handleFocusBack skipped: popup open (floating=%o inline=%d gridCtx=%o theme=%o aiHub=%o)',
+    if(window.__DEBUG__)console.log('[ESC-app] handleFocusBack skipped: popup open (floating=%o inline=%d gridCtx=%o theme=%o aiHub=%o)',
       !!floating, inlineMenus.length, !!gridCtx, !!themePanelOpen, !!aiHubOpen);
     return;
   }
@@ -1099,7 +1102,7 @@ const handleFocusBack = () => {
       return;
     }
     if (musicRuntime.isPlayerExpanded) {
-      console.log('[ESC-app] handleFocusBack: player expanded, queue=%s settings=%s settingsVisible=%s', musicRuntime.isQueueSheetOpen, musicRuntime.isSettingsView, settingsVisible);
+      if(window.__DEBUG__)console.log('[ESC-app] handleFocusBack: player expanded, queue=%s settings=%s settingsVisible=%s', musicRuntime.isQueueSheetOpen, musicRuntime.isSettingsView, settingsVisible);
       // Close sub-panels first before closing overlay
       if (musicRuntime.isQueueSheetOpen) {
         musicRuntime.isQueueSheetOpen = false;
@@ -1404,11 +1407,12 @@ const bootstrap = async () => {
           if (img.dataset.src) {
             img.src = img.dataset.src;
             img.removeAttribute('data-src');
-            // Mark card as loaded so content-visibility stays visible (no re-decode flicker)
             const card = img.closest('.music-album-grid-item');
             if (card) {
               card.classList.remove('img-loading');
-              card.classList.add('img-loaded');
+              // Use instant (no animation) if image is from browser cache
+              const isCached = img.complete && img.naturalWidth > 0;
+              card.classList.add(isCached ? 'img-loaded-instant' : 'img-loaded');
             }
           }
           obs.unobserve(img);
@@ -1436,7 +1440,7 @@ const bootstrap = async () => {
   focusManager.start();
   await preloadLibraries();
   const initialTab = store.getState().activeType || 'music';
-  console.log('[BOOTSTRAP] switchCategory to:', initialTab, '| fix style present:', !!document.getElementById('initial-tab-fix'));
+  debug.log('[BOOTSTRAP] switchCategory to:', initialTab, '| fix style present:', !!document.getElementById('initial-tab-fix'));
   await switchCategory(initialTab);
 
   // Pre-warm GPU visualizer in the background (shader compile + GPU cache)
@@ -1494,6 +1498,13 @@ const bootstrap = async () => {
 
 bootstrap();
 
+// Performance profiler — dynamically loaded only in perf mode
+if (window.__PERF_MODE__) {
+  import('./core/profiler/ProfilerManager.js').then(({ profilerManager }) => {
+    profilerManager.init();
+  });
+}
+
 /* ── Chromic TV Parallax Tilt for TV Show Episode Cards ── */
 
 /* ── Auto-Padding: make sure last items are reachable when player is active ── */
@@ -1540,12 +1551,12 @@ document.addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
 
-  console.log('[ESC-app] ESC pressed in app.js handler');
+  if(window.__DEBUG__)console.log('[ESC-app] ESC pressed in app.js handler');
 
   // Close floating context menu
   const floating = document.getElementById('chromic-floating-menu');
   if (floating) {
-    console.log('[ESC-app] Closing floating menu');
+    if(window.__DEBUG__)console.log('[ESC-app] Closing floating menu');
     e.preventDefault();
     e.stopImmediatePropagation();
     window._chromicEscClosedPopup = true;
@@ -1557,7 +1568,7 @@ document.addEventListener('keydown', (e) => {
   // Close any open data-more-menu
   const openMenus = document.querySelectorAll('[data-more-menu]:not([hidden])');
   if (openMenus.length) {
-    console.log('[ESC-app] Closing %d inline more-menus', openMenus.length);
+    if(window.__DEBUG__)console.log('[ESC-app] Closing %d inline more-menus', openMenus.length);
     e.preventDefault();
     e.stopImmediatePropagation();
     window._chromicEscClosedPopup = true;
@@ -1876,17 +1887,10 @@ const showWelcomeIntro = () => {
 // Header button to replay (removed from UI but kept for debug)
 document.getElementById('headerWelcomeBtn')?.addEventListener('click', showWelcomeIntro);
 
-// Issue 6: Marquee overflow detection for mobile
+// Issue 6: Marquee overflow detection — only on resize/track change (NOT per-mutation)
 function checkMarqueeOverflow() {
-  // Always check #mainTrackTitle (overlay title), rest only on mobile
-  const mainTitle = document.getElementById('mainTrackTitle');
-  if (mainTitle) {
-    if (mainTitle.scrollWidth > mainTitle.clientWidth + 2) {
-      mainTitle.classList.add('is-overflowing');
-    } else {
-      mainTitle.classList.remove('is-overflowing');
-    }
-  }
+  // #mainTrackTitle now uses auto-width + line-clamp, no marquee needed
+  // Only check mobile elements on narrow screens
   if (window.innerWidth > 900) return;
   document.querySelectorAll('.album-view-kicker, .album-track-row.active .track-title-main').forEach(el => {
     if (el.scrollWidth > el.clientWidth + 2) {
@@ -1896,6 +1900,5 @@ function checkMarqueeOverflow() {
     }
   });
 }
-const marqueeObserver = new MutationObserver(() => requestAnimationFrame(checkMarqueeOverflow));
-marqueeObserver.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+// Only check on resize — no MutationObserver loop (was causing 100K+ mutations/sec feedback loop)
 window.addEventListener('resize', checkMarqueeOverflow);

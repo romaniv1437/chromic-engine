@@ -161,8 +161,14 @@ export class ImagePool {
         const img = entry.target;
         const src = img.dataset.src;
         // If src is already set correctly (kept in cache), just re-mark as loaded
-        if (src && img.src && img.src.includes(src.split('?')[0]) && img.naturalWidth > 0) {
+        // Don't require naturalWidth > 0 — the browser HTTP cache will serve it without re-fetch
+        if (src && img.src && img.src.includes(src.split('?')[0])) {
           img._ipLoaded = true;
+          const card = img.closest('.music-album-grid-item') || img.parentElement;
+          if (card && !card.classList.contains('img-loaded-instant') && !card.classList.contains('img-loaded')) {
+            card.classList.add('img-loaded-instant');
+            card.classList.remove('img-loading');
+          }
           continue;
         }
         this._loadImage(img, false);
@@ -186,6 +192,17 @@ export class ImagePool {
   _loadImage(img, forceInstant) {
     const src = img.dataset.src;
     if (!src) return;
+
+    // Already displaying this image correctly — just re-mark as loaded, no re-fetch
+    if (img.src && img.src.includes(src.split('?')[0])) {
+      img._ipLoaded = true;
+      const card = img.closest('.music-album-grid-item') || img.parentElement;
+      if (card && !card.classList.contains('img-loaded-instant') && !card.classList.contains('img-loaded')) {
+        card.classList.add('img-loaded-instant');
+        card.classList.remove('img-loading');
+      }
+      return;
+    }
 
     const card = img.closest('.music-album-grid-item') || img.parentElement;
 

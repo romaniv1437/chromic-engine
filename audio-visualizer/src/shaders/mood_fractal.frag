@@ -13,9 +13,9 @@ uniform vec3 u_colors[3];
 varying vec2 vUv;
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-#define MAX_STEPS 80
+#define MAX_STEPS 60
 #define MAX_DIST 20.0
-#define SURF_DIST 0.002
+#define SURF_DIST 0.003
 #define PI 3.14159265359
 
 // ─── Rotation matrix ─────────────────────────────────────────────────────────
@@ -59,8 +59,8 @@ float fractalSDF(vec3 pos) {
   float scale = 1.0;
   float totalScale = 1.0;
 
-  // Capped iterations: 4-7 range keeps fractal always visible
-  float maxIter = 4.0 + min(u_energy, 0.6) * 5.0;
+  // Capped iterations: 4-5 range keeps fractal always visible
+  float maxIter = 4.0 + min(u_energy, 0.3) * 3.0;
 
   // Offset "breathes" with mid frequencies
   vec3 offset = vec3(
@@ -69,7 +69,7 @@ float fractalSDF(vec3 pos) {
     1.1 + u_treble * 0.3
   );
 
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < 5; i++) {
     if (float(i) >= maxIter) break;
 
     p = abs(p);
@@ -131,30 +131,9 @@ vec3 getNormal(vec3 p) {
   ));
 }
 
-// ─── Soft shadow (cheap 4-step) ──────────────────────────────────────────────
-float softShadow(vec3 ro, vec3 rd, float mint, float maxt) {
-  float res = 1.0;
-  float t = mint;
-  for (int i = 0; i < 16; i++) {
-    float h = map(ro + rd * t);
-    res = min(res, 8.0 * h / t);
-    t += clamp(h, 0.02, 0.2);
-    if (h < 0.001 || t > maxt) break;
-  }
-  return clamp(res, 0.0, 1.0);
-}
-
-// ─── Ambient Occlusion ───────────────────────────────────────────────────────
+// ─── Cheap AO (1 sample) ─────────────────────────────────────────────────────
 float calcAO(vec3 pos, vec3 nor) {
-  float occ = 0.0;
-  float sca = 1.0;
-  for (int i = 0; i < 5; i++) {
-    float h = 0.01 + 0.12 * float(i);
-    float d = map(pos + h * nor);
-    occ += (h - d) * sca;
-    sca *= 0.75;
-  }
-  return clamp(1.0 - 3.0 * occ, 0.0, 1.0);
+  return clamp(map(pos + nor * 0.15) / 0.15, 0.0, 1.0);
 }
 
 // ─── Glow accumulation (during raymarch — sparkle effect) ────────────────────
@@ -221,7 +200,6 @@ void main() {
     float diff = max(dot(n, lightDir), 0.0);
     float spec = pow(max(dot(reflect(-lightDir, n), -rd), 0.0), 16.0 + u_treble * 48.0);
     float ao = calcAO(p, n);
-    float shadow = softShadow(p + n * 0.01, lightDir, 0.01, 5.0);
 
     // Color based on normal orientation + depth (mood-reactive)
     float colorMix = dot(n, vec3(0.0, 1.0, 0.0)) * 0.5 + 0.5;
@@ -230,8 +208,8 @@ void main() {
     vec3 surfColor = getMoodColor(fract(colorMix), moodShift);
 
     // Compose lighting
-    col = surfColor * (0.15 + diff * shadow * 0.7) * ao;
-    col += spec * u_colors[2] * (0.3 + u_treble * 0.7) * shadow; // Treble = specular sparkle
+    col = surfColor * (0.15 + diff * 0.7) * ao;
+    col += spec * u_colors[2] * (0.3 + u_treble * 0.7); // Treble = specular sparkle
 
     // Rim light (edge glow driven by RMS)
     float rim = pow(1.0 - max(dot(n, -rd), 0.0), 3.0);

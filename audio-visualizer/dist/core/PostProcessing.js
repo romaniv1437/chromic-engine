@@ -31,7 +31,8 @@ const ChromaticAberrationShader = {
       float r = texture2D(tDiffuse, vUv + dir).r;
       float g = texture2D(tDiffuse, vUv).g;
       float b = texture2D(tDiffuse, vUv - dir).b;
-      gl_FragColor = vec4(r, g, b, 1.0);
+      float a = texture2D(tDiffuse, vUv).a;
+      gl_FragColor = vec4(r, g, b, a);
     }
   `,
 };
@@ -76,68 +77,122 @@ const SeparableBlurShader = {
     }
   `,
 };
+// Dim shader — darkens scene when UI is visible (text overlay readability)
+const DimShader = {
+    uniforms: {
+        tDiffuse: { value: null },
+        u_dim: { value: 0.0 },
+    },
+    vertexShader: `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+    fragmentShader: `
+    uniform sampler2D tDiffuse;
+    uniform float u_dim;
+    varying vec2 vUv;
+    void main() {
+      vec4 color = texture2D(tDiffuse, vUv);
+      gl_FragColor = vec4(color.rgb * (1.0 - u_dim), color.a);
+    }
+  `,
+};
 export class PostProcessing {
     constructor(renderer, scene, camera) {
-        this.textRenderPass = null;
         this.uiVisibility = 0;
         this.uiVisibilityTarget = 0;
         this.chromaBeat = 0;
+        this._textRenderer = null;
+        this._textDbgCount = 0;
+        this.renderer = renderer;
+        this.scene = scene;
+        this.camera = camera;
         this.composer = new EffectComposer(renderer);
-        // Main scene render (layer 0 only - excludes text)
+        // Main scene render — layer 0 only (scene shaders like lava_flow — NO bloom)
         const mainPass = new RenderPass(scene, camera);
         mainPass.clear = true;
         this.composer.addPass(mainPass);
-        this.bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+        // Patch main pass to only render layer 0 (scene geometry)
+        const origMainRender = mainPass.render.bind(mainPass);
+        mainPass.render = (r, wb, rb, dt, ma) => {
+            const cam = mainPass.camera;
+            const saved = cam.layers.mask;
+            cam.layers.set(0);
+            origMainRender(r, wb, rb, dt, ma);
+            cam.layers.mask = saved;
+        };
+        // Lyrics text render pass — layer 1 on top of scene, BEFORE bloom
+        const textPass = new RenderPass(scene, camera);
+        textPass.clear = false;
+        textPass.clearDepth = true;
+        this.composer.addPass(textPass);
+        const origTextRender = textPass.render.bind(textPass);
+        textPass.render = (r, wb, rb, dt, ma) => {
+            const cam = textPass.camera;
+            const saved = cam.layers.mask;
+            cam.layers.set(1);
+            origTextRender(r, wb, rb, dt, ma);
+            cam.layers.mask = saved;
+        };
+        // Bloom — applied AFTER text is composited, so only lyrics HDR colors glow
+        // Scene shaders (layer 0) stay below threshold, lyrics push above with HDR boost
+        const dpr = renderer.getPixelRatio();
+        this.bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.4, 0.4, 1.0);
         this.composer.addPass(this.bloom);
         // Chromatic Aberration (spikes on beat)
         this.chromaPass = new ShaderPass(ChromaticAberrationShader);
-        this.chromaPass.uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
+        this.chromaPass.uniforms.u_resolution.value.set(window.innerWidth * dpr, window.innerHeight * dpr);
         this.composer.addPass(this.chromaPass);
-        // Separable blur: horizontal + vertical (42 samples total vs 441)
-        this.blurPassH = new ShaderPass(SeparableBlurShader);
-        this.blurPassH.uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
-        this.blurPassH.uniforms.u_direction.value.set(1, 0);
-        this.composer.addPass(this.blurPassH);
-        this.blurPassV = new ShaderPass(SeparableBlurShader);
-        this.blurPassV.uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
-        this.blurPassV.uniforms.u_direction.value.set(0, 1);
-        this.composer.addPass(this.blurPassV);
-        // Text render pass (layer 1 - rendered AFTER blur, stays sharp)
-        this.textRenderPass = new RenderPass(scene, camera);
-        this.textRenderPass.clear = false;
-        this.textRenderPass.clearDepth = true;
-        this.composer.addPass(this.textRenderPass);
+    }
+    /** Set a dedicated full-DPI renderer for crisp text overlay */
+    setTextRenderer(r) {
+        this._textRenderer = r;
+    }
+    /**
+     * Text is now rendered inside the composer pipeline (textPass before bloom).
+     * This method is kept as no-op for API compatibility.
+     */
+    renderText() {
+        // No-op — text rendered via textPass in composer pipeline so bloom applies to it
     }
     setUiVisibility(visible) {
         this.uiVisibilityTarget = visible ? 1 : 0;
     }
+    setBlur(_enabled) {
+        // Handled per-scene via material uniforms
+    }
+    setDim(_enabled, _opacity) {
+        // Handled per-scene via material uniforms
+    }
     update(audio) {
-        this.bloom.threshold = 0.2 - audio.rms * 0.2;
-        this.bloom.strength = 1.0 + audio.rms * 2.0;
-        // Chromatic aberration: spike on bass hits, decay
-        if (audio.bass > 0.5)
-            this.chromaBeat = Math.max(this.chromaBeat, audio.bass);
-        this.chromaBeat *= 0.92;
-        this.chromaPass.uniforms.u_intensity.value = this.chromaBeat;
-        // Lerp blur
-        this.uiVisibility += (this.uiVisibilityTarget - this.uiVisibility) * 0.05;
-        const blurValue = this.uiVisibility * 5.0;
-        this.blurPassH.uniforms.u_blur.value = blurValue;
-        this.blurPassV.uniforms.u_blur.value = blurValue;
+        // Bloom: constant params — not audio-reactive so it persists on pause
+        // Stretch words trigger bloom via HDR color boost on layer 0
+        // (threshold/strength stay fixed)
+        // Chromatic aberration disabled — causes glitchy colors with bloom
+        this.chromaPass.uniforms.u_intensity.value = 0;
     }
     setSize(w, h) {
-        this.composer.setSize(w, h);
-        this.chromaPass.uniforms.u_resolution.value.set(w, h);
-        this.blurPassH.uniforms.u_resolution.value.set(w, h);
-        this.blurPassV.uniforms.u_resolution.value.set(w, h);
+        const dpr = this.renderer.getPixelRatio();
+        const pw = w * dpr;
+        const ph = h * dpr;
+        this.composer.setSize(pw, ph);
+        this.bloom.resolution.set(pw, ph);
+        this.chromaPass.uniforms.u_resolution.value.set(pw, ph);
+        if (this._textRenderer) {
+            this._textRenderer.setSize(w, h, false);
+        }
     }
     updateScene(scene, camera) {
+        this.scene = scene;
+        this.camera = camera;
         const mainPass = this.composer.passes[0];
         mainPass.scene = scene;
         mainPass.camera = camera;
-        if (this.textRenderPass) {
-            this.textRenderPass.scene = scene;
-            this.textRenderPass.camera = camera;
-        }
+        const textPass = this.composer.passes[1];
+        textPass.scene = scene;
+        textPass.camera = camera;
     }
 }

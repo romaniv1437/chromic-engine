@@ -2637,6 +2637,58 @@ def format_blind(segments):
 
 # ─── Gap Detection ────────────────────────────────────────────────────────────
 
+def insert_vocal_cues(lines, whisper_segments=None, audio_duration=None):
+    """
+    Heuristic vocal cue insertion when no LRC timings are available.
+    Detects gaps > 5s between consecutive lyric lines and inserts instrumental markers.
+    """
+    text_lines = [l for l in lines if l.get("type") != "vocal_cue" and l.get("words")]
+    if len(text_lines) < 2:
+        return lines
+
+    gaps = []
+    for i in range(len(text_lines) - 1):
+        curr_words = text_lines[i].get("words", [])
+        next_words = text_lines[i + 1].get("words", [])
+        if not curr_words or not next_words:
+            continue
+        curr_end = curr_words[-1].get("end", curr_words[-1].get("start", 0))
+        next_start = next_words[0].get("start", 0)
+        gap = next_start - curr_end
+        if gap > 5.0:
+            gaps.append((curr_end + 0.3, next_start - 0.3))
+
+    # Intro gap
+    if text_lines and text_lines[0].get("words"):
+        first_start = text_lines[0]["words"][0].get("start", 0)
+        if first_start > 8.0:
+            gaps.insert(0, (0.3, first_start - 0.3))
+
+    # Outro gap
+    if audio_duration and text_lines and text_lines[-1].get("words"):
+        last_end = text_lines[-1]["words"][-1].get("end", 0)
+        if audio_duration - last_end > 8.0:
+            gaps.append((last_end + 0.3, audio_duration - 0.3))
+
+    if not gaps:
+        return lines
+
+    print(f"[aligner] 🎵 Heuristic gaps detected: {[(f'{s:.0f}-{e:.0f}s') for s, e in gaps]}", file=sys.stderr)
+
+    cues = []
+    for gap_start, gap_end in gaps:
+        gap_dur = gap_end - gap_start
+        n_dots = min(4, max(2, int(gap_dur / 3)))
+        spacing = gap_dur / (n_dots + 1)
+        for d in range(n_dots):
+            t = gap_start + spacing * (d + 1)
+            cues.append({"type": "vocal_cue", "time": round(t, 2), "text": "●"})
+
+    result = lines + cues
+    result.sort(key=lambda l: l.get("time", 0))
+    return result
+
+
 def insert_vocal_cues_from_lrc(lines, lrc_timings, audio_duration=None):
     """
     Use LRC line-level timestamps to detect instrumental breaks.
@@ -3296,6 +3348,124 @@ def _get_local_lyrics_as_anchor(audio_path):
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
+# ─── Acoustic Feature Analysis ─────────────────────────────────────────────────
+
+def _tag_acoustic_features(audio_path, lines):
+    """
+    Analyze audio to tag words with whisper/spoken/sung flags.
+    Uses librosa for pitch (pyin) and RMS energy analysis.
+    Processes in bulk per-line for efficiency.
+    """
+    try:
+        import librosa
+        import numpy as np
+    except ImportError:
+        print("[aligner] ⚠️ librosa not installed — skipping acoustic feature tagging", file=sys.stderr)
+        return
+
+    print("[aligner] 🎤 Running acoustic feature analysis (whisper/spoken/sung)...", file=sys.stderr)
+
+    # Load audio once (mono, native sr)
+    y, sr = librosa.load(audio_path, sr=22050, mono=True)
+    total_duration = len(y) / sr
+
+    # Precompute full-track RMS for relative thresholds
+    frame_length = 2048
+    hop_length = 512
+    rms_full = librosa.feature.rms(y=y, frame_length=frame_length, hop_length=hop_length)[0]
+    rms_median = float(np.median(rms_full[rms_full > 0])) if np.any(rms_full > 0) else 0.01
+    whisper_threshold = rms_median * 0.3  # Below 30% of median = whisper
+
+    tagged_count = {"whisper": 0, "spoken": 0, "sung": 0}
+
+    for line in lines:
+        if line.get("type") == "vocal_cue":
+            continue
+        words = line.get("words", [])
+        if not words:
+            continue
+
+        # Get line audio segment for pitch analysis (more efficient than per-word)
+        line_start = words[0].get("start", 0)
+        line_end = words[-1].get("end", line_start + 1)
+        if line_end <= line_start:
+            continue
+
+        start_sample = int(line_start * sr)
+        end_sample = min(int(line_end * sr), len(y))
+        if end_sample <= start_sample:
+            continue
+
+        y_line = y[start_sample:end_sample]
+        if len(y_line) < frame_length:
+            continue
+
+        # Compute pitch for the line segment using pyin
+        f0, voiced_flag, voiced_prob = librosa.pyin(
+            y_line, fmin=60, fmax=600, sr=sr,
+            frame_length=frame_length, hop_length=hop_length
+        )
+
+        # Compute RMS for the line segment
+        rms_line = librosa.feature.rms(y=y_line, frame_length=frame_length, hop_length=hop_length)[0]
+
+        line_duration = line_end - line_start
+        frames_per_sec = sr / hop_length
+
+        for w in words:
+            w_start = w.get("start", 0)
+            w_end = w.get("end", w_start + 0.1)
+            w_dur = w_end - w_start
+            if w_dur < 0.05:
+                continue
+
+            # Map word times to frame indices within line segment
+            w_rel_start = max(0, w_start - line_start)
+            w_rel_end = min(line_duration, w_end - line_start)
+            frame_start = int(w_rel_start * frames_per_sec)
+            frame_end = int(w_rel_end * frames_per_sec)
+            frame_end = min(frame_end, len(rms_line) - 1)
+            if frame_start >= frame_end:
+                continue
+
+            # ── Whisper detection: low RMS energy ──
+            word_rms = rms_line[frame_start:frame_end + 1]
+            if len(word_rms) > 0:
+                word_rms_mean = float(np.mean(word_rms))
+                if word_rms_mean < whisper_threshold and word_rms_mean > 0:
+                    w["whisper"] = True
+                    tagged_count["whisper"] += 1
+                    continue  # Whisper overrides spoken/sung
+
+            # ── Spoken vs Sung: pitch variance analysis ──
+            if f0 is not None and frame_end < len(f0):
+                word_f0 = f0[frame_start:frame_end + 1]
+                voiced_frames = word_f0[~np.isnan(word_f0)]
+
+                if len(voiced_frames) >= 2:
+                    # Pitch variance (in semitones for perceptual relevance)
+                    f0_semitones = 12 * np.log2(voiced_frames / np.median(voiced_frames))
+                    pitch_std = float(np.std(f0_semitones))
+
+                    # Thresholds tuned empirically:
+                    # spoken/rap: pitch_std < 1.5 semitones (relatively flat)
+                    # sung: pitch_std > 2.5 semitones (clear melodic movement)
+                    if pitch_std < 1.5:
+                        w["spoken"] = True
+                        tagged_count["spoken"] += 1
+                    elif pitch_std > 2.5:
+                        w["sung"] = True
+                        tagged_count["sung"] += 1
+
+    total = sum(tagged_count.values())
+    if total > 0:
+        print(f"[aligner] 🎤 Acoustic tags: {tagged_count['whisper']} whisper, "
+              f"{tagged_count['spoken']} spoken, {tagged_count['sung']} sung "
+              f"(total {total} words tagged)", file=sys.stderr)
+    else:
+        print("[aligner] 🎤 Acoustic analysis complete — no words tagged (track may be uniform)", file=sys.stderr)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("audio_path")
@@ -3787,6 +3957,74 @@ def main():
     cjk_grouped = sum(1 for l in lines if l.get("words") and any(w.get("_chars") for w in l.get("words", [])))
     if cjk_grouped > 0:
         print(f"[aligner] 🀄 CJK grouping: {cjk_grouped} lines regrouped into semantic phrases", file=sys.stderr)
+
+    # Tag adlib words: words inside parentheses in lyrics are ad-libs
+    # This allows FE to style them without guessing from text content
+    # Also detects trailing interjections after comma (e.g. "начале, мэ")
+    _TRAILING_ADLIB_WORDS = {
+        # EN
+        'yeah', 'yuh', 'yah', 'uh', 'ah', 'oh', 'ooh', 'woo', 'woo-hoo',
+        'hey', 'ayy', 'ay', 'aye', 'huh', 'hmm', 'mmm', 'ey', 'eh',
+        'skrrt', 'brr', 'grr', 'sheesh', 'woah', 'whoa', 'yo', 'ayo',
+        'man', 'baby', 'babe', 'dawg', 'bruh',
+        # RU
+        'мэ', 'да', 'а', 'э', 'е', 'эй', 'ай', 'ой', 'оу', 'у',
+        'йоу', 'бейби', 'ман', 'йо', 'вспомни',
+        # Exclamation forms
+        'да!', 'эй!', 'а!', 'е!',
+    }
+    for line in lines:
+        if line.get("type") == "vocal_cue":
+            continue
+        words = line.get("words", [])
+        # 1) Parenthesis-based detection on word text
+        in_paren = False
+        for w in words:
+            txt = w.get("word", "")
+            if "(" in txt:
+                in_paren = True
+            if in_paren:
+                w["adlib"] = True
+            if ")" in txt:
+                in_paren = False
+        # 1b) Parenthesis-based detection on LINE text (parens may be lost in words
+        #     during Whisper alignment, but preserved in the original line text)
+        line_text = line.get("text", "")
+        paren_match = re.finditer(r'\(([^)]+)\)', line_text)
+        for m in paren_match:
+            adlib_text = m.group(1).strip().lower()
+            adlib_words_list = adlib_text.split()
+            # Find matching word(s) at end of line by text
+            for w in words:
+                wt = w.get("word", "").strip().rstrip('.,!?;:()').lower()
+                if wt and wt in adlib_words_list:
+                    w["adlib"] = True
+        # 2) Trailing interjection detection: last word(s) after a comma
+        #    e.g. "начале, мэ" or "кварталы, бейби" or "кварталы, yeah, man"
+        if len(words) >= 2:
+            # Try each comma position from earliest to latest; use the first one
+            # where ALL subsequent words (stripped of punctuation) are known adlibs
+            for ci in range(len(words) - 1):
+                if not words[ci].get("word", "").rstrip().endswith(","):
+                    continue
+                trailing = words[ci + 1:]
+                if len(trailing) > 3:
+                    continue
+                all_adlib = all(
+                    w.get("word", "").strip().rstrip('.,!?;:').lower() in _TRAILING_ADLIB_WORDS
+                    for w in trailing
+                )
+                if all_adlib:
+                    for w in trailing:
+                        w["adlib"] = True
+                    break
+
+    # ── Acoustic Feature Analysis: whisper/spoken/sung detection ──
+    # Uses librosa for pitch and energy analysis per word segment
+    try:
+        _tag_acoustic_features(args.audio_path, lines)
+    except Exception as e:
+        print(f"[aligner] ⚠️ Acoustic feature analysis failed (non-fatal): {e}", file=sys.stderr)
 
     # Clean up internal flags before output
     for line in lines:

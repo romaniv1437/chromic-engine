@@ -4,6 +4,14 @@ import { VISUALIZER_PRESETS, VisualizerManager, computeAudioBands, computeMoodPr
 import { GlobalPlayerVisualizer } from './GlobalPlayerVisualizer.js';
 import { uiButton, uiRange, uiSegmented, uiToggleRow } from '../../ui/controls.js';
 
+// ─── Debug-gated console: suppress verbose logs in production ─────────────────
+const _dbg = window.__DEBUG__
+  ? console.log.bind(console)
+  : () => {};
+const _dbgWarn = window.__DEBUG__
+  ? console.warn.bind(console)
+  : () => {};
+
 // ─── SVG Icon Map (Lucide-style, 16×16, currentColor) ───────────────────────
 const ICONS = {
   menu: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>',
@@ -383,7 +391,7 @@ export class MusicPlayer {
     this.settings.gpuScene = Number.isFinite(snapshot.musicGpuScene) ? snapshot.musicGpuScene : 0;
     this.settings.fpsMax = (Number.isFinite(snapshot.musicFpsMax) && snapshot.musicFpsMax > 0) ? snapshot.musicFpsMax : 60;
     this.settings.gpuLabsUnlocked = true; // All scenes always visible
-    console.log('[hydrate] engineMode=%s gpuScene=%d fpsMax=%d (from snapshot: engineMode=%s gpuScene=%s)', this.settings.engineMode, this.settings.gpuScene, this.settings.fpsMax, snapshot.musicEngineMode, snapshot.musicGpuScene);
+    _dbg('[hydrate] engineMode=%s gpuScene=%d fpsMax=%d (from snapshot: engineMode=%s gpuScene=%s)', this.settings.engineMode, this.settings.gpuScene, this.settings.fpsMax, snapshot.musicEngineMode, snapshot.musicGpuScene);
     document.body.classList.toggle('engine-premium', this.settings.engineMode === 'premium');
     this.repeatMode = snapshot.musicRepeatMode || 'off';
     this.settings.vizDimEnabled = snapshot.musicVizDimEnabled !== undefined ? Boolean(snapshot.musicVizDimEnabled) : this.settings.vizDimEnabled;
@@ -513,7 +521,7 @@ export class MusicPlayer {
     // DISABLED FOR PERF TESTING — uncomment to re-enable
     const bgCanvas = document.getElementById('globalPlayerBgCanvas');
     if (bgCanvas) {
-      console.log('[GlobalPlayerViz]  DISABLED for performance testing');
+      _dbg('[GlobalPlayerViz]  DISABLED for performance testing');
       bgCanvas.style.display = 'none';
       // this._globalPlayerViz = new GlobalPlayerVisualizer(bgCanvas);
       this._globalPlayerVizEnabled = false;
@@ -558,13 +566,13 @@ export class MusicPlayer {
       if (throttle) {
         // Lyrics are struggling — reduce visualizer FPS to give text priority
         const throttledFps = Math.min(this.settings.fpsMax || 30, 30);
-        console.log(`[perf] Lyrics FPS=${Math.round(fps)}, throttling visualizer to ${throttledFps}fps`);
+        _dbg(`[perf] Lyrics FPS=${Math.round(fps)}, throttling visualizer to ${throttledFps}fps`);
         if (this.mathVisualizer?.setMaxFps) this.mathVisualizer.setMaxFps(throttledFps);
         if (this.visualizer) this.visualizer._fpsMax = throttledFps;
         this._lyricsThrottleActive = true;
       } else if (this._lyricsThrottleActive) {
         // Lyrics recovered — restore user's chosen FPS
-        console.log(`[perf] Lyrics FPS recovered to ${Math.round(fps)}, restoring visualizer FPS`);
+        _dbg(`[perf] Lyrics FPS recovered to ${Math.round(fps)}, restoring visualizer FPS`);
         this._applyFpsLimit();
         this._lyricsThrottleActive = false;
       }
@@ -574,7 +582,7 @@ export class MusicPlayer {
     document.addEventListener('chromic:track-assets-updated', async (e) => {
       const updatedPath = e?.detail?.trackPath;
       const source = e?.detail?.source;
-      console.log(`[lyrics] 📡 track-assets-updated event received`, {
+      _dbg(`[lyrics] 📡 track-assets-updated event received`, {
         updatedPath,
         source,
         showTranslation: this.settings?.showTranslation,
@@ -584,7 +592,7 @@ export class MusicPlayer {
       // If this event came from translation completion, DO NOT reload lyrics
       // because setTrack() clears translations and we just applied them!
       if (source === 'translation') {
-        console.log(`[lyrics] ⏹ Skipping lyrics reload (source=translation) — translations already applied`);
+        _dbg(`[lyrics] ⏹ Skipping lyrics reload (source=translation) — translations already applied`);
         return;
       }
 
@@ -596,7 +604,7 @@ export class MusicPlayer {
       // Normalize for comparison (both can be with or without "music/" prefix)
       const norm = (p) => p?.replace(/^music\//, '') || '';
       if (norm(currentPath) !== norm(updatedPath)) return;
-      console.log('[lyrics] 🔄 Track assets updated externally, reloading lyrics...');
+      _dbg('[lyrics] 🔄 Track assets updated externally, reloading lyrics...');
       try {
         const res = await fetch('/api/lyrics/refresh', {
           method: 'POST',
@@ -652,12 +660,12 @@ export class MusicPlayer {
         this.mathVisualizer?.setLyricsTimeline?.(syncedTimeline);
         // Re-apply translations if active (source check is now handled at the top of the event handler)
         if (this.settings?.showTranslation) {
-          console.log(`[lyrics] 🔄 Triggering translation after asset update (source=${source})`);
+          _dbg(`[lyrics] 🔄 Triggering translation after asset update (source=${source})`);
           this._fetchAndApplyTranslations?.();
         }
-        console.log(`[lyrics] ✅ Hot-reloaded ${data.lyrics.length} lines (hasWords=${data.hasWords})`);
+        _dbg(`[lyrics] ✅ Hot-reloaded ${data.lyrics.length} lines (hasWords=${data.hasWords})`);
       } catch (err) {
-        console.warn('[lyrics] Failed to reload after asset update:', err);
+        _dbgWarn('[lyrics] Failed to reload after asset update:', err);
       }
     });
   }
@@ -742,7 +750,7 @@ export class MusicPlayer {
         return;
       }
 
-      console.log('[album-nav] ESC pressed: activeAlbumKey=%s isPlayerExpanded=%s isSettingsView=%s proActive=%s target=%s',
+      _dbg('[album-nav] ESC pressed: activeAlbumKey=%s isPlayerExpanded=%s isSettingsView=%s proActive=%s target=%s',
         this.activeAlbumKey, this.isPlayerExpanded, this.isSettingsView,
         document.body.classList.contains('chromic-pro-active'), target?.tagName);
 
@@ -753,7 +761,7 @@ export class MusicPlayer {
 
       // Skip if app.js already closed a popup on this ESC keystroke
       if (window._chromicEscClosedPopup) {
-        console.log('[ESC-debug] Blocked: popup was just closed by app.js');
+        _dbg('[ESC-debug] Blocked: popup was just closed by app.js');
         return;
       }
 
@@ -781,7 +789,7 @@ export class MusicPlayer {
       if (!this.activeAlbumKey && !this.isPlayerExpanded && this.elements.grid?.querySelector('.graveyard-view')) {
         event.stopImmediatePropagation();
         const savedScroll = this._albumsScrollTop || 0;
-        console.log('[album-nav] ESC: leaving graveyard view, savedScroll=%d', savedScroll);
+        _dbg('[album-nav] ESC: leaving graveyard view, savedScroll=%d', savedScroll);
         const grid = this.elements.grid;
         grid._cachedAlbumsGrid = null;
         grid._cachedAlbumsFingerprint = null;
@@ -820,7 +828,7 @@ export class MusicPlayer {
       if (this.activeAlbumKey && !this.isPlayerExpanded) {
         // Don't navigate back if we just closed the overlay on this/previous Escape
         if (this._justClosedOverlay) {
-          console.log('[ESC-debug] Blocked: _justClosedOverlay flag is set');
+          _dbg('[ESC-debug] Blocked: _justClosedOverlay flag is set');
           return;
         }
         // Don't close album view if a popup/menu/modal is open — let app.js handler close it first
@@ -829,14 +837,14 @@ export class MusicPlayer {
         const gridCtx = document.querySelector('.album-grid-context-menu');
         const navList = document.querySelector('.music-album-nav-list:not([hidden])');
         const hasOpenPopup = floatingMenu || inlineMenus.length || gridCtx || navList;
-        console.log('[ESC-debug] Popup check: floating=%o inlineMenus=%d gridCtx=%o navList=%o → hasOpenPopup=%o',
+        _dbg('[ESC-debug] Popup check: floating=%o inlineMenus=%d gridCtx=%o navList=%o → hasOpenPopup=%o',
           !!floatingMenu, inlineMenus.length, !!gridCtx, !!navList, !!hasOpenPopup);
         if (hasOpenPopup) {
-          console.log('[ESC-debug] Blocked: popup is open, letting app.js close it');
+          _dbg('[ESC-debug] Blocked: popup is open, letting app.js close it');
           return;
         }
         event.stopImmediatePropagation();
-        console.log('[album-nav] ESC: going back to albums');
+        _dbg('[album-nav] ESC: going back to albums');
         const savedScroll = this._albumsScrollTop || 0;
         this.activeAlbumKey = null;
         this._backToAlbums = true;
@@ -851,7 +859,7 @@ export class MusicPlayer {
       if (this.isPlayerExpanded) {
         event.stopImmediatePropagation();
         const settingsVisible = this.isSettingsPanelOpen();
-        console.log('[ESC-debug] Player expanded: isQueueSheetOpen=%s isSettingsView=%s settingsVisible=%s', this.isQueueSheetOpen, this.isSettingsView, settingsVisible);
+        _dbg('[ESC-debug] Player expanded: isQueueSheetOpen=%s isSettingsView=%s settingsVisible=%s', this.isQueueSheetOpen, this.isSettingsView, settingsVisible);
         // Close sub-panels first before closing overlay itself
         if (this.isQueueSheetOpen) {
           this.isQueueSheetOpen = false;
@@ -957,7 +965,7 @@ export class MusicPlayer {
       return;
     }
 
-    console.log('[music] overlay button click', {
+    _dbg('[music] overlay button click', {
       id: button.id || null,
       upNextId: button.dataset.upNextId || null,
       presetValue: button.dataset.presetValue || null,
@@ -1149,7 +1157,7 @@ export class MusicPlayer {
       providerSelect?.addEventListener('change', updateOllamaVisibility);
       updateOllamaVisibility();
       this._refreshPythonSetupStatus();
-    } catch (e) { console.warn('[AI Settings] Load failed:', e); }
+    } catch (e) { _dbgWarn('[AI Settings] Load failed:', e); }
   }
 
   async _refreshPythonSetupStatus() {
@@ -1363,7 +1371,7 @@ export class MusicPlayer {
             break;
         }
       } catch (err) {
-        console.warn('[PythonInstall] Parse error:', err);
+        _dbgWarn('[PythonInstall] Parse error:', err);
       }
     };
 
@@ -1475,8 +1483,9 @@ export class MusicPlayer {
       }
       this._setTranslationBtnState(btn, 'idle');
       container?.classList.remove('translations-loading', 'show-translations');
+      this.mathVisualizer?.lyricsRenderer?.setTranslationsVisible(false);
       this.persistPlayerState({ immediate: true });
-      console.log('[Translation] Cancelled by user via toggle button');
+      _dbg('[Translation] Cancelled by user via toggle button');
       return;
     }
 
@@ -1487,6 +1496,7 @@ export class MusicPlayer {
     }
     // Toggle CSS class on lyrics container
     if (container) container.classList.toggle('show-translations', this.settings.showTranslation);
+    this.mathVisualizer?.lyricsRenderer?.setTranslationsVisible(this.settings.showTranslation);
 
     if (this.settings.showTranslation) {
       await this._fetchAndApplyTranslations();
@@ -1532,8 +1542,9 @@ export class MusicPlayer {
       const info = await res.json();
       if (info.status === 'done' && info.translations) {
         // Cached translation exists — apply it
-        if (this.lyrics) this.lyrics.setTranslations(info.translations);
-        console.log(`[Translation] ✅ Cached translation applied for "${track?.title}"`);
+        if (this.lyrics) this.lyrics.setTranslations(info.translations);this.mathVisualizer?.lyricsRenderer?.setTranslations(info.translations);
+        this.mathVisualizer?.lyricsRenderer?.setTranslationsVisible(true);
+        _dbg(`[Translation] ✅ Cached translation applied for "${track?.title}"`);
       } else if (info.status === 'running') {
         // Translation in progress — show loading state, don't turn off
         const btn = this.getOverlayRoot()?.querySelector('#translationToggleBtn');
@@ -1545,10 +1556,10 @@ export class MusicPlayer {
         if (btn) { btn.classList.remove('active'); btn.setAttribute('aria-pressed', 'false'); }
         const container = this.getOverlayRoot()?.querySelector('#musicLyricsStage');
         if (container) container.classList.remove('show-translations');
-        console.log(`[Translation] No cached translation for "${track?.title}" — toggle OFF`);
+        _dbg(`[Translation] No cached translation for "${track?.title}" — toggle OFF`);
       }
     } catch (e) {
-      console.warn('[Translation] Cache check failed:', e.message);
+      _dbgWarn('[Translation] Cache check failed:', e.message);
     }
   }
 
@@ -1568,28 +1579,40 @@ export class MusicPlayer {
     }
 
     const track = this.items[this.currentTrackIndex];
-    if (!track || !this.lyrics?.timeline?.length) {
-      console.log('[Translation] Skipped: no track or no timeline', { hasTrack: !!track, timelineLen: this.lyrics?.timeline?.length });
+    const gpuTimeline = this.mathVisualizer?.lyricsRenderer?.timeline;
+    const domTimeline = this.lyrics?.timeline;
+    const activeTimeline = domTimeline?.length ? domTimeline : null;
+    const hasAnyLyrics = !!(activeTimeline?.length || gpuTimeline?.length);
+    if (!track || !hasAnyLyrics) {
+      _dbg('[Translation] Skipped: no track or no timeline', { hasTrack: !!track, timelineLen: domTimeline?.length, gpuLines: gpuTimeline?.length });
       return;
     }
 
     const trackPath = this._getTrackRelativePath(track);
     if (!trackPath) {
-      console.log('[Translation] Skipped: could not resolve trackPath from', track?.url);
+      _dbg('[Translation] Skipped: could not resolve trackPath from', track?.url);
       return;
     }
 
     const trackIndex = this.currentTrackIndex;
     const btn = this.getOverlayRoot()?.querySelector('#translationToggleBtn');
 
-    const lines = this.lyrics.timeline.filter(e => e.type !== 'vocal_cue').map(e => ({ text: e.text || '' }));
+    // Get lines from DOM timeline or fall back to GPU renderer lines
+    let lines;
+    if (activeTimeline?.length) {
+      lines = activeTimeline.filter(e => e.type !== 'vocal_cue').map(e => ({ text: e.text || '' }));
+    } else if (gpuTimeline?.length) {
+      lines = gpuTimeline.filter(e => e.type !== 'vocal_cue').map(e => ({ text: e.text || '' }));
+    } else {
+      lines = [];
+    }
     if (!lines.length) {
-      console.log('[Translation] Skipped: no non-cue lines in timeline');
+      _dbg('[Translation] Skipped: no non-cue lines in timeline');
       return;
     }
 
-    console.log(`[Translation] Starting for trackIndex=${trackIndex} path="${trackPath}" lang=${this.settings.translationLang} lines=${lines.length}`);
-    console.log(`[Translation] First 3 lines: ${lines.slice(0, 3).map(l => `"${l.text}"`).join(' | ')}`);
+    _dbg(`[Translation] Starting for trackIndex=${trackIndex} path="${trackPath}" lang=${this.settings.translationLang} lines=${lines.length}`);
+    _dbg(`[Translation] First 3 lines: ${lines.slice(0, 3).map(l => `"${l.text}"`).join(' | ')}`);
 
     // Register with AI Activity Hub
     const hubTaskId = `translate-${trackPath}-${this.settings.translationLang}`;
@@ -1616,7 +1639,7 @@ export class MusicPlayer {
         signal: this._translationAbort.signal,
       });
       const startData = await startRes.json();
-      console.log(`[Translation] Server response:`, { status: startData.status, cached: startData.cached, hasTranslations: !!startData.translations, progress: startData.progress, total: startData.total });
+      _dbg(`[Translation] Server response:`, { status: startData.status, cached: startData.cached, hasTranslations: !!startData.translations, progress: startData.progress, total: startData.total });
 
       // Show initial progress toast (1-based: "working on chunk 1")
       if (startData.status === 'running') {
@@ -1630,7 +1653,7 @@ export class MusicPlayer {
           const nonCueLines = lines.length;
           const transLines = startData.translations.length;
           if (Math.abs(transLines - nonCueLines) > 5) {
-            console.warn(`[Translation] ⚠️ Stale cache mismatch: ${transLines} translations vs ${nonCueLines} lines — forcing re-translate`);
+            _dbgWarn(`[Translation] ⚠️ Stale cache mismatch: ${transLines} translations vs ${nonCueLines} lines — forcing re-translate`);
             // Re-request with force
             try {
               const forceRes = await fetch('/api/lyrics/translate', {
@@ -1642,21 +1665,25 @@ export class MusicPlayer {
               const forceData = await forceRes.json();
               if (forceData.translations && this.currentTrackIndex === trackIndex) {
                 this.lyrics.setTranslations(forceData.translations);
+                this.mathVisualizer?.lyricsRenderer?.setTranslations(forceData.translations);
+                this.mathVisualizer?.lyricsRenderer?.setTranslationsVisible(true);
                 this._showTranslationToast(toastEl, 'Translated ✓');
               }
             } catch (fe) {
-              if (fe.name !== 'AbortError') console.warn('[Translation] Force re-translate failed:', fe.message);
+              if (fe.name !== 'AbortError') _dbgWarn('[Translation] Force re-translate failed:', fe.message);
             }
             window.aiHub?.completeTask?.(hubTaskId);
             return;
           }
-          console.log(`[Translation] Applying cached translations (${transLines} lines) to trackIndex=${trackIndex}`);
+          _dbg(`[Translation] Applying cached translations (${transLines} lines) to trackIndex=${trackIndex}`);
           this.lyrics.setTranslations(startData.translations);
+          this.mathVisualizer?.lyricsRenderer?.setTranslations(startData.translations);
+          this.mathVisualizer?.lyricsRenderer?.setTranslationsVisible(true);
           this._showTranslationToast(toastEl, startData.cached ? 'Translation loaded' : 'Translated ✓');
           window.aiHub?.completeTask?.(hubTaskId);
           document.dispatchEvent(new CustomEvent('chromic:track-assets-updated', { detail: { trackPath, source: 'translation' } }));
         } else {
-          console.warn(`[Translation] Track changed during fetch! was=${trackIndex} now=${this.currentTrackIndex}`);
+          _dbgWarn(`[Translation] Track changed during fetch! was=${trackIndex} now=${this.currentTrackIndex}`);
           window.aiHub?.completeTask?.(hubTaskId);
         }
         return;
@@ -1672,7 +1699,7 @@ export class MusicPlayer {
 
         while (pollCount < maxPolls) {
           if (this._translationAbort?.signal?.aborted || this.currentTrackIndex !== trackIndex) {
-            console.log('[Translation] Polling stopped (aborted or track changed)');
+            _dbg('[Translation] Polling stopped (aborted or track changed)');
             return;
           }
 
@@ -1697,18 +1724,19 @@ export class MusicPlayer {
               window.aiHub?.updateTask?.(hubTaskId, status.progress, status.total);
             } else if (status.status === 'done' && status.translations) {
               if (this.currentTrackIndex === trackIndex && this.lyrics) {
-                console.log(`[Translation] ✅ Done! Applying ${status.translations.length} translations to trackIndex=${trackIndex}, path="${trackPath}"`);
-                console.log(`[Translation] First 2 translations: ${status.translations.slice(0, 2).map(t => `"${t}"`).join(' | ')}`);
+                _dbg(`[Translation] ✅ Done! Applying ${status.translations.length} translations to trackIndex=${trackIndex}, path="${trackPath}"`);
+                _dbg(`[Translation] First 2 translations: ${status.translations.slice(0, 2).map(t => `"${t}"`).join(' | ')}`);
                 this.lyrics.setTranslations(status.translations);
-                this._showTranslationToast(toastEl, 'Translated ✓');
+                this.mathVisualizer?.lyricsRenderer?.setTranslations(status.translations);
+                this.mathVisualizer?.lyricsRenderer?.setTranslationsVisible(true);                this._showTranslationToast(toastEl, 'Translated ✓');
               } else {
-                console.warn(`[Translation] Track changed! Discarding. was=${trackIndex} now=${this.currentTrackIndex}`);
+                _dbgWarn(`[Translation] Track changed! Discarding. was=${trackIndex} now=${this.currentTrackIndex}`);
               }
               window.aiHub?.completeTask?.(hubTaskId);
               document.dispatchEvent(new CustomEvent('chromic:track-assets-updated', { detail: { trackPath, source: 'translation' } }));
               return;
             } else if (status.status === 'error') {
-              console.warn('[Translation] Failed:', status.error);
+              _dbgWarn('[Translation] Failed:', status.error);
               this._showTranslationToast(toastEl, 'Translation failed');
               window.aiHub?.failTask?.(hubTaskId);
               return;
@@ -1718,15 +1746,15 @@ export class MusicPlayer {
             }
           } catch (pollErr) {
             if (pollErr.name === 'AbortError') return;
-            console.warn('[Translation] Poll error:', pollErr.message);
+            _dbgWarn('[Translation] Poll error:', pollErr.message);
           }
         }
       }
     } catch (e) {
       if (e.name === 'AbortError') {
-        console.log('[Translation] Cancelled by user');
+        _dbg('[Translation] Cancelled by user');
       } else {
-        console.warn('[Translation] Failed:', e.message);
+        _dbgWarn('[Translation] Failed:', e.message);
         this._showTranslationToast(toastEl, 'Translation failed');
       }
     } finally {
@@ -1779,9 +1807,11 @@ export class MusicPlayer {
       const data = await res.json();
       if (data.transliterations && this.lyrics) {
         this.lyrics.setTranslations(data.transliterations);
+        this.mathVisualizer?.lyricsRenderer?.setTranslations(data.transliterations);
+        this.mathVisualizer?.lyricsRenderer?.setTranslationsVisible(true);
       }
     } catch (e) {
-      console.warn('[Transliteration] Failed:', e.message);
+      _dbgWarn('[Transliteration] Failed:', e.message);
     }
   }
 
@@ -1806,7 +1836,7 @@ export class MusicPlayer {
       });
       const info = await res.json();
       if (info.status === 'running') {
-        console.log('[resume] Enhancement in progress, resuming poll for', trackPath);
+        _dbg('[resume] Enhancement in progress, resuming poll for', trackPath);
         // Only add hub task if no lyrics task already exists for this track
         if (!this._lyricsHubTaskId || !hub?.tasks?.has(this._lyricsHubTaskId)) {
           const hubTaskId = `lyrics-resume-${trackPath}-${Date.now()}`;
@@ -1818,7 +1848,7 @@ export class MusicPlayer {
         const meta = track;
         this._pollWhisperEnhancement(track, meta);
       }
-    } catch (e) { console.warn('[resume] enhance-status check failed:', e.message); }
+    } catch (e) { _dbgWarn('[resume] enhance-status check failed:', e.message); }
 
     // Check for in-progress translation
     if (this.settings.showTranslation) {
@@ -1830,7 +1860,7 @@ export class MusicPlayer {
         });
         const info = await res.json();
         if (info.status === 'running') {
-          console.log('[resume] Translation in progress, resuming for', trackPath);
+          _dbg('[resume] Translation in progress, resuming for', trackPath);
           // _fetchAndApplyTranslations will handle polling — it's already called
           // from the lyrics load path when showTranslation is true.
           // Just register in hub:
@@ -1842,10 +1872,12 @@ export class MusicPlayer {
           this._setTranslationBtnState(btn, 'loading');
         } else if (info.status === 'done' && info.translations) {
           // Translation finished while we were reloading — apply immediately
-          console.log('[resume] Translation already done, applying');
+          _dbg('[resume] Translation already done, applying');
           if (this.lyrics) this.lyrics.setTranslations(info.translations);
+          this.mathVisualizer?.lyricsRenderer?.setTranslations(info.translations);
+          this.mathVisualizer?.lyricsRenderer?.setTranslationsVisible(true);
         }
-      } catch (e) { console.warn('[resume] translate-status check failed:', e.message); }
+      } catch (e) { _dbgWarn('[resume] translate-status check failed:', e.message); }
     }
   }
 
@@ -1894,7 +1926,7 @@ export class MusicPlayer {
         if (info.status === 'done') {
           clearInterval(this._whisperPollTimer);
           this._whisperPollTimer = null;
-          console.log('[lyrics] ✅ Whisper enhancement complete, refreshing lyrics...');
+          _dbg('[lyrics] ✅ Whisper enhancement complete, refreshing lyrics...');
           document.dispatchEvent(new CustomEvent('chromic:track-assets-updated', { detail: { trackPath } }));
 
           // Show "done" state briefly
@@ -1913,7 +1945,7 @@ export class MusicPlayer {
             });
             const refreshData = await refreshRes.json();
             if (refreshData.lyrics && refreshData.hasWords && this.currentTrackIndex === trackIndex) {
-              console.log(`[lyrics]  Hot-swapping ${refreshData.lyrics.length} enhanced lines`);
+              _dbg(`[lyrics]  Hot-swapping ${refreshData.lyrics.length} enhanced lines`);
               this.currentLyrics = refreshData.lyrics;
               // Rebuild the synced timeline with real word timestamps
               const syncedTimeline = this.currentLyrics.map((l, idx) => {
@@ -1992,10 +2024,10 @@ export class MusicPlayer {
         }
         // Store for later use
         this._sentimentColors = data;
-        console.log(`[Sentiment] Mood: ${data.mood}, Colors: ${data.colors.join(', ')}`);
+        _dbg(`[Sentiment] Mood: ${data.mood}, Colors: ${data.colors.join(', ')}`);
       }
     } catch (e) {
-      console.warn('[Sentiment] Failed:', e.message);
+      _dbgWarn('[Sentiment] Failed:', e.message);
     }
   }
 
@@ -2021,7 +2053,8 @@ export class MusicPlayer {
     this.audioUnsubs.forEach((off) => off());
     this.audioUnsubs = [
       this.audioEngine.on('timeupdate', () => {
-        // GPU lyrics renderer disabled — HTML LyricsEngine handles sync
+        // Feed audio time to GPU lyrics renderer (Troika text with bloom)
+        this.mathVisualizer?.setCurrentTime?.(this.audioEngine.getCurrentTime());
         // Always update zen lyrics — they have their own scroll guard
         this.updateZenLyrics(this.audioEngine.getCurrentTime());
         // Drift check: if LyricsEngine active line is >0.5s out of sync, force resync
@@ -2045,6 +2078,8 @@ export class MusicPlayer {
       this.audioEngine.on('seeked', () => {
         this._pendingSeekTarget = null;
         this._restoredFromReload = false;
+        // Feed audio time to GPU lyrics on seek
+        this.mathVisualizer?.setCurrentTime?.(this.audioEngine.getCurrentTime());
       }),
       this.audioEngine.on('play', () => {
         this.updatePlayButtons();
@@ -2086,8 +2121,27 @@ export class MusicPlayer {
     let _plDropCount = 0;
     let _plDropTimer = 0;
     let _scrollSkipStart = 0; // Track how long we've been skipping updates
+    // Perf monitoring: track frame times to detect overheating sources
+    let _perfFrameCount = 0;
+    let _perfTotalTime = 0;
+    let _perfMaxTime = 0;
+    let _perfLastReport = performance.now();
     const tick = () => {
       const now = performance.now();
+      // Perf: report every 60s
+      _perfFrameCount++;
+      if (now - _perfLastReport > 60000) {
+        const avgMs = _perfFrameCount > 0 ? (_perfTotalTime / _perfFrameCount).toFixed(2) : '?';
+        if (window.__DEBUG__) _dbg(
+          `[perf-monitor] 🔥 progressLoop: ${_perfFrameCount} frames in 60s | avg: ${avgMs}ms | max: ${_perfMaxTime.toFixed(1)}ms | ` +
+          `rAF loops: progress=${this.progressFrameId?1:0} accent=${this.audioReactiveAccentFrameId?1:0} | ` +
+          `vizRunning: ${this._globalPlayerViz?._running ? 'yes' : 'no'}`
+        );
+        _perfFrameCount = 0;
+        _perfTotalTime = 0;
+        _perfMaxTime = 0;
+        _perfLastReport = now;
+      }
       if (_plLastFrame > 0) {
         const delta = now - _plLastFrame;
         if (delta > 25 && scrollGuardian.isScrolling) {
@@ -2095,7 +2149,7 @@ export class MusicPlayer {
           clearTimeout(_plDropTimer);
           _plDropTimer = setTimeout(() => {
             if (_plDropCount > 0) {
-              console.warn(`[scroll-perf] progressLoop: ${_plDropCount} dropped frames during scroll (>25ms)`);
+              _dbgWarn(`[scroll-perf] progressLoop: ${_plDropCount} dropped frames during scroll (>25ms)`);
               _plDropCount = 0;
             }
           }, 500);
@@ -2123,9 +2177,12 @@ export class MusicPlayer {
       }
       // Feed audio data to global player aurora (skip when overlay open — viz is stopped)
       // Also skip during scroll to reduce main-thread work
+      // Throttle to ~30fps to save CPU (aurora doesn't need 60fps updates)
       if (!scrollGuardian.isScrolling && this._globalPlayerViz && this._globalPlayerVizEnabled && this._globalPlayerViz._running) {
-        const analyser = this.audioEngine?.getAnalyser?.();
-        if (analyser) {
+        if (!this._gpvLastTime || now - this._gpvLastTime > 33) {
+          this._gpvLastTime = now;
+          const analyser = this.audioEngine?.getAnalyser?.();
+          if (analyser) {
           if (!this._gpvBuffer || this._gpvBuffer.length !== analyser.frequencyBinCount) {
             this._gpvBuffer = new Uint8Array(analyser.frequencyBinCount);
           }
@@ -2141,11 +2198,22 @@ export class MusicPlayer {
             (totalSum / this._gpvBuffer.length) / 255
           );
         }
+        }
       }
       if (!this.audioEngine.isPlaying()) {
         this.progressFrameId = null;
+        // Perf: measure frame time
+        const _frameEnd = performance.now();
+        const _frameDur = _frameEnd - now;
+        _perfTotalTime += _frameDur;
+        if (_frameDur > _perfMaxTime) _perfMaxTime = _frameDur;
         return;
       }
+      // Perf: measure frame time
+      const _frameEnd = performance.now();
+      const _frameDur = _frameEnd - now;
+      _perfTotalTime += _frameDur;
+      if (_frameDur > _perfMaxTime) _perfMaxTime = _frameDur;
       this.progressFrameId = window.requestAnimationFrame(tick);
     };
     this.progressFrameId = window.requestAnimationFrame(tick);
@@ -2167,27 +2235,27 @@ export class MusicPlayer {
     const validTrackIds = new Set(this.items.map((track) => track.id));
     this.queueTrackIds = this.queueTrackIds.filter((trackId) => validTrackIds.has(trackId));
     if (!this.queueTrackIds.length) {
-      console.log('[SHUFFLE-DEBUG] syncQueueWithItems: queueTrackIds was empty, defaulting to all items');
+      // _dbg('[SHUFFLE-DEBUG] syncQueueWithItems: queueTrackIds was empty, defaulting to all items');
       this.queueTrackIds = this.items.map((track) => track.id);
     }
 
     if (!this.shuffledQueueIds.length) {
-      console.log('[SHUFFLE-DEBUG] syncQueueWithItems: shuffledQueueIds empty, rebuilding from queueTrackIds');
+      // _dbg('[SHUFFLE-DEBUG] syncQueueWithItems: shuffledQueueIds empty, rebuilding from queueTrackIds');
       this.shuffledQueueIds = shuffleList(this.queueTrackIds, this.store.getState().musicCurrentTrackId);
     } else {
       this.shuffledQueueIds = this.shuffledQueueIds.filter((trackId) => validTrackIds.has(trackId));
       const missingIds = this.queueTrackIds.filter((trackId) => !this.shuffledQueueIds.includes(trackId));
       if (missingIds.length) {
-        console.log('[SHUFFLE-DEBUG] syncQueueWithItems: adding missing IDs to shuffledQueueIds:', missingIds.length);
+        // _dbg('[SHUFFLE-DEBUG] syncQueueWithItems: adding missing IDs to shuffledQueueIds:', missingIds.length);
       }
       this.shuffledQueueIds.push(...shuffleList(missingIds));
     }
-    console.log('[SHUFFLE-DEBUG] syncQueueWithItems: before=%d/%d after=%d/%d', beforeQueue, beforeShuffled, this.queueTrackIds.length, this.shuffledQueueIds.length);
+    // _dbg('[SHUFFLE-DEBUG] syncQueueWithItems: before=%d/%d after=%d/%d', beforeQueue, beforeShuffled, this.queueTrackIds.length, this.shuffledQueueIds.length);
   }
 
   getActiveQueueIds() {
     const result = this.settings.isShuffle ? this.shuffledQueueIds : this.queueTrackIds;
-    console.log('[SHUFFLE-DEBUG] getActiveQueueIds: isShuffle=%s returning %s queue with %d items', this.settings.isShuffle, this.settings.isShuffle ? 'shuffled' : 'normal', result.length);
+    // _dbg('[SHUFFLE-DEBUG] getActiveQueueIds: isShuffle=%s returning %s queue with %d items', this.settings.isShuffle, this.settings.isShuffle ? 'shuffled' : 'normal', result.length);
     return result;
   }
 
@@ -2413,12 +2481,12 @@ export class MusicPlayer {
     if (!Number.isFinite(duration) || duration <= 0) return;
 
     const targetTime = Math.min(seconds, duration * 0.995);
-    console.log(`[audio-restore] Setting currentTime=${targetTime.toFixed(2)} (requested=${seconds.toFixed(2)}) duration=${duration.toFixed(2)} readyState=${audio.readyState} paused=${audio.paused}`);
+    _dbg(`[audio-restore] Setting currentTime=${targetTime.toFixed(2)} (requested=${seconds.toFixed(2)}) duration=${duration.toFixed(2)} readyState=${audio.readyState} paused=${audio.paused}`);
 
     // Wait for sufficient data before seeking (readyState >= 2 = HAVE_CURRENT_DATA)
     // This prevents the browser from ignoring/resetting currentTime when buffer is empty
     if (audio.readyState < 2) {
-      console.log(`[audio-restore] readyState=${audio.readyState} < 2, waiting for canplay...`);
+      _dbg(`[audio-restore] readyState=${audio.readyState} < 2, waiting for canplay...`);
       await new Promise((resolve) => {
         const onCanPlay = () => {
           audio.removeEventListener('canplay', onCanPlay);
@@ -2434,7 +2502,7 @@ export class MusicPlayer {
           resolve();
         }, 3000);
       });
-      console.log(`[audio-restore] After canplay: readyState=${audio.readyState}`);
+      _dbg(`[audio-restore] After canplay: readyState=${audio.readyState}`);
     }
 
     audio.currentTime = targetTime;
@@ -2446,12 +2514,12 @@ export class MusicPlayer {
         audio.addEventListener('seeked', resolve, { once: true });
         setTimeout(resolve, 2000);
       });
-      console.log(`[audio-restore] After seeked: currentTime=${audio.currentTime.toFixed(2)} target=${targetTime.toFixed(2)} diff=${(audio.currentTime - targetTime).toFixed(3)}`);
+      _dbg(`[audio-restore] After seeked: currentTime=${audio.currentTime.toFixed(2)} target=${targetTime.toFixed(2)} diff=${(audio.currentTime - targetTime).toFixed(3)}`);
     }
 
     // Double-set after seeked to combat MP3 keyframe inaccuracy
     if (Math.abs(audio.currentTime - targetTime) > 0.1) {
-      console.log(`[audio-restore] Drift detected (${(audio.currentTime - targetTime).toFixed(3)}s), re-seeking...`);
+      _dbg(`[audio-restore] Drift detected (${(audio.currentTime - targetTime).toFixed(3)}s), re-seeking...`);
       audio.currentTime = targetTime;
       if (audio.seeking) {
         await new Promise((resolve) => {
@@ -2463,7 +2531,7 @@ export class MusicPlayer {
 
     // Final verification — if still way off, log a warning
     if (Math.abs(audio.currentTime - targetTime) > 0.5) {
-      console.warn(`[audio-restore] ⚠️ Seek failed! currentTime=${audio.currentTime.toFixed(2)} target=${targetTime.toFixed(2)} — lyrics may desync`);
+      _dbgWarn(`[audio-restore] ⚠️ Seek failed! currentTime=${audio.currentTime.toFixed(2)} target=${targetTime.toFixed(2)} — lyrics may desync`);
     }
 
     // Mark that we need to re-affirm position on first play — ONLY for actual page reload restores
@@ -2507,7 +2575,7 @@ export class MusicPlayer {
         isRestore: true,  // This is an actual page reload restore
       });
       // Auto-reopen overlay on reload if it was open before
-      console.log('[VIZ-DEBUG] hydrate: post-playTrack check — isPlayerExpanded=%o _overlayIsOpen=%o mathVisualizer=%o currentTrackIndex=%d', this.isPlayerExpanded, this._overlayIsOpen, !!this.mathVisualizer, this.currentTrackIndex);
+      _dbg('[VIZ-DEBUG] hydrate: post-playTrack check — isPlayerExpanded=%o _overlayIsOpen=%o mathVisualizer=%o currentTrackIndex=%d', this.isPlayerExpanded, this._overlayIsOpen, !!this.mathVisualizer, this.currentTrackIndex);
       if (this.isPlayerExpanded && !this._overlayIsOpen) {
         // Ensure currentTrackIndex is valid before opening overlay
         if (this.currentTrackIndex < 0) {
@@ -2515,13 +2583,13 @@ export class MusicPlayer {
           const idx = this.items.findIndex(item => item.id === persistedTrackId);
           if (idx >= 0) {
             this.currentTrackIndex = idx;
-            console.log('[VIZ-DEBUG] hydrate: manually set currentTrackIndex=%d', idx);
+            _dbg('[VIZ-DEBUG] hydrate: manually set currentTrackIndex=%d', idx);
           }
         }
         if (this.currentTrackIndex < 0 || !this.items[this.currentTrackIndex]) {
-          console.warn('[VIZ-DEBUG] hydrate: cannot re-open overlay, no valid track (idx=%d)', this.currentTrackIndex);
+          _dbgWarn('[VIZ-DEBUG] hydrate: cannot re-open overlay, no valid track (idx=%d)', this.currentTrackIndex);
         } else {
-          console.log('[VIZ-DEBUG] hydrate: re-opening overlay, currentTrackIndex=%d', this.currentTrackIndex);
+          _dbg('[VIZ-DEBUG] hydrate: re-opening overlay, currentTrackIndex=%d', this.currentTrackIndex);
         this.openOverlay('player');
         // Skip FLIP animation on reload — show overlay immediately at full quality
         const overlayRoot = this.getOverlayRoot();
@@ -2548,17 +2616,17 @@ export class MusicPlayer {
         if (this.settings.engineMode === 'premium') {
           const analyser = this.audioEngine?.getAnalyser();
           const renderRoot = this.getOverlayRoot();
-          console.log('[VIZ-DEBUG] hydrate: premium mode, mathVisualizer=%o _mathVisualizerLoading=%o analyser=%o renderRoot=%o',
+          _dbg('[VIZ-DEBUG] hydrate: premium mode, mathVisualizer=%o _mathVisualizerLoading=%o analyser=%o renderRoot=%o',
             !!this.mathVisualizer, this._mathVisualizerLoading, !!analyser, !!renderRoot);
           // Wait for any in-flight initMathVisualizer to complete before trying again
           if (this._mathVisualizerLoading) {
-            console.log('[VIZ-DEBUG] hydrate: waiting for in-flight initMathVisualizer...');
+            _dbg('[VIZ-DEBUG] hydrate: waiting for in-flight initMathVisualizer...');
             // Poll until the loading init finishes (max ~3s)
             await new Promise(resolve => {
               let tries = 0;
               const check = () => {
                 if (this.mathVisualizer || !this._mathVisualizerLoading || ++tries > 60) {
-                  console.log('[VIZ-DEBUG] hydrate: poll done after %d tries, mathVisualizer=%o _mathVisualizerLoading=%o', tries, !!this.mathVisualizer, this._mathVisualizerLoading);
+                  _dbg('[VIZ-DEBUG] hydrate: poll done after %d tries, mathVisualizer=%o _mathVisualizerLoading=%o', tries, !!this.mathVisualizer, this._mathVisualizerLoading);
                   return resolve();
                 }
                 setTimeout(check, 50);
@@ -2567,23 +2635,23 @@ export class MusicPlayer {
             });
           }
           if (analyser && renderRoot && !this.mathVisualizer) {
-            console.log('[VIZ-DEBUG] hydrate: calling initMathVisualizer (no existing instance)');
+            _dbg('[VIZ-DEBUG] hydrate: calling initMathVisualizer (no existing instance)');
             try {
               await this.initMathVisualizer(analyser, renderRoot);
-              console.log('[VIZ-DEBUG] hydrate: initMathVisualizer completed, mathVisualizer=%o', !!this.mathVisualizer);
+              _dbg('[VIZ-DEBUG] hydrate: initMathVisualizer completed, mathVisualizer=%o', !!this.mathVisualizer);
             } catch (e) {
-              console.warn('[MathVisualizer] reload init failed:', e);
+              _dbgWarn('[MathVisualizer] reload init failed:', e);
             }
           }
           // If no FLIP animation is running (e.g. direct hydrate without animation),
           // start the ignition sequence now. Otherwise FLIP onfinish handles it.
           if (this.mathVisualizer && !this._flipAnimation) {
-            console.log('[VIZ-DEBUG] hydrate: no FLIP in progress, running ignition now');
+            _dbg('[VIZ-DEBUG] hydrate: no FLIP in progress, running ignition now');
             this._runVisualizerIgnition();
           } else if (this.mathVisualizer) {
-            console.log('[VIZ-DEBUG] hydrate: FLIP in progress, deferring full-res to FLIP onfinish');
+            _dbg('[VIZ-DEBUG] hydrate: FLIP in progress, deferring full-res to FLIP onfinish');
           } else {
-            console.warn('[VIZ-DEBUG] hydrate: NO mathVisualizer after init attempt!');
+            _dbgWarn('[VIZ-DEBUG] hydrate: NO mathVisualizer after init attempt!');
           }
         }
         }
@@ -2774,14 +2842,14 @@ export class MusicPlayer {
   }
 
   renderLibrary() {
-    console.log('[album-nav] renderLibrary called, activeAlbumKey=%s', this.activeAlbumKey);
-    if (!this.activeAlbumKey) console.trace('[album-nav] renderLibrary with null activeAlbumKey');
+    _dbg('[album-nav] renderLibrary called, activeAlbumKey=%s', this.activeAlbumKey);
+    if (!this.activeAlbumKey) _dbg('[album-nav] renderLibrary with null activeAlbumKey');
     this.elements.grid.classList.remove('movies-grid', 'books-grid');
     this.elements.grid.classList.add('music-grid');
     const albumList = groupTracksIntoAlbums(this.items, this.helpers.resolvePreviewUrl);
     const albumKeys = new Set(albumList.map((album) => album.key));
     if (this.activeAlbumKey && !albumKeys.has(this.activeAlbumKey)) {
-      console.warn('[album-nav] renderLibrary: activeAlbumKey "%s" NOT FOUND in albumKeys (count=%d) — keeping it to avoid reset', this.activeAlbumKey, albumKeys.size);
+      _dbgWarn('[album-nav] renderLibrary: activeAlbumKey "%s" NOT FOUND in albumKeys (count=%d) — keeping it to avoid reset', this.activeAlbumKey, albumKeys.size);
       // Don't clear — the album detail view was already shown successfully.
       // Only explicit user actions (ESC, back button) should clear activeAlbumKey.
     }
@@ -2799,7 +2867,7 @@ export class MusicPlayer {
         // Save scroll position only when leaving the albums grid (not when switching between albums)
         if (!this.activeAlbumKey) {
           this._albumsScrollTop = window.scrollY || 0;
-          console.log('[album-nav] Saved grid scroll: %d', this._albumsScrollTop);
+          _dbg('[album-nav] Saved grid scroll: %d', this._albumsScrollTop);
         }
         this.activeAlbumKey = albumKey;
         this.renderLibrary();
@@ -2813,7 +2881,7 @@ export class MusicPlayer {
         // Scroll to top when opening album page
         window._chromicResetSmoothScroll?.(0);
         window.scrollTo(0, 0);
-        console.log('[album-nav] Opened album: %s, scrolled to top', albumKey);
+        _dbg('[album-nav] Opened album: %s, scrolled to top', albumKey);
       },
       onTrackSelect: (trackId) => {
         // Clicking a row in album table should play this album first, then random tracks.
@@ -2824,34 +2892,80 @@ export class MusicPlayer {
         this.enqueueTrackById(trackId, position);
       },
       onExpand: async (album, options = {}) => {
-        console.log('[SHUFFLE-DEBUG] onExpand called:', { albumKey: album?.key, albumName: album?.name, trackCount: album?.tracks?.length, options });
+        // _dbg('[SHUFFLE-DEBUG] onExpand called:', { albumKey: album?.key, albumName: album?.name, trackCount: album?.tracks?.length, options });
         if (this._isTransitioning) {
-          console.log('[SHUFFLE-DEBUG] onExpand blocked — transition in progress');
+          // _dbg('[SHUFFLE-DEBUG] onExpand blocked — transition in progress');
+          return;
+        }
+        // Reload guard: same album already playing — just ensure overlay is open, don't restart
+        const targetTrackId = options.startTrackId || album?.tracks?.[0]?.id;
+        const currentTrack = this.items[this.currentTrackIndex];
+        const albumTracks = album?.tracks || [];
+        const isCurrentTrackInAlbum = currentTrack && albumTracks.some(t => t.id === currentTrack.id);
+        if ((this._currentAlbumKey === album?.key || isCurrentTrackInAlbum) && currentTrack && !options.startTrackId) {
+          if (!this._overlayIsOpen) {
+            this.isPlayerExpanded = true;
+            // Run FLIP animation even when re-opening same album
+            const sourceRect = options?.sourceElement?.getBoundingClientRect?.() || null;
+            if (options?.sourceElement?.classList?.contains('album-view-cover')) {
+              options.sourceElement.style.opacity = '0';
+              options.sourceElement.style.transition = 'opacity 0.15s';
+            }
+            this.openOverlay('player');
+            this.runAlbumFlipTransition(sourceRect);
+          }
+          return;
+        }
+        if (targetTrackId && currentTrack?.id === targetTrackId && this._overlayIsOpen) {
+          _dbg('[reload-guard] Same track already open, skipping reload');
           return;
         }
         const sourceRect = options?.sourceElement?.getBoundingClientRect?.() || null;
+        console.log(`%c[FLIP-DEBUG] onExpand sourceElement=${options?.sourceElement?.className} sourceRect=${sourceRect ? `x=${sourceRect.x|0} y=${sourceRect.y|0} w=${sourceRect.width|0} h=${sourceRect.height|0}` : 'null'}`, 'color:lime');
+
+        // Pre-extract palette from album-view-cover (already loaded) so visualizer
+        // opens with correct colors immediately — no flash of wrong palette
+        const sourceImg = options?.sourceElement?.tagName === 'IMG' ? options.sourceElement : options?.sourceElement?.querySelector?.('img');
+        if (sourceImg?.complete && sourceImg.naturalWidth > 0) {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = 50; canvas.height = 50;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            ctx.drawImage(sourceImg, 0, 0, 50, 50);
+            const { data } = ctx.getImageData(0, 0, 50, 50);
+            const palette = extractPalette(data, 10);
+            if (palette?.length >= 3) {
+              this._lastPalette = palette;
+              if (this.mathVisualizer) {
+                const toHex = (c) => `#${((1 << 24) | (c.r << 16) | (c.g << 8) | c.b).toString(16).slice(1)}`;
+                this.mathVisualizer.setPalette([toHex(palette[0]), toHex(palette[1]), toHex(palette[2])]);
+              }
+              this._extractIdentity?.(palette);
+            }
+          } catch (_) { /* cross-origin or tainted canvas */ }
+        }
         // Don't reset user settings (contentMode, uiMode) — respect user's preferences
         // Handle shuffle mode
         if (options.shuffle) {
-          console.log('[SHUFFLE-DEBUG] Setting isShuffle=true');
+          // _dbg('[SHUFFLE-DEBUG] Setting isShuffle=true');
           this.settings.isShuffle = true;
           this.syncShuffleUi?.();
         }
         const tracks = album?.tracks || [];
-        console.log('[SHUFFLE-DEBUG] Tracks from album:', tracks.length);
+        // _dbg('[SHUFFLE-DEBUG] Tracks from album:', tracks.length);
         // Sort tracks by track number so Play starts from track 1
         const sortedTracks = [...tracks].sort((a, b) => (a.trackNumber || 0) - (b.trackNumber || 0));
         // Set full queue from album tracks before playing
         if (sortedTracks.length) {
           this.queueTrackIds = sortedTracks.map(t => t.id);
-          console.log('[SHUFFLE-DEBUG] Set queueTrackIds:', this.queueTrackIds.length, 'items');
+          // _dbg('[SHUFFLE-DEBUG] Set queueTrackIds:', this.queueTrackIds.length, 'items');
           if (this.settings.isShuffle && !options.preOrdered) {
             this.shuffledQueueIds = [...this.queueTrackIds].sort(() => Math.random() - 0.5);
-            console.log('[SHUFFLE-DEBUG] Reshuffled queue (preOrdered=false)');
+            // _dbg('[SHUFFLE-DEBUG] Reshuffled queue (preOrdered=false)');
           } else if (options.preOrdered) {
             // Tracks are already in desired order (e.g. shuffle-all with mosaic leads)
             this.shuffledQueueIds = [...this.queueTrackIds];
-            console.log('[SHUFFLE-DEBUG] Using preOrdered queue, shuffledQueueIds:', this.shuffledQueueIds.length, 'items');
+            // _dbg('[SHUFFLE-DEBUG] Using preOrdered queue, shuffledQueueIds:', this.shuffledQueueIds.length, 'items');
           }
           this._currentAlbumKey = album.key;
         }
@@ -2859,24 +2973,162 @@ export class MusicPlayer {
         let firstTrack;
         if (options.startTrackId) {
           firstTrack = sortedTracks.find(t => t.id === options.startTrackId) || sortedTracks[0];
-          console.log('[SHUFFLE-DEBUG] Using startTrackId:', options.startTrackId);
+          // _dbg('[SHUFFLE-DEBUG] Using startTrackId:', options.startTrackId);
         } else if (options.shuffle && !options.preOrdered && sortedTracks.length > 1) {
           firstTrack = sortedTracks[Math.floor(Math.random() * sortedTracks.length)];
         } else {
           firstTrack = sortedTracks[0];
         }
-        console.log('[SHUFFLE-DEBUG] First track to play:', firstTrack?.title || firstTrack?.name, 'ID:', firstTrack?.id);
+        // _dbg('[SHUFFLE-DEBUG] First track to play:', firstTrack?.title || firstTrack?.name, 'ID:', firstTrack?.id);
         if (firstTrack) {
-          // Load track first so currentTrackIndex is valid, then open overlay with FLIP
-          await this.playTrackById(firstTrack.id, { autoplay: true, expand: true });
-          console.log('[SHUFFLE-DEBUG] After playTrackById, currentTrackIndex:', this.currentTrackIndex, 'queueTrackIds:', this.queueTrackIds.length, 'shuffledQueueIds:', this.shuffledQueueIds.length);
-          // Now track is loaded — open overlay and run FLIP animation
+          console.log('%c[EXPAND-DEBUG] onExpand: starting, track=%s, _flipAnimation=%o, _isTransitioning=%o', 'color:magenta;font-weight:bold', firstTrack.title || firstTrack.id, !!this._flipAnimation, this._isTransitioning);
+
+          // ─── PHASE 1: Collect all track display data BEFORE animation ───
+          // Use the base artwork URL (without size params) so we can normalize to 700px for overlay
+          const rawArtworkUrl = (sourceImg?.complete && sourceImg.src)
+            ? sourceImg.src.split('?')[0]  // strip tile's size params
+            : this.helpers.resolvePreviewUrl(firstTrack);
+          const trackDisplayBundle = {
+            id: firstTrack.id,
+            title: firstTrack.title || firstTrack.name || '',
+            artist: firstTrack.artist || '',
+            album: firstTrack.album || 'Singles',
+            artwork: rawArtworkUrl,
+            track: firstTrack,
+          };
+
+          // Start fetching full track metadata (lyrics etc) in parallel immediately
+          const trackMetaPromise = this._prefetchLyricsData(firstTrack);
+
+          // ─── STOP PREVIOUS TRACK IMMEDIATELY ───
+          const audio = this.audioEngine?.audioElement;
+          if (audio && !audio.paused) {
+            audio.pause();
+          }
+          // Cancel progress update loop so old track position doesn't keep updating the seekbar
+          if (this.progressFrameId) {
+            window.cancelAnimationFrame(this.progressFrameId);
+            this.progressFrameId = null;
+          }
+          // Reset seek bar and time display to 0 — use DOM directly in case pageUi isn't ready
+          if (this.pageUi?.progress) this.pageUi.progress.value = '0';
+          if (this.pageUi?.currentTime) this.pageUi.currentTime.textContent = '0:00';
+          if (this.pageUi?.duration) this.pageUi.duration.textContent = '0:00';
+          if (this._globalProgressBar) this._globalProgressBar.setProgress?.(0);
+          const progressEl = document.getElementById('trackProgress');
+          if (progressEl) progressEl.value = '0';
+          const currentTimeEl = document.getElementById('trackCurrentTime') || this.getOverlayRoot?.()?.querySelector?.('.music-track-current-time');
+          if (currentTimeEl) currentTimeEl.textContent = '0:00';
+
+          // Set minimal state so overlay can open
+          const idx = this.items.findIndex(t => t.id === firstTrack.id);
+          if (idx >= 0) this.currentTrackIndex = idx;
+          this.isPlayerExpanded = true;
+          this._preloadedArtworkUrl = trackDisplayBundle.artwork;
+
+          // ─── PHASE 2: Apply bundle to overlay immediately (before animation) ───
+          this.updateGlobalMetadata(firstTrack);
+          // Clear old lyrics so GPU text from previous track isn't shown
+          if (this.lyrics) {
+            this.lyrics.stop();
+            this.lyrics.setTrack({ ...firstTrack, lyrics: null, syncedLyrics: null });
+          }
+
+          // Store the bundle so openOverlay/renderTrackPage uses it
+          this._pendingTrackBundle = trackDisplayBundle;
+
+          // ─── PRE-SET ARTWORK before overlay becomes visible (prevents 1-frame old image flash) ───
+          // Use the tile's exact cached src for instant display — no network wait/blink
+          const existingArtEl = this.getOverlayRoot?.()?.querySelector?.('#musicTrackArtwork');
+          if (existingArtEl && trackDisplayBundle.artwork) {
+            const tileSrc = (sourceImg?.complete && sourceImg.src && !sourceImg.src.startsWith('data:'))
+              ? sourceImg.src  // already in browser cache at 400px
+              : withImageParams(trackDisplayBundle.artwork, 700);
+            existingArtEl.src = tileSrc;
+            // Silently upgrade to 700px in background — img keeps old pixels until new loads
+            const hiResSrc = withImageParams(trackDisplayBundle.artwork, 700);
+            if (tileSrc !== hiResSrc) {
+              const hiRes = new Image();
+              hiRes.onload = () => { existingArtEl.src = hiResSrc; };
+              hiRes.src = hiResSrc;
+            }
+          }
+
+          // ─── PHASE 3: Open overlay + animate ───
+          console.log('%c[EXPAND-DEBUG] onExpand: calling openOverlay + runAlbumFlipTransition', 'color:magenta;font-weight:bold');
+          // Hide the album-view cover so it looks like the image "flew" to the overlay
+          if (options?.sourceElement?.classList?.contains('album-view-cover')) {
+            options.sourceElement.style.opacity = '0';
+            options.sourceElement.style.transition = 'opacity 0.15s';
+          }
           this.openOverlay('player');
+          // Clear GPU lyrics renderer AFTER openOverlay (mathVisualizer now initialized)
+          this.mathVisualizer?.setLyricsTimeline?.([]);
+
+          // Optimistically position art on left (lyrics layout) — assume lyrics exist
+          const immShell = this.getOverlayRoot()?.querySelector('.music-immersive-shell');
+          if (immShell && this.settings.engineMode === 'premium') {
+            immShell.classList.add('gpu-lyrics-active');
+          }
+
+          // Start visualizer at low quality for warmup — single rendered frame
+          if (this.settings.engineMode === 'premium' && this.mathVisualizer) {
+            const vizContainer = this.getOverlayRoot()?.querySelector('#mathVisualizerContainer');
+            if (vizContainer) vizContainer.style.display = '';
+            this.mathVisualizer.setResolutionScale(0.4);
+            this.mathVisualizer.setMaxFps(1); // minimal during warmup
+            if (!this.mathVisualizer.running) this.mathVisualizer.start();
+            if (this.mathVisualizer.renderFrame) this.mathVisualizer.renderFrame();
+          }
+
+          // START FLIP IMMEDIATELY — don't wait for lyrics/meshes, animate from frame 1
+          // Single rAF to let overlay layout settle, then go
+          await new Promise(r => requestAnimationFrame(r));
           this.runAlbumFlipTransition(sourceRect);
+
+          // Load lyrics IN PARALLEL with animation — no blocking
+          const lyricsLoadPromise = (async () => {
+            const earlyMeta = await trackMetaPromise;
+            console.log('[DOM-LYRICS-DEBUG] onExpand lyricsLoad: earlyMeta=%s hasLyrics=%s engineMode=%s', !!earlyMeta, !!earlyMeta?.lyrics?.length, this.settings.engineMode);
+            if (earlyMeta && this.lyrics) {
+              await this.fetchAndDisplayLyrics(firstTrack, earlyMeta);
+              this._lyricsAlreadyLoadedForTrackId = firstTrack.id;
+              console.log('[DOM-LYRICS-DEBUG] onExpand: fetchAndDisplayLyrics done, shell has-lyrics=%s', this.getOverlayRoot()?.querySelector('.music-immersive-shell')?.classList?.contains('has-lyrics'));
+            } else if (immShell) {
+              console.log('[DOM-LYRICS-DEBUG] onExpand: no meta or no lyrics engine');
+              immShell.classList.remove('gpu-lyrics-active');
+            }
+          })();
+
+          // Wait for FLIP animation to finish
+          await new Promise(resolve => {
+            const check = () => {
+              if (!this._flipAnimation && !this._isTransitioning) return resolve();
+              requestAnimationFrame(check);
+            };
+            check();
+          });
+
+          // Ensure lyrics are loaded (should already be done by now — local files are fast)
+          await lyricsLoadPromise;
+
+          // Mark that renderTrackPage should NOT re-render (bundle already applied)
+          this._trackPageAlreadyRenderedForId = firstTrack.id;
+
+          // Now that FLIP is done, feed full lyrics timeline to GPU renderer
+          if (this._deferredFullLyricsTimeline) {
+            this.mathVisualizer?.setLyricsTimeline?.(this._deferredFullLyricsTimeline);
+            this._deferredFullLyricsTimeline = null;
+          }
+
+          // ─── PHASE 5: Load audio (heavy part, doesn't affect UI) ───
+          await this.playTrackById(firstTrack.id, { autoplay: true, expand: false });
+          this._pendingTrackBundle = null;
+          console.log('%c[EXPAND-DEBUG] onExpand: playTrackById DONE', 'color:magenta;font-weight:bold');
         }
       },
       onBackToAlbums: () => {
-        console.log('[album-nav] Back button pressed');
+        _dbg('[album-nav] Back button pressed');
         const savedScroll = this._albumsScrollTop || 0;
         this.activeAlbumKey = null;
         this._backToAlbums = true;
@@ -2889,8 +3141,8 @@ export class MusicPlayer {
       onDeleteTrack: async (trackId) => {
         await this.deleteTrackById(trackId);
       },
-      onDeleteAlbum: async (albumKey) => {
-        await this.deleteAlbumByKey(albumKey);
+      onDeleteAlbum: async (albumKey, options) => {
+        await this.deleteAlbumByKey(albumKey, options);
       },
     });
 
@@ -2922,27 +3174,15 @@ export class MusicPlayer {
           card.style.opacity = '1';
           card.style.transform = '';
           card.style.willChange = '';
-          card.dataset.staggerDone = '1';
+          card.style.transition = '';
           card.dataset.staggerRevealed = '1';
-          // Mark as visible for IntersectionObserver in staggeredEntry
           card._staggerVisible = true;
+          card._staggerDone = true;
         });
       }
 
-      requestAnimationFrame(() => {
-        const cards = Array.from(this.elements.grid.querySelectorAll('.stagger-item'));
-        if (cards.length) {
-          cards.forEach((card) => {
-            if (!card.querySelector('.motion-gloss-overlay')) {
-              tilt3D(card, { maxTilt: 5, scale: 1.02 });
-            }
-            hapticHover(card, { brightness: 1.08 });
-            if (!card.querySelector('.card-ambient-glow')) {
-              ambientCardGlow(card);
-            }
-          });
-        }
-      });
+      // Motion effects (tilt3D, hapticHover, ambientCardGlow) are applied by app.js applyMotionEffects
+      // No duplicate application needed here
     }
 
     const currentTrack = this.items[this.currentTrackIndex];
@@ -2962,15 +3202,17 @@ export class MusicPlayer {
     }
   }
 
-  async deleteTrackById(trackId) {
+  async deleteTrackById(trackId, { skipConfirm = false } = {}) {
     const track = this.getTrackById(trackId);
     if (!track) {
       return;
     }
 
-    const approved = window.confirm(`Delete track ${track.title || track.name}?`);
-    if (!approved) {
-      return;
+    if (!skipConfirm) {
+      const approved = window.confirm(`Delete track ${track.title || track.name}?`);
+      if (!approved) {
+        return;
+      }
     }
 
     await this.deleteMediaFile(track.name);
@@ -2986,15 +3228,17 @@ export class MusicPlayer {
     this.persistPlayerState({ immediate: true });
   }
 
-  async deleteAlbumByKey(albumKey) {
+  async deleteAlbumByKey(albumKey, { skipConfirm = false } = {}) {
     const albumTracks = this.items.filter((item) => getTrackAlbumKey(item) === albumKey);
     if (!albumTracks.length) {
       return;
     }
 
-    const approved = window.confirm(`Delete album ${albumTracks[0].album || albumKey} and ${albumTracks.length} tracks?`);
-    if (!approved) {
-      return;
+    if (!skipConfirm) {
+      const approved = window.confirm(`Delete album ${albumTracks[0].album || albumKey} and ${albumTracks.length} tracks?`);
+      if (!approved) {
+        return;
+      }
     }
 
     for (const track of albumTracks) {
@@ -3016,6 +3260,7 @@ export class MusicPlayer {
   }
 
   async playTrackById(trackId, options = {}) {
+    console.log('%c[EXPAND-DEBUG] playTrackById called: trackId=%s, options=%o, stack:', 'color:yellow;font-weight:bold', trackId, options, new Error().stack?.split('\n').slice(1,4).join(' | '));
     const index = this.items.findIndex((item) => item.id === trackId);
     if (index >= 0) {
       await this.playTrack(index, options);
@@ -3050,8 +3295,22 @@ export class MusicPlayer {
   }
 
   async playTrack(index, { autoplay = true, expand = true, startTime = 0, preserveSettingsView = false, isRestore = false } = {}) {
+    console.log('%c[EXPAND-DEBUG] playTrack called: index=%d, autoplay=%o, expand=%o, _flipAnimation=%o, _isTransitioning=%o', 'color:yellow;font-weight:bold', index, autoplay, expand, !!this._flipAnimation, this._isTransitioning);
     if (index < 0 || index >= this.items.length) {
       return;
+    }
+
+    // Wait for overlay open animation to fully complete before loading track
+    // This prevents jank/freeze during FLIP transitions
+    if (this._flipAnimation || this._isTransitioning) {
+      _dbg('[playTrack] Deferring until overlay animation completes');
+      await new Promise(resolve => {
+        const check = () => {
+          if (!this._flipAnimation && !this._isTransitioning) return resolve();
+          requestAnimationFrame(check);
+        };
+        check();
+      });
     }
 
     const track = this.items[index];
@@ -3064,13 +3323,15 @@ export class MusicPlayer {
     // Guard: If same track is already loaded and at the right position, skip re-loading
     // This prevents switchCategory/activate from wiping a successfully restored position
     const audio = this.audioEngine.audioElement;
-    const alreadyLoaded = this.currentTrackIndex === index && audio?.src && !audio.error;
+    const trackSrc = track.path || track.id;
+    const audioSrcMatchesTrack = audio?.src && trackSrc && decodeURIComponent(audio.src).includes(decodeURIComponent(trackSrc));
+    const alreadyLoaded = this.currentTrackIndex === index && audio?.src && !audio.error && audioSrcMatchesTrack;
     if (alreadyLoaded) {
       if (startTime > 0) {
         const drift = Math.abs(audio.currentTime - startTime);
         if (drift < 1.0) {
-          console.log(`[playTrack] Same track already at position ${audio.currentTime.toFixed(2)} (target=${startTime.toFixed(2)}), skipping reload`);
-          this.isPlayerExpanded = Boolean(expand);
+          _dbg(`[playTrack] Same track already at position ${audio.currentTime.toFixed(2)} (target=${startTime.toFixed(2)}), skipping reload`);
+          if (expand) this.isPlayerExpanded = true;
           this.isSettingsView = preserveSettingsView ? this.isSettingsView : false;
           this.updateGlobalMetadata(track);
           this.updatePlayButtons();
@@ -3079,12 +3340,13 @@ export class MusicPlayer {
         }
       } else if (!audio.paused || audio.currentTime > 0.5) {
         // Track is already playing or has meaningful position — don't reset to 0
-        console.log(`[playTrack] Same track already active (currentTime=${audio.currentTime.toFixed(2)} paused=${audio.paused}), skipping reload`);
+        _dbg(`[playTrack] Same track already active (currentTime=${audio.currentTime.toFixed(2)} paused=${audio.paused}), skipping reload`);
         // If paused, resume playback
         if (audio.paused && autoplay) {
           audio.play().catch(() => {});
         }
-        this.isPlayerExpanded = Boolean(expand);
+        // Don't override isPlayerExpanded if already expanded (e.g. from onExpand flow)
+        if (expand) this.isPlayerExpanded = true;
         this.isSettingsView = preserveSettingsView ? this.isSettingsView : false;
         this.updateGlobalMetadata(track);
         this.updatePlayButtons();
@@ -3100,7 +3362,7 @@ export class MusicPlayer {
       // User chose to discard — restore original lyrics then continue
       if (this._sessionLyricsOverride.originalPayload && this.lyrics?.setTrack) {
         this.lyrics.setTrack(this._sessionLyricsOverride.originalPayload);
-        console.log('[MusicPlayer] ↩ Restored original lyrics after session discard');
+        _dbg('[MusicPlayer] ↩ Restored original lyrics after session discard');
       }
       this._sessionLyricsOverride = null;
     }
@@ -3110,9 +3372,10 @@ export class MusicPlayer {
 
     this.syncQueueWithItems();
     this.currentTrackIndex = index;
-    console.log('[SHUFFLE-DEBUG] playTrack: index=%d trackId=%s queueTrackIds=%d shuffledQueueIds=%d', index, track.id, this.queueTrackIds.length, this.shuffledQueueIds.length);
+    // _dbg('[SHUFFLE-DEBUG] playTrack: index=%d trackId=%s queueTrackIds=%d shuffledQueueIds=%d', index, track.id, this.queueTrackIds.length, this.shuffledQueueIds.length);
     this._pendingSyncedLyricsPayload = null; // Clear stale lyrics from previous track
-    this.isPlayerExpanded = Boolean(expand);
+    // Only expand if requested; never collapse if already expanded (e.g. from onExpand flow)
+    if (expand) this.isPlayerExpanded = true;
     this.isSettingsView = preserveSettingsView ? this.isSettingsView : false;
     this.lastSyncedSecond = -1;
 
@@ -3122,16 +3385,21 @@ export class MusicPlayer {
     }
 
     if (!this.queueTrackIds.includes(track.id)) {
-      console.log('[SHUFFLE-DEBUG] playTrack: track not in queueTrackIds, adding it');
+      // _dbg('[SHUFFLE-DEBUG] playTrack: track not in queueTrackIds, adding it');
       this.queueTrackIds.push(track.id);
     }
     if (this.settings.isShuffle && !this.shuffledQueueIds.includes(track.id)) {
-      console.log('[SHUFFLE-DEBUG] playTrack: track not in shuffledQueueIds, REBUILDING QUEUE (this may break shuffle all order!)');
+      // _dbg('[SHUFFLE-DEBUG] playTrack: track not in shuffledQueueIds, REBUILDING QUEUE (this may break shuffle all order!)');
       this.rebuildShuffledQueue();
     }
 
     // Pre-fetch lyrics metadata in parallel with audio + page render (network only)
     const lyricsDataPromise = this._prefetchLyricsData(track);
+
+    // Stop previous track immediately before loading new one
+    if (audio && !audio.paused) {
+      audio.pause();
+    }
 
     await this.audioEngine.setSource(track.url, { autoplay: startTime > 0 ? false : autoplay });
     if (startTime > 0) {
@@ -3163,8 +3431,14 @@ export class MusicPlayer {
         : 'This browser may not support this audio format. Use direct open/download fallback.',
     );
     this.persistPlayerState({ immediate: true });
-    // Now DOM is ready — display pre-fetched lyrics
-    this.fetchAndDisplayLyrics(track, await lyricsDataPromise);
+    // Now DOM is ready — display pre-fetched lyrics (skip if already loaded by onExpand)
+    if (this._lyricsAlreadyLoadedForTrackId === track.id) {
+      console.log('[DOM-LYRICS-DEBUG] playTrack: lyrics already loaded by onExpand, skipping');
+      this._lyricsAlreadyLoadedForTrackId = null;
+    } else {
+      console.log('[DOM-LYRICS-DEBUG] playTrack: calling fetchAndDisplayLyrics');
+      this.fetchAndDisplayLyrics(track, await lyricsDataPromise);
+    }
   }
 
   /** Resolve the relative path (e.g. music/Music/Album/track.flac) from a track object.
@@ -3254,17 +3528,17 @@ export class MusicPlayer {
       if (!meta) {
         const relPath = this._resolveTrackRelPath(track);
         if (!relPath) return;
-        console.log('[lyrics] Fetching track-info for:', relPath);
+        _dbg('[lyrics] Fetching track-info for:', relPath);
         const encodedRelPath = relPath.split('/').map(s => encodeURIComponent(s)).join('/');
         const res = await fetch(`/api/track-info/${encodedRelPath}`);
         if (!res.ok) {
-          console.warn('[lyrics] API returned', res.status);
+          _dbgWarn('[lyrics] API returned', res.status);
           return;
         }
         meta = await res.json();
       }
 
-      console.log('[lyrics] Metadata received:', { title: meta.title, artist: meta.artist, album: meta.album, year: meta.year, lyricsType: meta.lyricsType, lyricsLength: meta.lyrics?.length || 0, hasPicture: !!meta.picture });
+      _dbg('[lyrics] Metadata received:', { title: meta.title, artist: meta.artist, album: meta.album, year: meta.year, lyricsType: meta.lyricsType, lyricsLength: meta.lyrics?.length || 0, hasPicture: !!meta.picture });
 
       // Update loading state — lyrics found, now processing
       this._showLyricsLoadingState(1);
@@ -3299,14 +3573,14 @@ export class MusicPlayer {
           let artSrc = this.elements?.globalPlayerArt?.src;
           const previewSource = track?.previewSource || null;
           const hasTrackSidecarPreview = previewSource === 'track-sidecar';
-          console.log('[artwork-debug] metadata callback — meta.picture:', !!meta.picture, 'globalPlayerArt.src:', artSrc);
+          _dbg('[artwork-debug] metadata callback — meta.picture:', !!meta.picture, 'globalPlayerArt.src:', artSrc);
           // If track has embedded cover art, use the track-cover API for this specific track
           if (meta.picture && !hasTrackSidecarPreview) {
             const relPath = this._resolveTrackRelPath(track);
-            console.log('[artwork-debug] track has embedded cover, relPath:', relPath);
+            _dbg('[artwork-debug] track has embedded cover, relPath:', relPath);
             if (relPath) {
               const trackCoverUrl = `/api/track-cover/${relPath.split('/').map(s => encodeURIComponent(s)).join('/')}?w=700&fmt=webp`;
-              console.log('[artwork-debug] using per-track cover URL:', trackCoverUrl);
+              _dbg('[artwork-debug] using per-track cover URL:', trackCoverUrl);
               artSrc = trackCoverUrl;
               // Also update the global player art to match
               if (this.elements?.globalPlayerArt) {
@@ -3314,12 +3588,12 @@ export class MusicPlayer {
               }
             }
           } else if (meta.picture && hasTrackSidecarPreview) {
-            console.log('[artwork-debug] preserving track-sidecar preview over embedded metadata cover');
+            _dbg('[artwork-debug] preserving track-sidecar preview over embedded metadata cover');
           }
           if (artSrc && artEl.src !== artSrc) {
             artEl.src = artSrc;
             artEl.alt = `${meta.title || track.title || 'Track'} artwork`;
-            console.log('[artwork-debug] Updated #musicTrackArtwork from', meta.picture ? 'embedded track cover' : 'globalPlayerArt', '→', artSrc);
+            _dbg('[artwork-debug] Updated #musicTrackArtwork from', meta.picture ? 'embedded track cover' : 'globalPlayerArt', '→', artSrc);
             // Re-extract accent color from the new artwork
             if (meta.picture) {
               artEl.addEventListener('load', () => {
@@ -3358,7 +3632,7 @@ export class MusicPlayer {
             this.currentLyrics = JSON.parse(meta.lyrics);
             this.currentLyricsType = 'synced';
           } catch (e) {
-            console.warn('[lyrics] Failed to parse synced lyrics, treating as unsynced:', e.message);
+            _dbgWarn('[lyrics] Failed to parse synced lyrics, treating as unsynced:', e.message);
             this.currentLyrics = meta.lyrics;
             this.currentLyricsType = 'unsynced';
           }
@@ -3371,8 +3645,8 @@ export class MusicPlayer {
         if (this.lyrics) {
           if (this.currentLyricsType === 'synced' && Array.isArray(this.currentLyrics)) {
             // Debug: show raw shape of first synced line
-            console.log('[lyrics] Raw synced data sample:', JSON.stringify(this.currentLyrics[0]));
-            console.log('[lyrics] All keys in first line:', Object.keys(this.currentLyrics[0] || {}));
+            _dbg('[lyrics] Raw synced data sample:', JSON.stringify(this.currentLyrics[0]));
+            _dbg('[lyrics] All keys in first line:', Object.keys(this.currentLyrics[0] || {}));
 
             // Build authoritative timeline from synced data
             // lyricIdea14: Frontend is a "dumb renderer" — use BE word timestamps when available
@@ -3408,7 +3682,7 @@ export class MusicPlayer {
               }
 
               if (idx === 0) {
-                console.log('[lyrics] Resolved first line timing:', { startSec, endSec, rawKeys: Object.keys(l), hasWordTimestamps: !!l.words });
+                _dbg('[lyrics] Resolved first line timing:', { startSec, endSec, rawKeys: Object.keys(l), hasWordTimestamps: !!l.words });
               }
 
               // Guard: ensure end > start (negative durations crash word distribution)
@@ -3425,12 +3699,20 @@ export class MusicPlayer {
               // ─── lyricIdea14: Use real word-level timestamps from BE if available ───
               if (Array.isArray(l.words) && l.words.length > 0 && l.words[0].start !== undefined) {
                 // BE provided word-level sync (Enhanced LRC or WhisperX)
-                console.log(`[lyrics] ✅ Line ${idx}: Using BE word-level timestamps (${l.words.length} words)`);
-                let wordData = l.words.map((w, wi) => ({
-                  text: w.word || w.text || w,
-                  start: parseFloat(w.start),
-                  end: parseFloat(w.end),
-                }));
+                if (window.__DEBUG__) _dbg(`[lyrics] ✅ Line ${idx}: Using BE word-level timestamps (${l.words.length} words)`);
+                let wordData = l.words.map((w, wi) => {
+                  const wo = {
+                    text: w.word || w.text || w,
+                    start: parseFloat(w.start),
+                    end: parseFloat(w.end),
+                  };
+                  if (w.adlib) wo.adlib = true;
+                  if (w.whisper) wo.whisper = true;
+                  if (w.spoken) wo.spoken = true;
+                  if (w.sung) wo.sung = true;
+                  if (w.stretch) wo.stretch = true;
+                  return wo;
+                });
                 // Update endSec from last word if needed
                 const lastWordEnd = wordData[wordData.length - 1]?.end;
                 if (lastWordEnd && lastWordEnd > endSec) endSec = lastWordEnd;
@@ -3441,7 +3723,7 @@ export class MusicPlayer {
 
               // ─── Fallback: Heuristic word generation (no BE word data) ───
               // Only used when BE doesn't provide word-level timestamps
-              console.log(`[lyrics] ⚠️ Line ${idx}: No word timestamps, generating from text (${(endSec - startSec).toFixed(2)}s)`);
+              _dbg(`[lyrics] ⚠️ Line ${idx}: No word timestamps, generating from text (${(endSec - startSec).toFixed(2)}s)`);
               const wordStrings = String(text).split(/\s+/).filter(Boolean);
 
               // Distribute words evenly across line duration
@@ -3459,12 +3741,12 @@ export class MusicPlayer {
               return { type: 'line', text: String(text), start: startSec, end: endSec, words: wordData };
             });
             const lyricsText = this.currentLyrics.map(l => l.text);
-            console.log('[lyrics] Updating LyricsEngine with', lyricsText.length, 'synced lines', 'AUDIO_STATE:', this.audioEngine.audioElement.currentTime.toFixed(2), 'dur:', this.audioEngine.audioElement.duration, 'paused:', this.audioEngine.audioElement.paused);
+            _dbg('[lyrics] Updating LyricsEngine with', lyricsText.length, 'synced lines', 'AUDIO_STATE:', this.audioEngine.audioElement.currentTime.toFixed(2), 'dur:', this.audioEngine.audioElement.duration, 'paused:', this.audioEngine.audioElement.paused);
             // Debug: verify words are present in timeline
             const withWords = syncedTimeline.filter(l => l.words && l.words.length > 0).length;
             const sample = syncedTimeline[0];
-            console.log(`[lyrics] Timeline quality: ${withWords}/${syncedTimeline.length} lines have words. Sample:`, sample?.words?.[0]);
-            console.log(`[lyrics-sync] About to call lyrics.setTrack — audioTime=${this.audioEngine.audioElement.currentTime.toFixed(2)} duration=${this.audioEngine.audioElement.duration} paused=${this.audioEngine.audioElement.paused}`);
+            _dbg(`[lyrics] Timeline quality: ${withWords}/${syncedTimeline.length} lines have words. Sample:`, sample?.words?.[0]);
+            _dbg(`[lyrics-sync] About to call lyrics.setTrack — audioTime=${this.audioEngine.audioElement.currentTime.toFixed(2)} duration=${this.audioEngine.audioElement.duration} paused=${this.audioEngine.audioElement.paused}`);
             // Cache payload so renderTrackPage can re-feed if it runs after this
             this._showLyricsLoadingState(2); // Enhancing step
             const lyricsPayload = {
@@ -3476,11 +3758,13 @@ export class MusicPlayer {
             };
             this._pendingSyncedLyricsPayload = lyricsPayload;
             this._hideLyricsLoadingState();
+            console.log('[DOM-LYRICS-DEBUG] fetchAndDisplayLyrics: calling setTrack with %d synced lines, engineMode=%s, container=%s', syncedTimeline.length, this.settings.engineMode, !!this.lyrics?.container);
             this.lyrics.setTrack(lyricsPayload).then(() => {
+              console.log('[DOM-LYRICS-DEBUG] fetchAndDisplayLyrics: setTrack RESOLVED, timeline=%d, shell has-lyrics=%s', this.lyrics?.timeline?.length, this.lyrics?.container?.closest?.('.music-immersive-shell')?.classList?.contains('has-lyrics'));
               // Force re-sync after setTrack completes (worker may have delayed)
               const audioTime = this.audioEngine.audioElement.currentTime;
               const tl = this.lyrics?.timeline;
-              console.log(`[lyrics] POST-setTrack sync check: audioTime=${audioTime.toFixed(2)} timelineLen=${tl?.length} firstStart=${tl?.[0]?.start?.toFixed(2)} lastEnd=${tl?.[tl?.length-1]?.end?.toFixed(2)} activeIdx=${this.lyrics?.activeLineIndex}`);
+              _dbg(`[lyrics] POST-setTrack sync check: audioTime=${audioTime.toFixed(2)} timelineLen=${tl?.length} firstStart=${tl?.[0]?.start?.toFixed(2)} lastEnd=${tl?.[tl?.length-1]?.end?.toFixed(2)} activeIdx=${this.lyrics?.activeLineIndex}`);
               // Force active line recalculation
               if (this.lyrics) {
                 this.lyrics._lastNow = -1;
@@ -3488,8 +3772,16 @@ export class MusicPlayer {
                 this.lyrics.updateActiveLine?.();
               }
             });
-            // Feed timeline to GPU lyrics renderer
-            this.mathVisualizer?.setLyricsTimeline?.(syncedTimeline);
+            // Feed timeline to GPU lyrics renderer — defer ALL during FLIP to avoid mesh jank
+            if (this._isTransitioning || this._flipAnimation) {
+              this._deferredFullLyricsTimeline = syncedTimeline;
+              // Don't create ANY meshes during animation — they cause 100ms+ frame drops
+            } else {
+              this._deferredFullLyricsTimeline = null;
+              this.mathVisualizer?.setLyricsTimeline?.(syncedTimeline);
+            }
+            // Feed current audio time so lyrics sync even when paused
+            this.mathVisualizer?.setCurrentTime?.(this.audioEngine.getCurrentTime());
             // Auto-fetch translations if enabled — but only apply CACHED ones (don't auto-generate)
             if (this.settings.showTranslation) {
               this._fetchCachedTranslationOrTurnOff(track, trackPath);
@@ -3507,10 +3799,10 @@ export class MusicPlayer {
             const lyricsForEngine = typeof this.currentLyrics === 'string'
               ? this.currentLyrics.split('\n')
               : Array.isArray(this.currentLyrics) ? this.currentLyrics.map(l => l.text || l) : [];
-            console.log('[lyrics] Updating LyricsEngine with', lyricsForEngine.length, 'unsynced lines');
+            _dbg('[lyrics] Updating LyricsEngine with', lyricsForEngine.length, 'unsynced lines');
             this.lyrics.setTrack({ ...track, lyrics: lyricsForEngine, album: meta.album, year: meta.year }).then(() => {
               const audioTime = this.audioEngine.audioElement.currentTime;
-              console.log(`[lyrics] POST-setTrack (unsynced) sync check: audioTime=${audioTime.toFixed(2)} activeIdx=${this.lyrics?.activeLineIndex}`);
+              _dbg(`[lyrics] POST-setTrack (unsynced) sync check: audioTime=${audioTime.toFixed(2)} activeIdx=${this.lyrics?.activeLineIndex}`);
               if (this.lyrics) {
                 this.lyrics._lastNow = -1;
                 this.lyrics.activeLineIndex = -1;
@@ -3520,7 +3812,8 @@ export class MusicPlayer {
           }
         }
 
-        // DEBUG: periodic sync monitor for 10s
+        // DEBUG: periodic sync monitor for 10s (only in debug mode)
+        if (window.__DEBUG__) {
         if (this._lyricsSyncDebugInterval) clearInterval(this._lyricsSyncDebugInterval);
         let _syncDbgCount = 0;
         this._lyricsSyncDebugInterval = setInterval(() => {
@@ -3531,11 +3824,12 @@ export class MusicPlayer {
           const idx = this.lyrics.activeLineIndex;
           const entry = tl?.[idx];
           const running = !!this.lyrics.frameId;
-          console.log(`[lyrics] SYNC-MON #${_syncDbgCount}: audio=${t.toFixed(2)} idx=${idx} running=${running} entry=[${entry?.start?.toFixed(2)}..${entry?.end?.toFixed(2)}] "${(entry?.text||'').substring(0,25)}" tlLen=${tl?.length}`);
+          _dbg(`[lyrics] SYNC-MON #${_syncDbgCount}: audio=${t.toFixed(2)} idx=${idx} running=${running} entry=[${entry?.start?.toFixed(2)}..${entry?.end?.toFixed(2)}] "${(entry?.text||'').substring(0,25)}" tlLen=${tl?.length}`);
         }, 1000);
+        }
 
       } else {
-        console.log('[lyrics] No lyrics in metadata, showing track info only');
+        _dbg('[lyrics] No lyrics in metadata, showing track info only');
         this._hideLyricsLoadingState();
         // No lyrics available — show rich metadata instead
         const lyricsStatus = meta.lyricsStatus || 'not_found';
@@ -3558,7 +3852,7 @@ export class MusicPlayer {
         }
       }
     } catch (err) {
-      console.warn('[lyrics] Failed to fetch:', err.message);
+      _dbgWarn('[lyrics] Failed to fetch:', err.message);
       this._hideLyricsLoadingState();
     }
   }
@@ -3576,7 +3870,7 @@ export class MusicPlayer {
     let attempts = 0;
     const maxAttempts = 120; // ~10 minutes at 5s interval
 
-    console.log(`[lyrics-poll] Starting poll for: ${meta.title || relPath}`);
+    _dbg(`[lyrics-poll] Starting poll for: ${meta.title || relPath}`);
 
     // Register in AI Activity Hub
     const hub = window.aiHub;
@@ -3635,7 +3929,7 @@ export class MusicPlayer {
     this._lyricsPollTimer = setInterval(async () => {
       attempts++;
       if (this.currentTrackId() !== trackId || attempts > maxAttempts) {
-        console.log(`[lyrics-poll] Stopped (track changed or timeout)`);
+        _dbg(`[lyrics-poll] Stopped (track changed or timeout)`);
         clearInterval(this._lyricsPollTimer);
         this._lyricsPollTimer = null;
         if (attempts > maxAttempts) hub?.failTask(hubTaskId);
@@ -3654,7 +3948,7 @@ export class MusicPlayer {
         const res = await fetch(`/api/lyrics-status/${encodedRelPath}`);
         if (!res.ok) return;
         const data = await res.json();
-        console.log(`[lyrics-poll] Status: ${data.status} (attempt ${attempts}) hasLyrics=${!!data.lyrics} partial=${data.partial} trackMatch=${this.currentTrackId() === trackId}`);
+        _dbg(`[lyrics-poll] Status: ${data.status} (attempt ${attempts}) hasLyrics=${!!data.lyrics} partial=${data.partial} trackMatch=${this.currentTrackId() === trackId}`);
 
         if (
           data.status === 'not_found' &&
@@ -3704,7 +3998,7 @@ export class MusicPlayer {
               this.currentLyricsType = 'synced';
 
               if (this.lyrics) {
-                console.log(`[lyrics-poll] ${isFinal ? '✅ Final' : ' Partial'} lyrics received (${parsed.length} lines). Loading into engine...`);
+                _dbg(`[lyrics-poll] ${isFinal ? '✅ Final' : ' Partial'} lyrics received (${parsed.length} lines). Loading into engine...`);
                 // Directly feed lyrics into the engine pipeline without re-fetching track-info
                 this.fetchAndDisplayLyrics(track, {
                   title: meta.title,
@@ -3718,7 +4012,7 @@ export class MusicPlayer {
                 if (isPartial) this._partialLyricsLoaded = true;
               }
             } catch (e) {
-              console.warn('[lyrics-poll] Failed to parse lyrics:', e.message);
+              _dbgWarn('[lyrics-poll] Failed to parse lyrics:', e.message);
             }
           }
 
@@ -3744,9 +4038,9 @@ export class MusicPlayer {
             this._lyricsPollTimer = null;
             this._partialLyricsLoaded = false;
             hub?.failTask(hubTaskId);
-            console.log(`[lyrics-poll] ❌ Lyrics not found after ${attempts} attempts, stopping poll`);
+            _dbg(`[lyrics-poll] ❌ Lyrics not found after ${attempts} attempts, stopping poll`);
           } else {
-            console.log(`[lyrics-poll] Status: not_found (attempt ${attempts}), retrying...`);
+            _dbg(`[lyrics-poll] Status: not_found (attempt ${attempts}), retrying...`);
           }
         }
       } catch (e) {
@@ -3785,7 +4079,7 @@ export class MusicPlayer {
     // Throttle: ignore rapid-fire clicks (< 250ms apart)
     const now = performance.now();
     if (this._lastToggleTime && now - this._lastToggleTime < 250) {
-      console.log(`[audio] togglePlayPause throttled (${(now - this._lastToggleTime).toFixed(0)}ms since last)`);
+      _dbg(`[audio] togglePlayPause throttled (${(now - this._lastToggleTime).toFixed(0)}ms since last)`);
       return;
     }
     this._lastToggleTime = now;
@@ -3805,7 +4099,7 @@ export class MusicPlayer {
       for (let i = 0; i < buffered.length; i++) {
         ranges.push(`[${buffered.start(i).toFixed(2)}..${buffered.end(i).toFixed(2)}]`);
       }
-      console.log(`[audio-restore] PLAY pressed (restore mode): target=${target.toFixed(2)} currentTime=${audio.currentTime.toFixed(2)} readyState=${audio.readyState} buffered=${ranges.join(',')} networkState=${audio.networkState} seeking=${audio.seeking}`);
+      _dbg(`[audio-restore] PLAY pressed (restore mode): target=${target.toFixed(2)} currentTime=${audio.currentTime.toFixed(2)} readyState=${audio.readyState} buffered=${ranges.join(',')} networkState=${audio.networkState} seeking=${audio.seeking}`);
 
       // Use fastSeek if available (more accurate for compressed formats)
       if (audio.fastSeek) {
@@ -3820,7 +4114,7 @@ export class MusicPlayer {
           setTimeout(resolve, 500);
         });
       }
-      console.log(`[audio-restore] After re-seek: currentTime=${audio.currentTime.toFixed(2)} seeking=${audio.seeking}`);
+      _dbg(`[audio-restore] After re-seek: currentTime=${audio.currentTime.toFixed(2)} seeking=${audio.seeking}`);
     }
 
     await this.audioEngine.togglePlayback();
@@ -3828,7 +4122,7 @@ export class MusicPlayer {
     // Log the exact moment audio starts outputting
     if (wasPaused) {
       audio.addEventListener('playing', () => {
-        console.log(`[audio-restore] 'playing' event fired: currentTime=${audio.currentTime.toFixed(3)}`);
+        _dbg(`[audio-restore] 'playing' event fired: currentTime=${audio.currentTime.toFixed(3)}`);
       }, { once: true });
     }
 
@@ -3842,7 +4136,7 @@ export class MusicPlayer {
       const checkInterval = setInterval(() => {
         checkCount++;
         const drift = audio.currentTime - expectedTime - (checkCount * 0.1);
-        console.log(`[audio-restore] Playback check #${checkCount}: currentTime=${audio.currentTime.toFixed(3)} expected≈${(expectedTime + checkCount * 0.1).toFixed(3)} drift=${drift.toFixed(3)}s`);
+        _dbg(`[audio-restore] Playback check #${checkCount}: currentTime=${audio.currentTime.toFixed(3)} expected≈${(expectedTime + checkCount * 0.1).toFixed(3)} drift=${drift.toFixed(3)}s`);
         if (checkCount >= 5) clearInterval(checkInterval);
       }, 100);
     }
@@ -3892,40 +4186,44 @@ export class MusicPlayer {
   }
 
   playNext({ dueToEnded = false } = {}) {
-    console.log('[SHUFFLE-DEBUG] playNext called:', { dueToEnded, isShuffle: this.settings.isShuffle, repeatMode: this.repeatMode });
+    // _dbg('[SHUFFLE-DEBUG] playNext called:', { dueToEnded, isShuffle: this.settings.isShuffle, repeatMode: this.repeatMode });
     if (!this.items.length) {
-      console.log('[SHUFFLE-DEBUG] playNext: no items, aborting');
+      // _dbg('[SHUFFLE-DEBUG] playNext: no items, aborting');
       return;
     }
+    // Debounce: ignore rapid clicks while a track switch is in progress
+    if (this._playNextLock) return;
+    this._playNextLock = true;
+    setTimeout(() => { this._playNextLock = false; }, 300);
 
     const currentTrackId = this.currentTrackId();
-    console.log('[SHUFFLE-DEBUG] Current track ID:', currentTrackId);
+    // _dbg('[SHUFFLE-DEBUG] Current track ID:', currentTrackId);
     if (dueToEnded && this.repeatMode === 'one' && currentTrackId) {
-      console.log('[SHUFFLE-DEBUG] Repeat one — replaying same track');
+      // _dbg('[SHUFFLE-DEBUG] Repeat one — replaying same track');
       this.playTrackById(currentTrackId, { autoplay: true, expand: this.isPlayerExpanded, startTime: 0, preserveSettingsView: true });
       return;
     }
 
     const queue = this.getActiveQueueIds();
     const currentQueueIndex = this.getQueueIndex(currentTrackId);
-    console.log('[SHUFFLE-DEBUG] Active queue length:', queue.length, 'Current queue index:', currentQueueIndex, 'isShuffle:', this.settings.isShuffle);
-    console.log('[SHUFFLE-DEBUG] Queue (first 10):', queue.slice(0, 10));
-    console.log('[SHUFFLE-DEBUG] shuffledQueueIds length:', this.shuffledQueueIds?.length, 'queueTrackIds length:', this.queueTrackIds?.length);
+    // _dbg('[SHUFFLE-DEBUG] Active queue length:', queue.length, 'Current queue index:', currentQueueIndex, 'isShuffle:', this.settings.isShuffle);
+    // _dbg('[SHUFFLE-DEBUG] Queue (first 10):', queue.slice(0, 10));
+    // _dbg('[SHUFFLE-DEBUG] shuffledQueueIds length:', this.shuffledQueueIds?.length, 'queueTrackIds length:', this.queueTrackIds?.length);
     const nextTrackId = currentQueueIndex >= 0 ? queue[currentQueueIndex + 1] : queue[0];
-    console.log('[SHUFFLE-DEBUG] Next track ID:', nextTrackId, 'Next index:', currentQueueIndex + 1);
+    // _dbg('[SHUFFLE-DEBUG] Next track ID:', nextTrackId, 'Next index:', currentQueueIndex + 1);
     if (nextTrackId) {
       this.playTrackById(nextTrackId, { autoplay: true, expand: this.isPlayerExpanded, preserveSettingsView: true });
       return;
     }
 
     if (this.repeatMode === 'all' && queue.length) {
-      console.log('[SHUFFLE-DEBUG] Repeat all — starting from beginning of queue');
+      // _dbg('[SHUFFLE-DEBUG] Repeat all — starting from beginning of queue');
       this.playTrackById(queue[0], { autoplay: true, expand: this.isPlayerExpanded, preserveSettingsView: true });
       return;
     }
 
     if (dueToEnded) {
-      console.log('[SHUFFLE-DEBUG] Queue exhausted, attempting to play next album');
+      // _dbg('[SHUFFLE-DEBUG] Queue exhausted, attempting to play next album');
       // Auto-play next album when current album ends
       this._playNextAlbum();
     }
@@ -3961,7 +4259,7 @@ export class MusicPlayer {
         ? nextAlbum.tracks[Math.floor(Math.random() * nextAlbum.tracks.length)]
         : nextAlbum.tracks[0];
       if (firstTrack) {
-        console.log(`[MusicPlayer]  Auto-playing next album: "${nextAlbum.name}"`);
+        _dbg(`[MusicPlayer]  Auto-playing next album: "${nextAlbum.name}"`);
         this.playTrackById(firstTrack.id, { autoplay: true, expand: this.isPlayerExpanded, preserveSettingsView: true });
       }
     }
@@ -3972,13 +4270,14 @@ export class MusicPlayer {
   }
 
   openOverlay(mode = 'player') {
-    console.log('[VIZ-DEBUG] openOverlay ENTER: mode=%s active=%o currentTrackIndex=%d hasTrack=%o', mode, this.active, this.currentTrackIndex, !!this.items[this.currentTrackIndex]);
+    _dbg('[VIZ-DEBUG] openOverlay ENTER: mode=%s active=%o currentTrackIndex=%d hasTrack=%o', mode, this.active, this.currentTrackIndex, !!this.items[this.currentTrackIndex]);
+    if (this._mathVizWarmTimeout) { clearTimeout(this._mathVizWarmTimeout); this._mathVizWarmTimeout = null; }
     if (this._isTransitioning) {
-      console.log('[VIZ-DEBUG] openOverlay: BLOCKED — transition in progress');
+      _dbg('[VIZ-DEBUG] openOverlay: BLOCKED — transition in progress');
       return;
     }
     if (!this.active || this.currentTrackIndex < 0 || !this.items[this.currentTrackIndex]) {
-      console.log('[VIZ-DEBUG] openOverlay: EARLY RETURN — active=%o idx=%d hasTrack=%o', this.active, this.currentTrackIndex, !!this.items[this.currentTrackIndex]);
+      _dbg('[VIZ-DEBUG] openOverlay: EARLY RETURN — active=%o idx=%d hasTrack=%o', this.active, this.currentTrackIndex, !!this.items[this.currentTrackIndex]);
       return;
     }
     sessionStorage.setItem('overlay_active', '1');
@@ -4010,6 +4309,30 @@ export class MusicPlayer {
       this.renderTrackPage(this.items[this.currentTrackIndex]).catch(() => {
         this.setTrackWarning('Audio pipeline is still unlocking. Try the control again if playback was blocked by browser policy.');
       });
+    } else {
+      // Page already exists — immediately update metadata so user doesn't see old track
+      const track = this.items[this.currentTrackIndex];
+      if (track) {
+        const renderRoot = this.getOverlayRoot();
+        const artEl = renderRoot?.querySelector('#musicTrackArtwork');
+        const titleEl = renderRoot?.querySelector('#mainTrackTitle');
+        const artistEl = renderRoot?.querySelector('#mainTrackArtist');
+        const titleTrigger = renderRoot?.querySelector('#musicTrackTitleTrigger');
+        const cleanTitle = this._extractCleanTitle(track.title || track.name || '');
+        const artist = track.artist || '';
+        if (titleEl) { titleEl.textContent = cleanTitle; titleEl.classList.remove('is-overflowing'); }
+        if (titleTrigger) titleTrigger.textContent = cleanTitle;
+        if (artistEl) artistEl.textContent = artist;
+        // Update artwork immediately from preloaded tile or track data
+        // Always use withImageParams(700) to match what renderTrackPage would use — prevents double-load
+        const rawArt = this._preloadedArtworkUrl || this.helpers.resolvePreviewUrl(track);
+        const newArt = withImageParams(rawArt, 700);
+        if (artEl && !artEl.src.includes(rawArt.split('?')[0])) {
+          // Set src directly — source is from album tile (already in browser cache)
+          artEl.src = newArt;
+          this._artworkIsPreloaded = !!this._preloadedArtworkUrl;
+        }
+      }
     }
 
     // Restore pulse animation (may have been stopped during close morph)
@@ -4049,16 +4372,16 @@ export class MusicPlayer {
       // Lazily init the GPU visualizer on first overlay open (non-blocking)
       const analyser = this.audioEngine?.getAnalyser();
       const renderRoot = this.getOverlayRoot();
-      console.log('[VIZ-DEBUG] openOverlay: premium && no mathVisualizer, analyser=%o renderRoot=%o _mathVisualizerLoading=%o', !!analyser, !!renderRoot, this._mathVisualizerLoading);
+      _dbg('[VIZ-DEBUG] openOverlay: premium && no mathVisualizer, analyser=%o renderRoot=%o _mathVisualizerLoading=%o', !!analyser, !!renderRoot, this._mathVisualizerLoading);
       if (analyser && renderRoot) {
         // If init is already in-flight, wait for it instead of calling again (which returns early)
         const initPromise = this._mathVisualizerLoading
           ? new Promise(resolve => {
-              console.log('[VIZ-DEBUG] openOverlay: polling for in-flight init...');
+              _dbg('[VIZ-DEBUG] openOverlay: polling for in-flight init...');
               let tries = 0;
               const poll = () => {
                 if (this.mathVisualizer || !this._mathVisualizerLoading || ++tries > 60) {
-                  console.log('[VIZ-DEBUG] openOverlay: poll done after %d tries, mathVisualizer=%o _mathVisualizerLoading=%o', tries, !!this.mathVisualizer, this._mathVisualizerLoading);
+                  _dbg('[VIZ-DEBUG] openOverlay: poll done after %d tries, mathVisualizer=%o _mathVisualizerLoading=%o', tries, !!this.mathVisualizer, this._mathVisualizerLoading);
                   return resolve();
                 }
                 setTimeout(poll, 50);
@@ -4068,7 +4391,7 @@ export class MusicPlayer {
           : this.initMathVisualizer(analyser, renderRoot);
         // Don't await — let FLIP run immediately, visualizer catches up
         initPromise.then(() => {
-          console.log('[VIZ-DEBUG] openOverlay: initPromise resolved, mathVisualizer=%o _overlayIsOpen=%o _flipAnimation=%o', !!this.mathVisualizer, this._overlayIsOpen, !!this._flipAnimation);
+          _dbg('[VIZ-DEBUG] openOverlay: initPromise resolved, mathVisualizer=%o _overlayIsOpen=%o _flipAnimation=%o', !!this.mathVisualizer, this._overlayIsOpen, !!this._flipAnimation);
           if (this.mathVisualizer && this._overlayIsOpen && this.settings.engineMode === 'premium') {
             // Pre-apply cached palette so first frame has correct colors (album mode only)
             if (this._lastPalette && this._lastPalette.length >= 3 && this.settings.visualizerColorMode === 'album') {
@@ -4080,36 +4403,32 @@ export class MusicPlayer {
             if (vizContainer) vizContainer.style.display = '';
             // If FLIP already finished, run the full ignition sequence now
             if (!this._flipAnimation) {
-              console.log('[VIZ-DEBUG] openOverlay: FLIP done, running ignition now');
+              _dbg('[VIZ-DEBUG] openOverlay: FLIP done, running ignition now');
               this._runVisualizerIgnition();
             } else {
               // FLIP still running — start low-res so visualizer is visible behind blur
-              console.log('[VIZ-DEBUG] openOverlay: FLIP still running, starting low-res (0.1, 2fps)');
+              _dbg('[VIZ-DEBUG] openOverlay: FLIP still running, starting low-res (0.1, 2fps)');
               if (this._lastPalette && this._lastPalette.length >= 3 && this.settings.visualizerColorMode === 'album') {
                 const toHex = (c) => `#${((1 << 24) | (c.r << 16) | (c.g << 8) | c.b).toString(16).slice(1)}`;
                 this.mathVisualizer.setPalette([toHex(this._lastPalette[0]), toHex(this._lastPalette[1]), toHex(this._lastPalette[2])]);
               }
-              this.mathVisualizer.setResolutionScale(0.1);
-              this.mathVisualizer.setMaxFps(2);
-              this.mathVisualizer.setTimeScale(0.05, 50);
+              this.mathVisualizer.setResolutionScale(0.6);
+              this.mathVisualizer.setMaxFps(this.settings.fpsMax || 30);
+              this.mathVisualizer.setTimeScale(1.0, 0);
               if (!this.mathVisualizer.running) this.mathVisualizer.start();
               this.mathVisualizer.setUiVisible(true);
             }
           }
-        }).catch(e => console.warn('[MathVisualizer] lazy init failed:', e));
+        }).catch(e => _dbgWarn('[MathVisualizer] lazy init failed:', e));
       }
     }
-    // Apply cached palette to existing visualizers on re-open (album mode only)
-    if (this._lastPalette && this._lastPalette.length >= 3 && this.settings.visualizerColorMode === 'album') {
-      const toHex = (c) => `#${((1 << 24) | (c.r << 16) | (c.g << 8) | c.b).toString(16).slice(1)}`;
-      if (this.mathVisualizer) {
-        this.mathVisualizer.setPalette([toHex(this._lastPalette[0]), toHex(this._lastPalette[1]), toHex(this._lastPalette[2])]);
-      }
-      this.visualizer?.setPalette?.(this._lastPalette);
+    // Apply correct color palette to visualizer on re-open (respects selected color mode)
+    if (this.mathVisualizer || this.visualizer) {
+      this.applyVisualizerColorMode();
     }
     // Ensure GPU visualizer is started on re-open
     if (this.mathVisualizer && this.settings.engineMode === 'premium') {
-      console.log('[VIZ-DEBUG] openOverlay: re-open existing mathVisualizer, running=%o preWarm=%o', this.mathVisualizer.running, !!this._preWarmContainer);
+      _dbg('[VIZ-DEBUG] openOverlay: re-open existing mathVisualizer, running=%o preWarm=%o', this.mathVisualizer.running, !!this._preWarmContainer);
       const vizContainer = this.getOverlayRoot()?.querySelector('#mathVisualizerContainer');
       if (vizContainer) vizContainer.style.display = '';
       // If still in pre-warm container, re-parent canvas to overlay
@@ -4131,20 +4450,49 @@ export class MusicPlayer {
         this._ensureVizBlurOverlay(vizContainer);
       }
       // Start low-res during FLIP — visible behind blur, lightweight
-      this.mathVisualizer.setResolutionScale(0.1);
-      this.mathVisualizer.setMaxFps(2);
-      this.mathVisualizer.setTimeScale(0.05, 50);
-      if (!this.mathVisualizer.running) this.mathVisualizer.start();
-      this.mathVisualizer.setUiVisible(true);
-      // Show blur overlay to soften low-res frames
-      if (this._vizBlurOverlay) {
-        this._vizBlurOverlay.style.transition = 'none';
-        this._vizBlurOverlay.style.opacity = '1';
+      this.mathVisualizer.setResolutionScale(0.6);
+      this.mathVisualizer.setMaxFps(this.settings.fpsMax || 30);
+      this.mathVisualizer.setTimeScale(1.0, 0);
+      // Force canvas fully opaque — zen fade may have left it transparent from previous close
+      const vizCanvas = this.mathVisualizer.renderer?.domElement;
+      if (vizCanvas) vizCanvas.style.opacity = '1';
+      if (this.mathVisualizer.zenFadeCurrent !== undefined) {
+        this.mathVisualizer.zenFadeCurrent = 1;
+        this.mathVisualizer.zenFadeTarget = 1;
       }
-      console.log('[VIZ-DEBUG] openOverlay: started low-res (0.1, 2fps) behind blur during FLIP');
+      if (!this.mathVisualizer.running) {
+        // Reset dilated time after long idle to avoid GPU precision issues
+        if (this.mathVisualizer.dilatedTime > 3600) {
+          this.mathVisualizer.dilatedTime = 0;
+          this.mathVisualizer.lastRealTime = 0;
+        }
+        this.mathVisualizer.start();
+      }
+      this.mathVisualizer.setUiVisible(true);
+      // Resize to final container size and render one frame before FLIP reveals it
+      const cw = vizContainer?.clientWidth || window.innerWidth;
+      const ch = vizContainer?.clientHeight || window.innerHeight;
+      if (cw > 0 && ch > 0) {
+        this.mathVisualizer.renderer.setSize(cw, ch, false);
+        this.mathVisualizer.postProcessing?.setSize(cw, ch);
+        this.mathVisualizer.current?.resize(cw, ch, window.devicePixelRatio * 0.6);
+        this.mathVisualizer.lyricsRenderer?.setAspect(cw, ch);
+      }
+      if (this.mathVisualizer.renderFrame) this.mathVisualizer.renderFrame();
+      // GPU mode: no CSS blur needed — text renders at full res
+      _dbg('[VIZ-DEBUG] openOverlay: started low-res (0.1, 2fps) during FLIP');
+      // Premium/GPU mode: completely disable DOM lyrics panel to free RAM/GPU
+      if (this.lyrics) {
+        this.lyrics.stop();
+      }
+      const domLyricsPanel = this.getOverlayRoot()?.querySelector('.music-immersive-lyrics-panel');
+      if (domLyricsPanel) {
+        domLyricsPanel.style.display = 'none';
+        domLyricsPanel.innerHTML = ''; // Remove all DOM word spans
+      }
     } else if (this.mathVisualizer && this.settings.engineMode !== 'premium') {
       // Classic mode — ensure GPU visualizer is stopped and hidden
-      console.log('[VIZ-DEBUG] openOverlay: engineMode=%s, stopping mathVisualizer', this.settings.engineMode);
+      _dbg('[VIZ-DEBUG] openOverlay: engineMode=%s, stopping mathVisualizer', this.settings.engineMode);
       this.mathVisualizer.stop();
       const vizContainer = this.getOverlayRoot()?.querySelector('#mathVisualizerContainer');
       if (vizContainer) vizContainer.style.display = 'none';
@@ -4152,7 +4500,7 @@ export class MusicPlayer {
     // Stop mini-player aurora — free GPU for premium visualizer
     this._globalPlayerViz?.stop();
     const overlayRoot = this.getOverlayRoot();
-    console.log(`[music] open overlay mode=${mode} isSettingsView=${this.isSettingsView}`);
+    _dbg(`[music] open overlay mode=${mode} isSettingsView=${this.isSettingsView}`);
 
     // Cancel any pending close animation and clean stale state
     scheduler.cancel('overlay-flip-close');
@@ -4213,9 +4561,12 @@ export class MusicPlayer {
 
   closeOverlay() {
     if (this._isTransitioning) {
-      console.log('[music] closeOverlay BLOCKED — transition in progress');
+      _dbg('[music] closeOverlay BLOCKED — transition in progress');
       return;
     }
+    // Restore album-view-cover if it was hidden during flip
+    const hiddenCover = document.querySelector('.album-view-cover[style*="opacity: 0"]');
+    if (hiddenCover) { hiddenCover.style.opacity = ''; hiddenCover.style.transition = ''; }
     // Guard: prevent Escape from also closing album view
     this._justClosedOverlay = true;
     setTimeout(() => { this._justClosedOverlay = false; }, 800);
@@ -4223,20 +4574,31 @@ export class MusicPlayer {
     clearTimeout(this._overlayRevealFallbackTimer);
     this.isPlayerExpanded = false;
     this._overlayIsOpen = false;
+    // Freeze DOM lyrics when overlay closes (not visible, saves CPU)
+    if (this.lyrics && !this.lyrics._premiumDisabled) {
+      this.lyrics.stop();
+    }
     this._disableFocusTrap();
     this.isSettingsView = false;
     this._settingsEscGuard = false;
     this.isQueueSheetOpen = false;
     sessionStorage.removeItem('overlay_active');
-    // Unfreeze grid before close animation so it's visible when overlay slides away
-    document.querySelector('.music-albums-grid')?.classList.remove('grid-frozen');
+    // Keep grid frozen during close morph animation — unfreeze after phantom handoff
+    // (moved to phantom setTimeout or fallback path below)
     // Stop heavy rAF loops when overlay not visible
     this.lyrics?.stop();
     // Keep visualizer alive at minimal power for instant re-open (warm GPU context)
+    // Stop after 10s to save power if user doesn't reopen
     if (this.mathVisualizer) {
-      this.mathVisualizer.setResolutionScale(0.1);
+      this.mathVisualizer.setResolutionScale(0.6);
       this.mathVisualizer.setMaxFps(1);
       this.mathVisualizer.setTimeScale(0.01, 50);
+      this._mathVizWarmTimeout = setTimeout(() => {
+        if (!this.isPlayerExpanded) {
+          this.mathVisualizer?.stop();
+          _dbg('[VIZ-DEBUG] mathVisualizer fully stopped after warm timeout');
+        }
+      }, 10000);
     }
     this.visualizer?.stop();
     // Restart mini-player aurora (was stopped when overlay opened)
@@ -4247,7 +4609,7 @@ export class MusicPlayer {
     if (overlayRoot?.contains(document.activeElement)) {
       document.activeElement?.blur?.();
     }
-    console.log('[music] close overlay');
+    _dbg('[music] close overlay');
 
     // Remove overlay-open class early so globalPlayerArt returns correct position
     document.body.classList.remove('music-overlay-open');
@@ -4256,10 +4618,8 @@ export class MusicPlayer {
     const globalPlayer = this.elements.globalMusicPlayer;
     if (globalPlayer) globalPlayer.style.visibility = 'hidden';
     this._restoreScrollPosition();
-    // Force reflow so transform is cleared before reading rect
-    this.elements.globalMusicPlayer?.offsetHeight;
 
-    // Determine close target: mini-player art, stored source rect, or center fallback
+    // Batch all rect reads together (single forced reflow instead of multiple)
     const targetArt = this.elements.globalPlayerArt;
     const artRect = targetArt?.getBoundingClientRect?.();
     const vw = window.innerWidth;
@@ -4269,17 +4629,14 @@ export class MusicPlayer {
       : (this._lastFlipSourceRect && this._lastFlipSourceRect.width > 0)
         ? this._lastFlipSourceRect
         : { left: vw * 0.3, top: vh * 0.3, width: vw * 0.4, height: vh * 0.4 };
-    console.log(`[music] close target rect top=${targetRect.top.toFixed(1)} left=${targetRect.left.toFixed(1)} w=${targetRect.width.toFixed(1)} h=${targetRect.height.toFixed(1)} vh=${vh} section=${document.body.dataset.section}`);
+    _dbg(`[music] close target rect top=${targetRect.top.toFixed(1)} left=${targetRect.left.toFixed(1)} w=${targetRect.width.toFixed(1)} h=${targetRect.height.toFixed(1)} vh=${vh} section=${document.body.dataset.section}`);
 
-    // Read mini-player rects NOW (before re-adding music-overlay-open which shifts it with transform)
+    // Read mini-player rects (already in correct state after class removal above — no extra reflow needed)
     const _miniPlayerEl = this.elements.globalMusicPlayer;
-    if (_miniPlayerEl) _miniPlayerEl.style.transition = 'none'; // prevent any transition during measurement
-    _miniPlayerEl?.offsetHeight;
+    const _miniArtImg = this.elements.globalPlayerArt;
     const _miniPlayerRect = _miniPlayerEl?.getBoundingClientRect();
-    const _miniArtImg = this.elements.globalPlayerArt; // the <img> itself
     const _miniArtRect = _miniArtImg?.getBoundingClientRect();
-    if (_miniPlayerEl) _miniPlayerEl.style.transition = '';
-    console.log(`[music] mini-player rects playerTop=${_miniPlayerRect?.top?.toFixed(1)} playerLeft=${_miniPlayerRect?.left?.toFixed(1)} playerW=${_miniPlayerRect?.width?.toFixed(1)} artTop=${_miniArtRect?.top?.toFixed(1)} artLeft=${_miniArtRect?.left?.toFixed(1)} artW=${_miniArtRect?.width?.toFixed(1)}`);
+    _dbg(`[music] mini-player rects playerTop=${_miniPlayerRect?.top?.toFixed(1)} playerLeft=${_miniPlayerRect?.left?.toFixed(1)} playerW=${_miniPlayerRect?.width?.toFixed(1)} artTop=${_miniArtRect?.top?.toFixed(1)} artLeft=${_miniArtRect?.left?.toFixed(1)} artW=${_miniArtRect?.width?.toFixed(1)}`);
 
     // Re-add overlay-open to keep player hidden during close animation; removed in closeComplete
     document.body.style.setProperty('--scroll-y', `${window.scrollY}px`);
@@ -4300,7 +4657,7 @@ export class MusicPlayer {
         const closeComplete = () => {
           if (closeDone) return;
           closeDone = true;
-          console.log('[music] closeComplete called');
+          _dbg('[music] closeComplete called');
           this._isCloseAnimating = false;
           overlayRoot.classList.remove('flip-closing');
           overlayRoot.style.removeProperty('opacity');
@@ -4324,6 +4681,7 @@ export class MusicPlayer {
           this._restoreScrollPosition();
           syncOverlayHostState(overlayRoot, false);
           this._revealMiniPlayer();
+          document.querySelector('.music-albums-grid')?.classList.remove('grid-frozen');
         };
 
         const safetyTimer = setTimeout(closeComplete, 900);
@@ -4339,7 +4697,7 @@ export class MusicPlayer {
 
           // If we were mid-open animation, skip fancy close — just hide instantly and show mini-player
           if (wasAnimatingOpen) {
-            console.log('[music:anim] close during open — instant hide');
+            _dbg('[music:anim] close during open — instant hide');
             overlayRoot.classList.remove('flip-closing');
 
             overlayRoot.style.transition = 'none';
@@ -4373,6 +4731,7 @@ export class MusicPlayer {
             }
             this.applyPageFlags();
             this.persistPlayerState({ immediate: true });
+            document.querySelector('.music-albums-grid')?.classList.remove('grid-frozen');
             return;
           }
 
@@ -4415,11 +4774,11 @@ export class MusicPlayer {
           const targetArtTopOffset = miniArtRect.top - miniPlayerRect.top;
           const targetArtLeftOffset = miniArtRect.left - miniPlayerRect.left;
 
-          console.log('[morph:art] miniPlayerRect:', JSON.stringify({top: miniPlayerRect.top, left: miniPlayerRect.left, w: miniPlayerRect.width, h: miniPlayerRect.height}));
-          console.log('[morph:art] miniArtRect:', JSON.stringify({top: miniArtRect.top, left: miniArtRect.left, w: miniArtRect.width, h: miniArtRect.height}));
-          console.log('[morph:art] overlayArtRect:', JSON.stringify({top: overlayArtRect.top, left: overlayArtRect.left, w: overlayArtRect.width, h: overlayArtRect.height}));
-          console.log('[morph:art] targetArtOffset top=' + targetArtTopOffset + ' left=' + targetArtLeftOffset);
-          console.log('[morph:art] expected art screen pos: top=' + (miniPlayerRect.top + targetArtTopOffset) + ' left=' + (miniPlayerRect.left + targetArtLeftOffset));
+          _dbg('[morph:art] miniPlayerRect:', JSON.stringify({top: miniPlayerRect.top, left: miniPlayerRect.left, w: miniPlayerRect.width, h: miniPlayerRect.height}));
+          _dbg('[morph:art] miniArtRect:', JSON.stringify({top: miniArtRect.top, left: miniArtRect.left, w: miniArtRect.width, h: miniArtRect.height}));
+          _dbg('[morph:art] overlayArtRect:', JSON.stringify({top: overlayArtRect.top, left: overlayArtRect.left, w: overlayArtRect.width, h: overlayArtRect.height}));
+          _dbg('[morph:art] targetArtOffset top=' + targetArtTopOffset + ' left=' + targetArtLeftOffset);
+          _dbg('[morph:art] expected art screen pos: top=' + (miniPlayerRect.top + targetArtTopOffset) + ' left=' + (miniPlayerRect.left + targetArtLeftOffset));
 
           // INSTANTLY hide overlay — remove flip-closing class that forces visibility
           // First, snap art to un-pulsed state so the phantom starts from the correct size
@@ -4471,7 +4830,7 @@ export class MusicPlayer {
           const phantomArt = document.createElement('img');
           phantomArt.src = artImg?.src || '';
           const artScale = miniArtRect.width / overlayArtRect.width; // e.g. 56/300 = 0.186
-          console.log('[morph:art] artScale=' + artScale + ' phantomArt transform will be: translate(' + targetArtLeftOffset + 'px, ' + targetArtTopOffset + 'px) scale(' + artScale + ')');
+          _dbg('[morph:art] artScale=' + artScale + ' phantomArt transform will be: translate(' + targetArtLeftOffset + 'px, ' + targetArtTopOffset + 'px) scale(' + artScale + ')');
           Object.assign(phantomArt.style, {
             position: 'absolute',
             top: '0px',
@@ -4532,7 +4891,7 @@ export class MusicPlayer {
             border: `1px solid color-mix(in srgb, ${accentColor} 18%, rgba(255, 255, 255, 0.1))`,
             backdropFilter: 'blur(40px) saturate(220%) brightness(80%)',
           };
-          console.log(`[music:anim] close phantom target styles accent=${accentColor} bg=${targetStyles.background}`);
+          _dbg(`[music:anim] close phantom target styles accent=${accentColor} bg=${targetStyles.background}`);
 
           phantom.style.top = `${miniPlayerRect.top}px`;
           phantom.style.left = `${miniPlayerRect.left}px`;
@@ -4579,11 +4938,13 @@ export class MusicPlayer {
             const realArtEl = this.elements.globalMusicPlayer?.querySelector('.global-player-art');
             if (realArtEl) {
               const r = realArtEl.getBoundingClientRect();
-              console.log('[morph:handoff] real art rect: top=' + r.top + ' left=' + r.left + ' w=' + r.width + ' h=' + r.height);
+              _dbg('[morph:handoff] real art rect: top=' + r.top + ' left=' + r.left + ' w=' + r.width + ' h=' + r.height);
             }
             // Instantly hide phantom and show real art — no fadeout, no empty frame
             phantom.remove();
             document.querySelector('.close-morph-scrim')?.remove();
+            // Unfreeze grid now that morph is complete and phantom is gone
+            document.querySelector('.music-albums-grid')?.classList.remove('grid-frozen');
           }, 420);
         }
       } else {
@@ -4595,6 +4956,7 @@ export class MusicPlayer {
           this._restoreScrollPosition();
           syncOverlayHostState(overlayRoot, false);
           this._revealMiniPlayer();
+          document.querySelector('.music-albums-grid')?.classList.remove('grid-frozen');
         }, 320);
       }
     } else {
@@ -4602,6 +4964,7 @@ export class MusicPlayer {
       this._restoreScrollPosition();
       syncOverlayHostState(overlayRoot, false);
       this._revealMiniPlayer();
+      document.querySelector('.music-albums-grid')?.classList.remove('grid-frozen');
     }
 
     this._lastFlipSourceRect = null;
@@ -4650,7 +5013,10 @@ export class MusicPlayer {
           el.style.opacity = '1';
           el.style.transform = '';
           el.style.willChange = '';
+          el.style.transition = '';
           el.dataset.staggerRevealed = '1';
+          el._staggerDone = true;
+          el._staggerVisible = true;
         });
 
         // Flush deferred mosaic callbacks — overlay is closed, close morph done, mini-player settled
@@ -4709,32 +5075,34 @@ export class MusicPlayer {
   }
 
   runAlbumFlipTransition(sourceRect = null) {
+    console.log(`%c[EXPAND-DEBUG] runAlbumFlipTransition ENTER, sourceRect=${sourceRect ? `left=${sourceRect.left} top=${sourceRect.top} w=${sourceRect.width} h=${sourceRect.height}` : 'null'}`, 'color:cyan;font-weight:bold');
     const overlayRoot = this.getOverlayRoot();
-    if (!overlayRoot) return;
+    if (!overlayRoot) { console.log('%c[EXPAND-DEBUG] runAlbumFlipTransition: no overlayRoot, EXIT', 'color:red'); return; }
 
     // During FLIP: run correct visualizer at low quality behind blur
     if (this.settings.engineMode === 'premium' && this.mathVisualizer) {
       const vizContainer = this.getOverlayRoot()?.querySelector('#mathVisualizerContainer');
       if (vizContainer) vizContainer.style.display = '';
       this._ensureVizBlurOverlay(vizContainer);
-      this._vizBlurOverlay.style.transition = 'none';
-      this._vizBlurOverlay.style.opacity = '1';
+      // GPU mode: no CSS blur — shader handles effects
       if (this._pendingScene != null && this._pendingScene !== 0) {
         this.mathVisualizer.setScene(this._pendingScene);
         this._pendingScene = null;
       }
-      // Start at minimal quality — enough to see something behind blur
-      this.mathVisualizer.setResolutionScale(0.1);
-      this.mathVisualizer.setMaxFps(2);
-      this.mathVisualizer.setTimeScale(0.05, 50);
+      // Start at full quality immediately
+      this.mathVisualizer.setResolutionScale(0.6);
+      this.mathVisualizer.setMaxFps(this.settings.fpsMax || 30);
+      this.mathVisualizer.setTimeScale(1.0, 0);
       if (!this.mathVisualizer.running) this.mathVisualizer.start();
       this.mathVisualizer.setUiVisible(true);
+      // Render one frame synchronously so canvas isn't blank when animation reveals it
+      if (this.mathVisualizer.renderFrame) this.mathVisualizer.renderFrame();
     } else {
-      // Classic (CPU) mode — start visualizer with CSS blur on canvas
+      // Classic (CPU) mode — start visualizer immediately, no loading blur
       const cpuCanvas = this.pageUi?.canvas;
       if (cpuCanvas) {
         cpuCanvas.style.display = '';
-        cpuCanvas.style.filter = 'blur(12px) saturate(1.3)';
+        cpuCanvas.style.filter = '';
         cpuCanvas.style.transition = 'none';
       }
       this.visualizer?.start();
@@ -4752,18 +5120,23 @@ export class MusicPlayer {
       : { left: vw * 0.3, top: vh * 0.3, width: vw * 0.4, height: vh * 0.4 };
 
     this._lastFlipSourceRect = first;
-    console.log(`[music] FLIP open from rect top=${first.top.toFixed(1)} left=${first.left.toFixed(1)} w=${first.width.toFixed(1)} h=${first.height.toFixed(1)} section=${document.body.dataset.section}`);
+    _dbg(`[music] FLIP open from rect top=${first.top.toFixed(1)} left=${first.left.toFixed(1)} w=${first.width.toFixed(1)} h=${first.height.toFixed(1)} section=${document.body.dataset.section}`);
 
     page.style.transition = 'none';
     page.style.willChange = 'transform, border-radius';
     page.style.opacity = '0';
+    page.style.transform = '';
+    page.style.borderRadius = '';
+    page.style.transformOrigin = '';
 
     overlayRoot.classList.add('flip-animating');
     overlayRoot.classList.remove('animate-in');
+    overlayRoot.classList.remove('flip-done');
     overlayRoot.style.transition = 'none';
     overlayRoot.style.opacity = '1';
     overlayRoot.style.background = 'transparent';
     this._isTransitioning = true;
+    console.log('%c[EXPAND-DEBUG] runAlbumFlipTransition: _isTransitioning=true set', 'color:cyan;font-weight:bold');
 
     // Freeze albums grid during FLIP — kill box-shadows, 3D, backdrop-filter
     const albumsGrid = document.querySelector('.music-albums-grid');
@@ -4773,10 +5146,27 @@ export class MusicPlayer {
       page.style.transform = 'none';
       page.offsetHeight;
       const overlayArtWrap = page.querySelector('.music-track-art-wrap');
+      // Temporarily remove gpu-lyrics-active to get natural art position for FLIP calc
+      const immersiveShell = page.querySelector('.music-immersive-shell');
+      const hadGpuLyrics = immersiveShell?.classList.contains('gpu-lyrics-active');
+      if (hadGpuLyrics) immersiveShell.classList.remove('gpu-lyrics-active');
+      // Reset any GPU lyrics transforms on art wrap so we can measure its natural position
+      if (overlayArtWrap) {
+        overlayArtWrap.style.transition = 'none';
+        overlayArtWrap.style.transform = '';
+        overlayArtWrap.style.opacity = '';
+        overlayArtWrap.style.display = '';
+        overlayArtWrap.style.visibility = '';
+      }
+      overlayArtWrap?.offsetHeight; // force reflow
       const overlayArtRect = overlayArtWrap?.getBoundingClientRect() || { left: 0, top: 0, width: 0, height: 0 };
+      console.log(`%c[FLIP-DEBUG] overlayArtRect: left=${overlayArtRect.left} top=${overlayArtRect.top} w=${overlayArtRect.width} h=${overlayArtRect.height} | first: left=${first.left} top=${first.top} w=${first.width} h=${first.height} | hadGpuLyrics=${hadGpuLyrics}`, 'color:yellow');
+      // Restore gpu-lyrics-active after measurement
+      if (hadGpuLyrics) immersiveShell.classList.add('gpu-lyrics-active');
 
       if (!overlayArtRect.width || overlayArtRect.width < 10) {
-        console.warn('[music:anim] FLIP skipped — overlay art not measured', overlayArtRect);
+        console.log('%c[EXPAND-DEBUG] FLIP skipped — overlay art not measured, clearing flags immediately', 'color:orange;font-weight:bold');
+        _dbgWarn('[music:anim] FLIP skipped — overlay art not measured', overlayArtRect);
         page.style.opacity = '1';
         page.style.transform = '';
         page.style.transformOrigin = '';
@@ -4788,13 +5178,20 @@ export class MusicPlayer {
         overlayRoot.style.removeProperty('opacity');
         overlayRoot.style.removeProperty('transition');
         overlayRoot.style.removeProperty('background');
+        this._isTransitioning = false;
+        this._flipAnimation = null;
+        // Still need to start visualizer even when FLIP is skipped
+        if (this.settings.engineMode === 'premium' && this.mathVisualizer) {
+          this._runVisualizerIgnition();
+        }
         return;
       }
 
       const uniformScale = first.width / overlayArtRect.width;
+      console.log(`%c[FLIP-DEBUG] uniformScale=${uniformScale} startX=${first.left - overlayArtRect.left * uniformScale} startY=${first.top - overlayArtRect.top * uniformScale}`, 'color:yellow');
 
       if (!isFinite(uniformScale) || uniformScale <= 0 || uniformScale > 5) {
-        console.warn('[music:anim] FLIP skipped — bad scale', { uniformScale, firstWidth: first.width, artWidth: overlayArtRect.width });
+        _dbgWarn('[music:anim] FLIP skipped — bad scale', { uniformScale, firstWidth: first.width, artWidth: overlayArtRect.width });
         page.style.opacity = '1';
         page.style.transform = '';
         page.style.transformOrigin = '';
@@ -4806,6 +5203,11 @@ export class MusicPlayer {
         overlayRoot.style.removeProperty('opacity');
         overlayRoot.style.removeProperty('transition');
         overlayRoot.style.removeProperty('background');
+        this._isTransitioning = false;
+        this._flipAnimation = null;
+        if (this.settings.engineMode === 'premium' && this.mathVisualizer) {
+          this._runVisualizerIgnition();
+        }
         return;
       }
 
@@ -4823,11 +5225,11 @@ export class MusicPlayer {
 
       const startRadius = `${14 / uniformScale}px`;
       const animation = page.animate([
-        { transform: `translate3d(${startX}px, ${startY}px, 0) scale(${uniformScale})`, borderRadius: startRadius, opacity: 0.85 },
+        { transform: `translate3d(${startX}px, ${startY}px, 0) scale(${uniformScale})`, borderRadius: startRadius, opacity: 1 },
         { transform: 'translate3d(0, 0, 0) scale(1)', borderRadius: '0px', opacity: 1 }
       ], {
-        duration: 500,
-        easing: 'cubic-bezier(0.2, 0.9, 0.3, 1)',
+        duration: 420,
+        easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
         fill: 'forwards',
         composite: 'replace',
       });
@@ -4840,7 +5242,7 @@ export class MusicPlayer {
           document.querySelector('.music-albums-grid')?.classList.remove('grid-frozen');
           // Restore lyrics FPS on cancel
           if (this.lyrics) this.lyrics.setMaxFps(0);
-          console.log('[music:anim] FLIP open CANCELLED');
+          _dbg('[music:anim] FLIP open CANCELLED');
         }
       };
 
@@ -4871,8 +5273,9 @@ export class MusicPlayer {
         page.style.transition = '';
         this._flipAnimation = null;
 
-        console.log('[music:anim] FLIP onfinish — revealing visualizer');
-        console.log('[VIZ-DEBUG] FLIP onfinish: engineMode=%s mathVisualizer=%o', this.settings.engineMode, !!this.mathVisualizer);
+        _dbg('[music:anim] FLIP onfinish — revealing visualizer');
+        console.log('%c[EXPAND-DEBUG] FLIP onfinish: _flipAnimation=null, setting _isTransitioning=false', 'color:lime;font-weight:bold');
+        _dbg('[VIZ-DEBUG] FLIP onfinish: engineMode=%s mathVisualizer=%o', this.settings.engineMode, !!this.mathVisualizer);
         this._isTransitioning = false;
 
         // Resume lyrics rAF loop (was paused during FLIP for CPU headroom)
@@ -4913,8 +5316,6 @@ export class MusicPlayer {
           if (vizContainer) vizContainer.style.display = 'none';
           if (this.pageUi?.canvas) {
             this.pageUi.canvas.style.display = '';
-            // Fade out the blur over 0.5s for smooth reveal
-            this.pageUi.canvas.style.transition = 'filter 0.5s cubic-bezier(0.0, 0.0, 0.2, 1)';
             this.pageUi.canvas.style.filter = '';
           }
           this.visualizer?.start();
@@ -4926,17 +5327,32 @@ export class MusicPlayer {
   /** Start visualizer at full quality. Shows blur during init, fades it out when ready. */
   _runVisualizerIgnition() {
     if (!this.mathVisualizer) {
-      console.warn('[VIZ-DEBUG] _runVisualizerIgnition: NO mathVisualizer, aborting');
+      _dbgWarn('[VIZ-DEBUG] _runVisualizerIgnition: NO mathVisualizer, aborting');
       return;
     }
-    console.log('[VIZ-DEBUG] _runVisualizerIgnition: ramping to full quality, running=%o', this.mathVisualizer.running);
+    // GPU mode: already running at full res — just ensure visible, no restart needed
+    if (this.settings.engineMode === 'premium' && this.mathVisualizer.running) {
+      _dbg('[VIZ-DEBUG] _runVisualizerIgnition: premium already running, skip restart');
+      this.mathVisualizer.setUiVisible(true);
+      const vizContainer = this.getOverlayRoot()?.querySelector('#mathVisualizerContainer');
+      if (vizContainer) vizContainer.style.display = '';
+      const canvas = this.mathVisualizer.renderer?.domElement;
+      if (canvas) { canvas.style.opacity = '1'; canvas.style.filter = ''; }
+      // Apply palette
+      if (this._lastPalette?.length >= 3 && this.settings.visualizerColorMode === 'album' && this.mathVisualizer.setPalette) {
+        const toHex = (c) => `#${((1 << 24) | (c.r << 16) | (c.g << 8) | c.b).toString(16).slice(1)}`;
+        this.mathVisualizer.setPalette([toHex(this._lastPalette[0]), toHex(this._lastPalette[1]), toHex(this._lastPalette[2])]);
+      }
+      return;
+    }
+    _dbg('[VIZ-DEBUG] _runVisualizerIgnition: ramping to full quality, running=%o', this.mathVisualizer.running);
     const vizContainer = this.getOverlayRoot()?.querySelector('#mathVisualizerContainer');
     if (vizContainer) vizContainer.style.display = '';
 
     // If canvas got detached (e.g. overlay DOM rebuilt), re-append it
     const canvas = this.mathVisualizer.renderer?.domElement;
     if (canvas && vizContainer && !vizContainer.contains(canvas)) {
-      console.log('[Visualizer] Re-appending detached canvas to container');
+      _dbg('[Visualizer] Re-appending detached canvas to container');
       vizContainer.appendChild(canvas);
     }
 
@@ -4947,13 +5363,21 @@ export class MusicPlayer {
     }
 
     // Ensure blur stays visible while we ramp up — no flicker
-    if (this._vizBlurOverlay && this._vizBlurOverlay.dataset.manualBlur !== 'true') {
+    if (this.settings.engineMode === 'premium') {
+      // GPU mode: use shader blur during ramp
+      this.mathVisualizer.setBlur?.(true);
+    } else if (this._vizBlurOverlay && this._vizBlurOverlay.dataset.manualBlur !== 'true') {
       this._vizBlurOverlay.style.transition = 'none';
-      this._vizBlurOverlay.style.opacity = '1';
+      this._showCssBlur();
     }
 
     // Ensure visualizer is running (it should be from FLIP low-res start)
     if (!this.mathVisualizer.running) {
+      // Reset dilated time to prevent float precision issues after long idle
+      if (this.mathVisualizer.dilatedTime > 3600) {
+        this.mathVisualizer.dilatedTime = 0;
+        this.mathVisualizer.lastRealTime = 0;
+      }
       this.mathVisualizer.start();
     }
     this.mathVisualizer.setUiVisible(true);
@@ -4968,7 +5392,6 @@ export class MusicPlayer {
     const ch = vizContainer?.clientHeight || window.innerHeight;
     if (cw > 0 && ch > 0) {
       this.mathVisualizer.renderer.setSize(cw, ch, false);
-      this.mathVisualizer.renderer.setViewport(0, 0, cw, ch);
       this.mathVisualizer.current?.resize(cw, ch, window.devicePixelRatio * 0.6);
     }
 
@@ -4983,10 +5406,15 @@ export class MusicPlayer {
     let fullFrames = 0;
     const fadeBlur = () => {
       if (++fullFrames < 6) { requestAnimationFrame(fadeBlur); return; }
-      if (this._vizBlurOverlay && this._vizBlurOverlay.dataset.manualBlur !== 'true') {
+      if (this.settings.engineMode === 'premium') {
+        // GPU mode: disable shader blur (unless user manually enabled it)
+        if (!this.settings.vizBlurEnabled) {
+          this.mathVisualizer.setBlur?.(false);
+        }
+      } else if (this._vizBlurOverlay && this._vizBlurOverlay.dataset.manualBlur !== 'true') {
         this._vizBlurOverlay.style.transition = 'opacity 0.5s cubic-bezier(0.0, 0.0, 0.2, 1)';
         this._vizBlurOverlay.style.opacity = '0';
-        console.log('[VIZ-DEBUG] _runVisualizerIgnition: blur fading out after %d full-res frames', fullFrames);
+        _dbg('[VIZ-DEBUG] _runVisualizerIgnition: blur fading out after %d full-res frames', fullFrames);
       }
     };
     requestAnimationFrame(fadeBlur);
@@ -5009,7 +5437,7 @@ export class MusicPlayer {
       }
     }
 
-    console.log('[Visualizer] Started — size=%dx%d running=%o', cw, ch, this.mathVisualizer.running);
+    _dbg('[Visualizer] Started — size=%dx%d running=%o', cw, ch, this.mathVisualizer.running);
   }
 
   _toggleHudActions(btn) {
@@ -5160,11 +5588,27 @@ export class MusicPlayer {
     let neonSlotBlend = [0, 0, 0]; // current blend amount per slot (0=pure mood, 1=full neon)
     let neonSlotTarget = [0, 0, 0]; // target blend per slot
     let neonSlotHue = [280, 280, 280]; // current neon hue per slot (lerps independently)
+    let _accentLastTime = 0;
+    const ACCENT_MIN_INTERVAL = 50; // ~20fps max for color computation (saves 66% CPU vs 60fps)
     const tick = () => {
       if ((!this.visualizer && !this.mathVisualizer) || this.settings.visualizerColorMode !== 'auto') {
         this.stopAudioReactiveAccentLoop();
         return;
       }
+
+      // Skip when tab hidden or audio paused — zero CPU when not needed
+      if (document.hidden || this.audio?.paused) {
+        this.audioReactiveAccentFrameId = window.requestAnimationFrame(tick);
+        return;
+      }
+
+      // Throttle: color analysis doesn't need 60fps — 20fps is perceptually smooth for hue shifts
+      const _tickNow = performance.now();
+      if (_tickNow - _accentLastTime < ACCENT_MIN_INTERVAL) {
+        this.audioReactiveAccentFrameId = window.requestAnimationFrame(tick);
+        return;
+      }
+      _accentLastTime = _tickNow;
 
       // Read frequency data
       analyser.getByteFrequencyData(this.audioReactiveBuffer);
@@ -5456,7 +5900,7 @@ export class MusicPlayer {
             this._gpuPaletteLerpFrame = 0;
           }
 
-          console.log(
+          _dbg(
             `[mood-palette]  PALETTE UPDATE | state: "${state}" | ` +
             `H:${finalH.toFixed(0)} S:${(finalS * 100).toFixed(0)}% L:${(finalL * 100).toFixed(0)}% | ` +
             `moodColor: H:${mc.h.toFixed(0)} | intensity: ${intensity.toFixed(2)} | ` +
@@ -5491,11 +5935,11 @@ export class MusicPlayer {
         }
       }
 
-      // Periodic mood status log
+      // Periodic mood status log (every 30s — diagnostic only, not needed for UX)
       const now = performance.now();
-      if (now - lastMoodLogTime > 5000) {
+      if (now - lastMoodLogTime > 30000) {
         lastMoodLogTime = now;
-        console.log(
+        _dbg(
           `[mood-palette]  MOOD STATUS | state: "${mood.moodState}" | ` +
           `windowed: ${mood.smoothedExcitement?.toFixed(3)} | raw: ${mood.rawExcitement?.toFixed(3)} | ` +
           `color: H:${mood.moodColor?.h?.toFixed(1)} S:${mood.moodColor?.s?.toFixed(1)} L:${mood.moodColor?.l?.toFixed(1)} | ` +
@@ -5614,19 +6058,19 @@ export class MusicPlayer {
       const currentTheme = document.documentElement.dataset.theme || 'chromic-dark';
       const palette = themePalettes[currentTheme] || themePalettes['chromic-dark'];
       const accent = palette[0];
-      this.visualizer.setAccent(accent);
+      this.visualizer?.setAccent(accent);
       this._globalPlayerViz?.setAccentHex(accent);
       if (this.mathVisualizer?.setPalette) {
         this.mathVisualizer.setPalette(palette);
-        console.log(`[color-mode]  THEME palette applied (${currentTheme}): [${palette.join(', ')}]`);
+        _dbg(`[color-mode]  THEME palette applied (${currentTheme}): [${palette.join(', ')}]`);
       }
       return;
     }
 
     if (this.settings.visualizerColorMode === 'album') {
       this.stopAudioReactiveAccentLoop();
-      const accent = this.albumAccent || this.colorEngine?.getAccentColor?.() || this.visualizer.accent || '#7dd6ff';
-      this.visualizer.setAccent(accent);
+      const accent = this.albumAccent || this.colorEngine?.getAccentColor?.() || this.visualizer?.accent || '#7dd6ff';
+      this.visualizer?.setAccent(accent);
       // Sync global player aurora accent
       this._globalPlayerViz?.setAccentHex(accent);
       // Re-apply album palette to GPU shader scenes
@@ -5634,9 +6078,9 @@ export class MusicPlayer {
         const toHex = (c) => `#${((1 << 24) | (c.r << 16) | (c.g << 8) | c.b).toString(16).slice(1)}`;
         const p = [toHex(this._lastPalette[0]), toHex(this._lastPalette[1]), toHex(this._lastPalette[2])];
         this.mathVisualizer.setPalette(p);
-        console.log(`[color-mode]  ALBUM palette applied: [${p.join(', ')}]`);
+        _dbg(`[color-mode]  ALBUM palette applied: [${p.join(', ')}]`);
       } else {
-        console.log(`[color-mode] ⚠️ ALBUM mode but no palette yet (lastPalette=${!!this._lastPalette})`);
+        _dbg(`[color-mode] ⚠️ ALBUM mode but no palette yet (lastPalette=${!!this._lastPalette})`);
       }
       return;
     }
@@ -5652,7 +6096,7 @@ export class MusicPlayer {
       const randomHue = Math.random() * 360;
       setTrackIdentity(randomHue, (randomHue + 120 + Math.random() * 60) % 360);
     }
-    console.log(`[color-mode]  AUDIO-REACTIVE mode — starting mood loop`);
+    _dbg(`[color-mode]  AUDIO-REACTIVE mode — starting mood loop`);
     this.startAudioReactiveAccentLoop();
   }
 
@@ -5663,7 +6107,7 @@ export class MusicPlayer {
    */
   async preWarmVisualizer() {
     if (this.mathVisualizer || this._mathVisualizerLoading || this.settings.engineMode !== 'premium') return;
-    console.log('[VIZ-PRE-WARM] Starting background visualizer pre-warm...');
+    _dbg('[VIZ-PRE-WARM] Starting background visualizer pre-warm...');
     this._mathVisualizerLoading = true;
     try {
       const mod = await getPreloadedVizModule() || await _vizModulePromise || await import('/visualizer/main.js');
@@ -5696,7 +6140,7 @@ export class MusicPlayer {
       // can construct without crashing on analyser.frequencyBinCount
       let analyser = this.audioEngine?.getAnalyser?.() || null;
       if (!analyser) {
-        console.log('[VIZ-PRE-WARM] AudioEngine not ready, using mock analyser');
+        _dbg('[VIZ-PRE-WARM] AudioEngine not ready, using mock analyser');
         const mockData = new Uint8Array(1024);
         analyser = {
           frequencyBinCount: 1024,
@@ -5712,7 +6156,7 @@ export class MusicPlayer {
         this._preWarmUsedMockAnalyser = true;
       }
 
-      this.mathVisualizer = new ThreeOrchestrator({ analyser, container: offscreen, resolutionScale: 0.1 });
+      this.mathVisualizer = new ThreeOrchestrator({ analyser, container: offscreen, resolutionScale: 0.6 });
       this._preWarmContainer = offscreen;
 
       // Pre-compile active scene shader (construction only, no render loop)
@@ -5729,7 +6173,7 @@ export class MusicPlayer {
           this.mathVisualizer.renderer.setSize(64, 64, false);
           this.mathVisualizer.renderer.render(scene.scene || scene, this.mathVisualizer.camera);
           this.mathVisualizer.renderer.getContext().flush();
-          console.log('[VIZ-PRE-WARM] GPU shader link forced via single draw call');
+          _dbg('[VIZ-PRE-WARM] GPU shader link forced via single draw call');
         }
       } catch (_) { /* GL errors from tiny container are harmless */ }
 
@@ -5744,10 +6188,12 @@ export class MusicPlayer {
         this.mathVisualizer.setPalette([toHex(this._lastPalette[0]), toHex(this._lastPalette[1]), toHex(this._lastPalette[2])]);
       }
       this.mathVisualizer.setMaxFps(this.settings.fpsMax || 30);
+      // Apply dim state to shader
+      this._applyVizDim();
 
-      console.log('[VIZ-PRE-WARM] ✅ Visualizer pre-warmed (shaders compiled, GPU cache warm)');
+      _dbg('[VIZ-PRE-WARM] ✅ Visualizer pre-warmed (shaders compiled, GPU cache warm)');
     } catch (err) {
-      console.warn('[VIZ-PRE-WARM] Failed:', err);
+      _dbgWarn('[VIZ-PRE-WARM] Failed:', err);
     }
     this._mathVisualizerLoading = false;
   }
@@ -5757,20 +6203,42 @@ export class MusicPlayer {
     if (!this.mathVisualizer || this.mathVisualizer._patchesApplied) return;
     this.mathVisualizer._patchesApplied = true;
 
-    // PATCH 1: Disable GPU text overlays
-    if (this.mathVisualizer.gpuTypography) this.mathVisualizer.gpuTypography.setVisible(false);
-    if (this.mathVisualizer.lyricsRenderer) this.mathVisualizer.lyricsRenderer.setVisible(false);
+    // PATCH 1: GPU lyrics — when lyrics timeline is set, hide DOM panel and show GPU lyrics
+    if (this.mathVisualizer.setLyricsTimeline) {
+      const origSetLyricsTimeline = this.mathVisualizer.setLyricsTimeline.bind(this.mathVisualizer);
+      this.mathVisualizer.setLyricsTimeline = (timeline) => {
+        // Pass track artist/album to GPU lyrics renderer
+        const track = this.items?.[this.currentTrackIndex];
+        const artist = track?.artist || '';
+        const album = track?.album || '';
+        origSetLyricsTimeline(timeline, artist, album);
+        // Hide DOM lyrics panel when GPU lyrics are active — ONLY in premium mode
+        if (this.settings.engineMode !== 'premium') return;
+        const domPanel = document.querySelector('.music-immersive-lyrics-panel');
+        if (domPanel && timeline?.length) {
+          domPanel.style.display = 'none';
+          const shell = domPanel.closest('.music-immersive-shell');
+          if (shell) shell.classList.add('gpu-lyrics-active');
+        } else if (domPanel && (!timeline || !timeline.length)) {
+          domPanel.style.display = '';
+          const shell = domPanel.closest('.music-immersive-shell');
+          if (shell) shell.classList.remove('gpu-lyrics-active');
+        }
+        // Ensure UI is visible so text renders through the effect composer
+        this.mathVisualizer.setUiVisible(true);
+      };
+    }
+
+    // PATCH 1b: Wrap setUiVisible so lyrics stay visible when timeline is active
     const origSetUiVisible = this.mathVisualizer.setUiVisible.bind(this.mathVisualizer);
     this.mathVisualizer.setUiVisible = (visible) => {
       origSetUiVisible(visible);
-      if (this.mathVisualizer.gpuTypography) this.mathVisualizer.gpuTypography.setVisible(false);
-      if (this.mathVisualizer.lyricsRenderer) this.mathVisualizer.lyricsRenderer.setVisible(false);
+      // If lyrics timeline is loaded, always keep lyrics renderer visible & gpuTypography hidden
+      if (this.mathVisualizer.lyricsRenderer?.timeline?.length > 0) {
+        this.mathVisualizer.lyricsRenderer.setVisible(true);
+        this.mathVisualizer.gpuTypography.setVisible(false);
+      }
     };
-
-    // PATCH 1b: Neuter setLyricsTimeline
-    if (this.mathVisualizer.setLyricsTimeline) {
-      this.mathVisualizer.setLyricsTimeline = (_timeline) => {};
-    }
 
     // PATCH 2: Block scroll-triggered blur on canvas
     const vizCanvas = this.mathVisualizer.renderer?.domElement;
@@ -5795,13 +6263,13 @@ export class MusicPlayer {
 
   async initMathVisualizer(analyser, renderRoot) {
     const container = renderRoot.querySelector('#mathVisualizerContainer');
-    console.log('[initMathVisualizer] engineMode=%s container=%o gpuScene=%d', this.settings.engineMode, !!container, this.settings.gpuScene);
+    _dbg('[initMathVisualizer] engineMode=%s container=%o gpuScene=%d', this.settings.engineMode, !!container, this.settings.gpuScene);
     if (!container) return;
 
     if (this.settings.engineMode === 'premium') {
       // If pre-warmed, re-parent the canvas into the real container
       if (this.mathVisualizer && this._preWarmContainer) {
-        console.log('[VIZ-DEBUG] initMathVisualizer: re-parenting pre-warmed visualizer into overlay');
+        _dbg('[VIZ-DEBUG] initMathVisualizer: re-parenting pre-warmed visualizer into overlay');
         const canvas = this.mathVisualizer.renderer?.domElement;
         if (canvas) container.appendChild(canvas);
         // Remove offscreen container
@@ -5820,19 +6288,19 @@ export class MusicPlayer {
         // Ensure blur overlay exists in the real container
         this._ensureVizBlurOverlay(container);
         this._vizBlurOverlay.style.transition = 'none';
-        this._vizBlurOverlay.style.opacity = '1';
+        this._showCssBlur();
         this._pendingScene = null;
         this._mathVisualizerLoading = false;
-        console.log('[VIZ-DEBUG] initMathVisualizer: DONE (from pre-warm), mathVisualizer=%o running=%o', !!this.mathVisualizer, this.mathVisualizer?.running);
+        _dbg('[VIZ-DEBUG] initMathVisualizer: DONE (from pre-warm), mathVisualizer=%o running=%o', !!this.mathVisualizer, this.mathVisualizer?.running);
       } else if (!this.mathVisualizer && !this._mathVisualizerLoading) {
         // Initialize in background even when overlay is closed — preload shaders so first open is instant.
         // The render loop only starts when overlay is actually visible (checked below).
-        console.log('[VIZ-DEBUG] initMathVisualizer: starting load (no existing, not loading)');
+        _dbg('[VIZ-DEBUG] initMathVisualizer: starting load (no existing, not loading)');
         this._mathVisualizerLoading = true;
         try {
           const mod = await getPreloadedVizModule() || await _vizModulePromise || await import('/visualizer/main.js');
           const { ThreeOrchestrator } = mod;
-          if (this.mathVisualizer) { console.log('[VIZ-DEBUG] initMathVisualizer: another call already created it, returning'); this._mathVisualizerLoading = false; return; }
+          if (this.mathVisualizer) { _dbg('[VIZ-DEBUG] initMathVisualizer: another call already created it, returning'); this._mathVisualizerLoading = false; return; }
 
           // PATCH 0: Shim addEventListener to neutralize ThreeOrchestrator's scroll listener.
           // Forces passive:true, capture:false on scroll listeners, and wraps the handler
@@ -5869,7 +6337,7 @@ export class MusicPlayer {
               if (!viz.scenes[activeScene]) {
                 viz.getOrCreateScene(activeScene);
               }
-              console.log(`[Visualizer] ✅ Shader warmup complete: 1/${totalScenes} scenes pre-compiled (active: ${activeScene})`);
+              _dbg(`[Visualizer] ✅ Shader warmup complete: 1/${totalScenes} scenes pre-compiled (active: ${activeScene})`);
             });
           }
 
@@ -5879,7 +6347,7 @@ export class MusicPlayer {
           // Use blur overlay to hide low-res startup frames
           this._ensureVizBlurOverlay(container);
           this._vizBlurOverlay.style.transition = 'none';
-          this._vizBlurOverlay.style.opacity = '1';
+          this._showCssBlur();
           const targetScene = this.settings.gpuScene || 0;
           if (targetScene !== 0) {
             this.mathVisualizer.setScene(targetScene);
@@ -5889,26 +6357,28 @@ export class MusicPlayer {
             const toHex = (c) => `#${((1 << 24) | (c.r << 16) | (c.g << 8) | c.b).toString(16).slice(1)}`;
             this.mathVisualizer.setPalette([toHex(this._lastPalette[0]), toHex(this._lastPalette[1]), toHex(this._lastPalette[2])]);
           }
+          // Apply dim state to shader now that mathVisualizer exists
+          this._applyVizDim();
           // Apply 30fps default
           this.mathVisualizer.setMaxFps(this.settings.fpsMax || 30);
           this._pendingScene = null;
         } catch (err) {
-          console.warn('[MathVisualizer] Failed to load premium engine:', err);
+          _dbgWarn('[MathVisualizer] Failed to load premium engine:', err);
           this._mathVisualizerLoading = false;
           return;
         }
         this._mathVisualizerLoading = false;
-        console.log('[VIZ-DEBUG] initMathVisualizer: DONE, mathVisualizer=%o running=%o', !!this.mathVisualizer, this.mathVisualizer?.running);
+        _dbg('[VIZ-DEBUG] initMathVisualizer: DONE, mathVisualizer=%o running=%o', !!this.mathVisualizer, this.mathVisualizer?.running);
         // Start in ultra-low-power warm mode (1fps, 10% res) so GPU context stays alive
         if (this.mathVisualizer && !this.mathVisualizer.running) {
-          this.mathVisualizer.setResolutionScale(0.1);
+          this.mathVisualizer.setResolutionScale(0.6);
           this.mathVisualizer.setMaxFps(1);
           this.mathVisualizer.setTimeScale(0.01, 50);
           this.mathVisualizer.start();
-          console.log('[VIZ-DEBUG] initMathVisualizer: started in warm idle mode (1fps, 0.1x res)');
+          _dbg('[VIZ-DEBUG] initMathVisualizer: started in warm idle mode (1fps, 0.1x res)');
         }
       } else {
-        console.log('[VIZ-DEBUG] initMathVisualizer: SKIPPED — mathVisualizer=%o _mathVisualizerLoading=%o', !!this.mathVisualizer, this._mathVisualizerLoading);
+        _dbg('[VIZ-DEBUG] initMathVisualizer: SKIPPED — mathVisualizer=%o _mathVisualizerLoading=%o', !!this.mathVisualizer, this._mathVisualizerLoading);
       }
       // Only start rendering if overlay is actually visible
       if (this._overlayIsOpen && this.mathVisualizer) {
@@ -5968,6 +6438,126 @@ export class MusicPlayer {
     const gpuPicker = this.getOverlayRoot()?.querySelector('#inlineGpuScenePicker');
     if (gpuPicker) gpuPicker.style.display = mode === 'premium' ? '' : 'none';
     document.body.classList.toggle('engine-premium', mode === 'premium');
+
+    if (mode === 'classic') {
+      // Restore DOM lyrics panel when switching away from GPU
+      const domPanel = document.querySelector('.music-immersive-lyrics-panel');
+      if (domPanel) {
+        domPanel.style.display = '';
+        // Ensure #musicLyricsStage exists (may have been cleared)
+        if (!domPanel.querySelector('#musicLyricsStage')) {
+          domPanel.innerHTML = '<div id="musicLyricsStage" class="lyrics-container"></div>';
+        }
+      }
+      const shell = domPanel?.closest('.music-immersive-shell');
+      if (shell) shell.classList.remove('gpu-lyrics-active');
+      // Stop GPU visualizer rendering to save resources
+      if (this.mathVisualizer) {
+        this.mathVisualizer.stop?.();
+        // Hide the GPU canvas
+        const canvas = this.mathVisualizer.renderer?.domElement;
+        if (canvas) canvas.style.display = 'none';
+      }
+      // Start DOM lyrics sync and classic visualizer
+      if (this.lyrics) {
+        // Restore original setTrack/start if they were overridden by premium mode
+        if (this.lyrics._origSetTrack) {
+          this.lyrics.setTrack = this.lyrics._origSetTrack;
+          this.lyrics._origSetTrack = null;
+        }
+        if (this.lyrics._origStart) {
+          this.lyrics.start = this.lyrics._origStart;
+          this.lyrics._origStart = null;
+        }
+        this.lyrics._premiumDisabled = false;
+
+        // Ensure container is the live DOM element (could be stale if overlay was reconstructed)
+        const liveContainer = document.querySelector('#musicLyricsStage');
+        if (liveContainer && this.lyrics.container !== liveContainer) {
+          _dbg('[switchEngineMode] Lyrics container is stale — reattaching to live DOM element');
+          this.lyrics.container = liveContainer;
+        }
+        // Rebuild DOM lyrics if container is empty (can happen if GPU mode was active during track load)
+        if (this.lyrics.container && this.lyrics.timeline?.length > 0 && !this.lyrics.container.children.length) {
+          _dbg('[switchEngineMode] Lyrics container empty — rebuilding DOM lyrics');
+          this.lyrics._buildChunkedDOM();
+          const shell2 = this.lyrics.container.closest('.music-immersive-shell');
+          if (shell2) shell2.classList.add('has-lyrics');
+          this.lyrics.activeLineIndex = -1;
+          this.lyrics.start();
+          this.lyrics.updateActiveLine?.();
+        } else if (this.lyrics.container && (!this.lyrics.timeline || !this.lyrics.timeline.length || !this.lyrics.container.children.length)) {
+          // Timeline empty or DOM empty — always re-fetch from scratch (most reliable)
+          const currentTrack = this.items?.[this.currentTrackIndex];
+          if (currentTrack) {
+            _dbg('[switchEngineMode] Lyrics missing — re-fetching for current track');
+            this.fetchAndDisplayLyrics(currentTrack).then(() => {
+              const shell2 = this.lyrics?.container?.closest('.music-immersive-shell');
+              if (shell2) shell2.classList.add('has-lyrics');
+              this.lyrics?.start();
+              this.lyrics?.updateActiveLine?.();
+            });
+          }
+        } else {
+          this.lyrics.activeLineIndex = -1;
+          this.lyrics.start();
+          this.lyrics.updateActiveLine?.();
+        }
+      }
+      // Show classic canvas and start visualizer
+      const classicCanvas = this.getOverlayRoot()?.querySelector('#trackVisualizer');
+      if (classicCanvas) classicCanvas.style.display = '';
+      if (this.visualizer) {
+        this.visualizer.start();
+      }
+    } else {
+      // Re-show GPU canvas and container when switching back to premium
+      const vizContainer = this.getOverlayRoot()?.querySelector('#mathVisualizerContainer');
+      if (vizContainer) vizContainer.style.display = '';
+      if (this.mathVisualizer) {
+        const canvas = this.mathVisualizer.renderer?.domElement;
+        if (canvas) canvas.style.display = '';
+        // Start the GPU visualizer if not running
+        if (!this.mathVisualizer.running) {
+          this.mathVisualizer.setResolutionScale(1.0);
+          this.mathVisualizer.setMaxFps(this.settings.fpsMax || 60);
+          this.mathVisualizer.setTimeScale(1.0, 0);
+          this.mathVisualizer.start();
+        } else {
+          // Already running but time may be frozen from close — resume it
+          this.mathVisualizer.setTimeScale(1.0, 0);
+        }
+      }
+      // Hide classic canvas
+      const classicCanvas = this.getOverlayRoot()?.querySelector('#trackVisualizer');
+      if (classicCanvas) classicCanvas.style.display = 'none';
+      // Stop classic visualizer
+      this.visualizer?.stop();
+      // Stop DOM lyrics sync (GPU lyrics take over)
+      this.lyrics?.stop();
+      // Re-override lyrics methods for premium mode
+      if (this.lyrics && !this.lyrics._origSetTrack) {
+        const origStart = this.lyrics.start.bind(this.lyrics);
+        const origSetTrack = this.lyrics.setTrack.bind(this.lyrics);
+        this.lyrics.start = () => {};
+        this.lyrics.setTrack = (data) => {
+          this.lyrics.timeline = data?.syncedLyrics || data?.lyrics?.split?.('\n') || [];
+          this.lyrics._lastTrackData = data;
+          return Promise.resolve();
+        };
+        this.lyrics._origStart = origStart;
+        this.lyrics._origSetTrack = origSetTrack;
+        this.lyrics._premiumDisabled = true;
+      }
+      // Hide DOM lyrics panel (GPU lyrics will take over when timeline is set)
+      const domPanel = document.querySelector('.music-immersive-lyrics-panel');
+      if (domPanel) {
+        domPanel.style.display = 'none';
+        const shell = domPanel?.closest('.music-immersive-shell');
+        if (shell) shell.classList.add('gpu-lyrics-active');
+      }
+    }
+
     const analyser = this.audioEngine.getAnalyser();
     const renderRoot = this.getOverlayRoot();
     this.initMathVisualizer(analyser, renderRoot);
@@ -6004,7 +6594,7 @@ export class MusicPlayer {
     const docHeight = document.documentElement.scrollHeight;
     const viewHeight = window.innerHeight;
     if (docHeight <= viewHeight) {
-      console.log('[scroll-lock] No scroll on page, skipping fake scrollbar');
+      _dbg('[scroll-lock] No scroll on page, skipping fake scrollbar');
       return;
     }
 
@@ -6012,7 +6602,7 @@ export class MusicPlayer {
     const sbWidth = window.innerWidth - document.documentElement.clientWidth;
     const effectiveSbWidth = Math.max(sbWidth, 6);
     this._savedScrollbarWidth = sbWidth;
-    console.log('[scroll-lock] _showFakeScrollbar: sbWidth=%d effectiveSbWidth=%d scrollY=%d', sbWidth, effectiveSbWidth, scrollY);
+    _dbg('[scroll-lock] _showFakeScrollbar: sbWidth=%d effectiveSbWidth=%d scrollY=%d', sbWidth, effectiveSbWidth, scrollY);
 
     // Set --scrollbar-width so fixed elements (header, app-shell) offset via `right`
     document.documentElement.style.setProperty('--scrollbar-width', `${sbWidth}px`);
@@ -6046,7 +6636,7 @@ export class MusicPlayer {
   _removeFakeScrollbar() {
     document.documentElement.style.removeProperty('--scrollbar-width');
     document.body.style.paddingRight = '';
-    console.log('[scroll-lock] _removeFakeScrollbar: cleaned up');
+    _dbg('[scroll-lock] _removeFakeScrollbar: cleaned up');
     if (this._fakeScrollbarEl) {
       this._fakeScrollbarEl.remove();
       this._fakeScrollbarEl = null;
@@ -6064,6 +6654,26 @@ export class MusicPlayer {
       container.appendChild(overlay);
     }
     this._vizBlurOverlay = overlay;
+    // GPU (premium) mode: never show CSS blur overlay — shader handles it
+    if (this.settings.engineMode === 'premium') {
+      overlay.style.opacity = '0';
+    }
+  }
+
+  /** Show CSS blur overlay — only for CPU (classic) mode. GPU mode uses shader blur. */
+  _showCssBlur(transition) {
+    if (!this._vizBlurOverlay) return;
+    if (this.settings.engineMode === 'premium') {
+      // GPU mode: ensure CSS blur is always hidden
+      this._vizBlurOverlay.style.opacity = '0';
+      return;
+    }
+    if (transition) {
+      this._vizBlurOverlay.style.transition = transition;
+    } else {
+      this._vizBlurOverlay.style.transition = 'none';
+    }
+    this._vizBlurOverlay.style.opacity = '1';
   }
 
   _ensureChromicOverlay(vizContainer) {
@@ -6113,6 +6723,31 @@ export class MusicPlayer {
     const vizIsOff = vizContainer.style.display === 'none';
     const isBlurred = this._vizBlurOverlay?.dataset?.manualBlur === 'true';
     const blurBtn = this.getOverlayRoot()?.querySelector('#vizBlurBtn');
+    console.log('[VIZ-BLUR] toggle: engineMode=%s isBlurred=%s vizIsOff=%s mathVisualizer=%o', this.settings.engineMode, isBlurred, vizIsOff, !!this.mathVisualizer);
+
+    // GPU (premium) mode: use shader blur, no CSS overlay
+    if (this.settings.engineMode === 'premium' && this.mathVisualizer && !vizIsOff) {
+      this._ensureVizBlurOverlay(vizContainer);
+      if (isBlurred) {
+        this._vizBlurOverlay.dataset.manualBlur = 'false';
+        this._vizBlurOverlay.style.opacity = '0';
+        this.mathVisualizer.setBlur?.(false);
+        blurBtn?.classList.remove('active');
+        blurBtn?.setAttribute('aria-pressed', 'false');
+        this.settings.vizBlurEnabled = false;
+        console.log('[VIZ-BLUR] GPU: blur OFF');
+      } else {
+        this._vizBlurOverlay.dataset.manualBlur = 'true';
+        this._vizBlurOverlay.style.opacity = '0'; // No CSS blur for GPU mode
+        this.mathVisualizer.setBlur?.(true);
+        blurBtn?.classList.add('active');
+        blurBtn?.setAttribute('aria-pressed', 'true');
+        this.settings.vizBlurEnabled = true;
+        console.log('[VIZ-BLUR] GPU: blur ON');
+      }
+      this.persistPlayerState({ immediate: true });
+      return;
+    }
 
     if (vizIsOff) {
       // Use the page-level blur overlay when viz is off
@@ -6145,8 +6780,7 @@ export class MusicPlayer {
         this.settings.vizBlurEnabled = false;
       } else {
         this._vizBlurOverlay.dataset.manualBlur = 'true';
-        this._vizBlurOverlay.style.transition = 'opacity 0.4s ease-out';
-        this._vizBlurOverlay.style.opacity = '1';
+        this._showCssBlur('opacity 0.4s ease-out');
         blurBtn?.classList.add('active');
         blurBtn?.setAttribute('aria-pressed', 'true');
         this.settings.vizBlurEnabled = true;
@@ -6157,6 +6791,7 @@ export class MusicPlayer {
 
   toggleVisualizerDim() {
     this.settings.vizDimEnabled = !this.settings.vizDimEnabled;
+    console.log('[VIZ-DIM] toggle: engineMode=%s dimEnabled=%s dimOpacity=%s mathVisualizer=%o', this.settings.engineMode, this.settings.vizDimEnabled, this.settings.vizDimOpacity, !!this.mathVisualizer);
     const dimBtn = this.getOverlayRoot()?.querySelector('#vizDimBtn');
     const sliderWrap = this.getOverlayRoot()?.querySelector('#vizDimSliderWrap');
     dimBtn?.classList.toggle('active', this.settings.vizDimEnabled);
@@ -6167,6 +6802,17 @@ export class MusicPlayer {
   }
 
   _applyVizDim() {
+    // GPU (premium) mode: use shader dim only (text stays full opacity)
+    if (this.settings.engineMode === 'premium') {
+      if (this.mathVisualizer) {
+        this.mathVisualizer.setDim?.(this.settings.vizDimEnabled, this.settings.vizDimOpacity || 0.4);
+      }
+      // Hide CSS overlay in premium mode — shader handles it (even if mathVisualizer not yet ready)
+      const overlay = this._ensureVizDimOverlay();
+      if (overlay) overlay.style.opacity = '0';
+      return;
+    }
+    // Classic (CPU) mode: CSS overlay
     const overlay = this._ensureVizDimOverlay();
     if (!overlay) return;
     if (this.settings.vizDimEnabled) {
@@ -6184,12 +6830,17 @@ export class MusicPlayer {
       if (vizContainer) {
         this._ensureVizBlurOverlay(vizContainer);
         this._vizBlurOverlay.dataset.manualBlur = 'true';
-        const vizIsOff = vizContainer.style.display === 'none';
-        if (vizIsOff) {
-          const pageBlur = this._ensurePageBlurOverlay(vizContainer);
-          pageBlur.style.opacity = '1';
+        if (this.settings.engineMode === 'premium' && this.mathVisualizer) {
+          // GPU mode: use shader blur, no CSS overlay
+          this.mathVisualizer.setBlur?.(true);
         } else {
-          this._vizBlurOverlay.style.opacity = '1';
+          const vizIsOff = vizContainer.style.display === 'none';
+          if (vizIsOff) {
+            const pageBlur = this._ensurePageBlurOverlay(vizContainer);
+            pageBlur.style.opacity = '1';
+          } else {
+            this._showCssBlur();
+          }
         }
         const blurBtn = this.getOverlayRoot()?.querySelector('#vizBlurBtn');
         blurBtn?.classList.add('active');
@@ -6272,7 +6923,7 @@ export class MusicPlayer {
       // If blur was on, re-apply to viz blur overlay
       if (this._vizBlurOverlay?.dataset?.manualBlur === 'true') {
         this._ensureVizBlurOverlay(vizContainer);
-        this._vizBlurOverlay.style.opacity = '1';
+        this._showCssBlur();
       }
       // Unfreeze CSS effects
       const page = vizContainer.closest('.music-track-page');
@@ -6488,12 +7139,21 @@ export class MusicPlayer {
   }
 
   async renderTrackPage(track) {
+    // Skip full re-render if onExpand already set up the overlay with correct data
+    if (this._trackPageAlreadyRenderedForId === track.id) {
+      console.log('[DOM-LYRICS-DEBUG] renderTrackPage: SKIPPED (already rendered for %s)', track.id);
+      this._trackPageAlreadyRenderedForId = null;
+      this._preloadedArtworkUrl = null;
+      return;
+    }
     const title = track.title || track.name;
     const cleanTitle = this._extractCleanTitle(title);
     const artist = track.artist || '';
     const albumName = this._cleanAlbumName(track.album || 'Singles', track.artist);
     const subtitle = `${albumName} • ${this.helpers.formatSize(track.size || 0)}`;
-    const artwork = this.helpers.resolvePreviewUrl(track);
+    // Use preloaded artwork from album tile if available (instant display, no network wait)
+    const artwork = this._preloadedArtworkUrl || this.helpers.resolvePreviewUrl(track);
+    this._preloadedArtworkUrl = null; // consume once
     const renderRoot = this.getOverlayRoot();
 
     // Fast-path: if page already exists, just update metadata (no flicker)
@@ -6512,23 +7172,58 @@ export class MusicPlayer {
       if (titleTrigger) titleTrigger.textContent = cleanTitle;
       if (artistEl) artistEl.textContent = artist;
       if (subEl) subEl.textContent = subtitle;
-      if (artEl && artEl.src !== artwork) {
-        const optimizedArtwork = withImageParams(artwork, 700);
-        artEl.src = optimizedArtwork;
-        artEl.addEventListener('load', () => {
-          const extractedAccent = this.extractColorFromImage(artEl);
-          this.albumAccent = extractedAccent;
-          const accent = this.colorEngine.updateThemeFromCover(artEl) || extractedAccent;
-          this.pageUi?.page?.style.setProperty('--music-overlay-accent', accent);
-          this.applyVisualizerColorMode();
-          this.persistPlayerState({ immediate: true });
-          this.updateVisualizerArtworkFocus();
-          this._extractAndApplyPalette?.(artEl);
-        }, { once: true });
+      const optimizedArtwork = withImageParams(artwork, 700);
+      // Skip if artwork is already showing the correct image (preloaded or same track)
+      const currentArtSrc = artEl?.src || '';
+      const artworkChanged = artEl && !currentArtSrc.includes(artwork.split('?')[0]) && currentArtSrc !== optimizedArtwork;
+      if (artworkChanged) {
+        // If the current src is the preloaded album artwork, crossfade to the real track artwork
+        // to avoid a visible blink when album cover != track-specific cover
+        if (this._artworkIsPreloaded) {
+          this._artworkIsPreloaded = false;
+          const tempImg = new Image();
+          tempImg.onload = () => {
+            // Only swap if still the intended artwork (user may have switched tracks)
+            if (artEl.dataset.pendingArt === optimizedArtwork) {
+              artEl.style.transition = 'opacity 0.2s ease';
+              artEl.style.opacity = '0';
+              setTimeout(() => {
+                artEl.src = optimizedArtwork;
+                artEl.style.opacity = '1';
+                delete artEl.dataset.pendingArt;
+              }, 200);
+            }
+            const extractedAccent = this.extractColorFromImage(tempImg);
+            this.albumAccent = extractedAccent;
+            const accent = this.colorEngine.updateThemeFromCover(tempImg) || extractedAccent;
+            this.pageUi?.page?.style.setProperty('--music-overlay-accent', accent);
+            this.applyVisualizerColorMode();
+            this.persistPlayerState({ immediate: true });
+            this.updateVisualizerArtworkFocus();
+            this._extractAndApplyPalette?.(tempImg);
+          };
+          artEl.dataset.pendingArt = optimizedArtwork;
+          tempImg.src = optimizedArtwork;
+        } else {
+          artEl.src = optimizedArtwork;
+          artEl.addEventListener('load', () => {
+            const extractedAccent = this.extractColorFromImage(artEl);
+            this.albumAccent = extractedAccent;
+            const accent = this.colorEngine.updateThemeFromCover(artEl) || extractedAccent;
+            this.pageUi?.page?.style.setProperty('--music-overlay-accent', accent);
+            this.applyVisualizerColorMode();
+            this.persistPlayerState({ immediate: true });
+            this.updateVisualizerArtworkFocus();
+            this._extractAndApplyPalette?.(artEl);
+          }, { once: true });
+        }
       }
       // Trigger album toast
       this._triggerAlbumToast(toastEl, albumName);
-      if (this.lyrics) this.lyrics.setTrack(track);
+      // Skip lyrics reload if already loaded by onExpand early-fetch
+      if (this._lyricsAlreadyLoadedForTrackId !== track.id) {
+        if (this.lyrics) this.lyrics.setTrack(track);
+      }
       this.updateGlobalMetadata(track);
       return;
     }
@@ -6576,7 +7271,7 @@ export class MusicPlayer {
                   </div>
                   <button id="musicTrackTitleTrigger" type="button" class="music-track-title track-settings-trigger" hidden>${this.helpers.escapeHtml(cleanTitle)}</button>
                 </section>
-                <section class="music-immersive-lyrics-panel">
+                <section class="music-immersive-lyrics-panel"${this.settings.engineMode === 'premium' ? ' style="display:none"' : ''}>
                   <div id="musicLyricsStage" class="lyrics-container"></div>
                 </section>
               </div>
@@ -6635,7 +7330,7 @@ export class MusicPlayer {
                   ${uiRange({ id: 'inlineParticleDensityRange', label: 'Particle Density', min: 0.2, max: 3, step: 0.1, value: this.settings.particleDensity || 1, classes: 'overlay-group classic-only-setting' })}
                   ${uiRange({ id: 'inlineLavaResolutionRange', label: 'Lava Resolution', min: 256, max: 2160, step: 128, value: this.settings.lavaResolution || 1024, classes: 'overlay-group classic-only-setting' })}
                    ${uiToggleRow({ id: 'inlineVisualEnabledToggle', label: 'Visual Background', checked: this.settings.visualEnabled, classes: 'toggle-row classic-only-setting' })}
-                   ${uiToggleRow({ id: 'inlineRetroFilterToggle', label: 'Retro Filter (Scanlines/Grain)', checked: this.settings.retroFilterEnabled, classes: 'toggle-row' })}
+                   ${uiToggleRow({ id: 'inlineRetroFilterToggle', label: 'Retro Filter (Scanlines/Grain)', checked: this.settings.retroFilterEnabled, classes: 'toggle-row classic-only-setting' })}
                    ${uiToggleRow({ id: 'inlinePureVisualModeToggle', label: 'Pure Visual Mode', checked: this.settings.uiMode === 'visualizer-only', classes: 'toggle-row' })}
                    <div class="premium-only-setting">${uiSegmented({ id: 'inlineVisualizerColorMode', active: this.settings.visualizerColorMode, options: [{ value: 'auto', label: 'Audio-Reactive' }, { value: 'album', label: 'Album-Driven' }, { value: 'theme', label: 'Theme' }] })}</div>
                   <div class="premium-only-setting">${uiSegmented({ id: 'inlineFpsMax', active: String(this.settings.fpsMax || 30), options: [{ value: '0', label: 'Unlimited' }, { value: '120', label: '120 FPS' }, { value: '60', label: '60 FPS' }, { value: '30', label: '30 FPS' }] })}</div>
@@ -6924,20 +7619,20 @@ export class MusicPlayer {
 
     // Math Visualizer (Premium GPU Overlay) — skip if already initialized
     if (!this.mathVisualizer) {
-      console.log('[VIZ-DEBUG] renderTrackPage: calling initMathVisualizer (no existing), _mathVisualizerLoading=%o', this._mathVisualizerLoading);
+      _dbg('[VIZ-DEBUG] renderTrackPage: calling initMathVisualizer (no existing), _mathVisualizerLoading=%o', this._mathVisualizerLoading);
       this.initMathVisualizer(analyser, renderRoot).then(() => {
-        console.log('[VIZ-DEBUG] renderTrackPage: initMathVisualizer resolved, mathVisualizer=%o _overlayIsOpen=%o', !!this.mathVisualizer, this._overlayIsOpen);
+        _dbg('[VIZ-DEBUG] renderTrackPage: initMathVisualizer resolved, mathVisualizer=%o _overlayIsOpen=%o', !!this.mathVisualizer, this._overlayIsOpen);
         // Force start if overlay is open (fixes reload/first-open visibility)
         if (this.mathVisualizer && this._overlayIsOpen && this.settings.engineMode === 'premium') {
-          console.log('[VIZ-DEBUG] renderTrackPage: starting mathVisualizer (overlay open=%o expanded=%o)', this._overlayIsOpen, this.isPlayerExpanded);
+          _dbg('[VIZ-DEBUG] renderTrackPage: starting mathVisualizer (overlay open=%o expanded=%o)', this._overlayIsOpen, this.isPlayerExpanded);
           // Start low-res if FLIP animation is in progress, otherwise full ignition
           if (this._flipAnimation) {
-            this.mathVisualizer.setResolutionScale(0.1);
+            this.mathVisualizer.setResolutionScale(0.6);
             this.mathVisualizer.setMaxFps(1);
-            this.mathVisualizer.setTimeScale(0.05, 50);
+            this.mathVisualizer.setTimeScale(1.0, 0);
             this.mathVisualizer.start();
             this.mathVisualizer.setUiVisible(true);
-            console.log('[VIZ-DEBUG] renderTrackPage: started low-res during FLIP');
+            _dbg('[VIZ-DEBUG] renderTrackPage: started low-res during FLIP');
           } else {
             this._runVisualizerIgnition();
           }
@@ -6946,7 +7641,7 @@ export class MusicPlayer {
           // Re-apply color mode now that mathVisualizer exists
           this.applyVisualizerColorMode();
         }
-      }).catch(e => console.warn('[MathVisualizer] init failed:', e));
+      }).catch(e => _dbgWarn('[MathVisualizer] init failed:', e));
     } else if (this.mathVisualizer && this._overlayIsOpen && this.settings.engineMode === 'premium') {
       // Already initialized — ensure it's running and visible
       this.mathVisualizer.start();
@@ -6963,6 +7658,22 @@ export class MusicPlayer {
       analyser: analyser,
       audioEngine: this.audioEngine,
     });
+
+    // In premium/GPU mode, disable DOM lyrics entirely — prevent rAF and DOM rendering
+    if (this.settings.engineMode === 'premium') {
+      this.lyrics._premiumDisabled = true;
+      const origStart = this.lyrics.start.bind(this.lyrics);
+      const origSetTrack = this.lyrics.setTrack.bind(this.lyrics);
+      this.lyrics.start = () => {}; // no-op — GPU renderer handles lyrics
+      this.lyrics.setTrack = (data) => {
+        // Store timeline data (needed for GPU lyrics + flow mode) but don't render DOM
+        this.lyrics.timeline = data?.enhancedLyrics?.timeline || data?.syncedLyrics || data?.lyrics?.split?.('\n') || [];
+        this.lyrics._lastTrackData = data;
+        return Promise.resolve();
+      };
+      this.lyrics._origStart = origStart;
+      this.lyrics._origSetTrack = origSetTrack;
+    }
 
     // Connect visualizer mood → lyrics track gamma
     if (this.visualizer) {
@@ -6982,12 +7693,20 @@ export class MusicPlayer {
           lang: this.settings.translationLang,
           translations: this.lyrics._translations,
         }),
-      }).catch(e => console.warn('[Translation Save] Failed:', e));
+      }).catch(e => _dbgWarn('[Translation Save] Failed:', e));
     };
 
     // If synced lyrics were already processed by metadata handler, use them directly
     // (renderTrackPage may run AFTER metadata handler on reload)
+    // In premium/GPU mode, don't populate DOM lyrics — GPU renderer handles it
+    console.log('[DOM-LYRICS-DEBUG] renderTrackPage lyrics section: engineMode=%s hasPendingPayload=%s hasLyricsEngine=%s', this.settings.engineMode, !!this._pendingSyncedLyricsPayload, !!this.lyrics);
+    if (this.settings.engineMode === 'premium') {
+      // Keep lyrics engine instance for data (metadata, timeline) but don't render DOM
+      console.log('[DOM-LYRICS-DEBUG] renderTrackPage: PREMIUM mode — sending null lyrics to engine');
+      this.lyrics.setTrack({ ...track, lyrics: null, syncedLyrics: null });
+    } else {
     const lyricsTrackData = this._pendingSyncedLyricsPayload || track;
+    console.log('[DOM-LYRICS-DEBUG] renderTrackPage: CLASSIC mode — calling setTrack, hasLyrics=%s hasEnhanced=%s', !!lyricsTrackData?.lyrics, !!lyricsTrackData?.enhancedLyrics);
     this.lyrics.setTrack(lyricsTrackData).then(() => {
       if (this.lyrics) {
         this.lyrics._lastNow = -1;
@@ -6995,12 +7714,12 @@ export class MusicPlayer {
         this.lyrics.updateActiveLine?.();
         // If lyrics empty and no payload yet, retry when metadata arrives
         if (!this.lyrics.timeline?.length && !this._pendingSyncedLyricsPayload) {
-          console.log('[lyrics] renderTrackPage: empty timeline, will retry when metadata arrives');
+          _dbg('[lyrics] renderTrackPage: empty timeline, will retry when metadata arrives');
           this._lyricsRetryTimer = setInterval(() => {
             if (this._pendingSyncedLyricsPayload && this.lyrics) {
               clearInterval(this._lyricsRetryTimer);
               this._lyricsRetryTimer = null;
-              console.log('[lyrics] renderTrackPage: retrying setTrack with pending payload');
+              _dbg('[lyrics] renderTrackPage: retrying setTrack with pending payload');
               this.lyrics.setTrack(this._pendingSyncedLyricsPayload).then(() => {
                 if (this.lyrics) {
                   this.lyrics.activeLineIndex = -1;
@@ -7014,6 +7733,7 @@ export class MusicPlayer {
         }
       }
     });
+    } // end else (classic mode DOM lyrics)
     // Only run lyrics rAF loop when overlay is visible (lyrics are in the fullscreen overlay)
     if (!this._overlayIsOpen) {
       this.lyrics.stop();
@@ -7150,11 +7870,11 @@ export class MusicPlayer {
       return;
     }
     const artworkUrl = this.helpers.resolvePreviewUrl(track);
-    console.log('[artwork-debug] updateGlobalMetadata track:', track.title, 'track.previewUrl:', track.previewUrl, '→ resolved artworkUrl:', artworkUrl);
+    _dbg('[artwork-debug] updateGlobalMetadata track:', track.title, 'track.previewUrl:', track.previewUrl, '→ resolved artworkUrl:', artworkUrl);
     // Clean title: extract only the song title (last segment after " - ")
     const rawTitle = track.title || track.name || '';
     const cleanTitle = this._extractCleanTitle(rawTitle);
-    console.log('[metadata] raw:', rawTitle, '→ clean:', cleanTitle);
+    _dbg('[metadata] raw:', rawTitle, '→ clean:', cleanTitle);
     this.elements.globalPlayerTitle.textContent = cleanTitle;
     // Subtitle: album + year
     const year = track.year ? ` (${track.year})` : '';
@@ -7445,13 +8165,15 @@ export class MusicPlayer {
     const current = this.audioEngine.getCurrentTime();
     const ratio = Number.isFinite(duration) && duration > 0 ? current / duration : 0;
 
-    // Update global player progress bar (via ProgressBar class or direct fallback)
-    if (this._globalProgressBar) {
-      this._globalProgressBar.setProgress(ratio);
-    } else {
-      const globalFill = document.getElementById('globalPlayerProgressFill');
-      if (globalFill) {
-        globalFill.style.width = `${(ratio * 100).toFixed(2)}%`;
+    // Update global player progress bar — skip when overlay is open (not visible, saves DOM mutations)
+    if (!this._overlayIsOpen) {
+      if (this._globalProgressBar) {
+        this._globalProgressBar.setProgress(ratio);
+      } else {
+        const globalFill = document.getElementById('globalPlayerProgressFill');
+        if (globalFill) {
+          globalFill.style.width = `${(ratio * 100).toFixed(2)}%`;
+        }
       }
     }
 
@@ -7609,7 +8331,7 @@ export class MusicPlayer {
     _enableFocusTrap() {
       const overlayHost = document.getElementById('musicOverlayHost');
       if (!overlayHost) return;
-      console.log('[FocusTrap] enabling, overlayHost children:', overlayHost.children.length);
+      _dbg('[FocusTrap] enabling, overlayHost children:', overlayHost.children.length);
       // 1. Mark all siblings of the overlay as inert so Tab cannot reach them
       this._inertElements = [];
       for (const child of document.body.children) {
@@ -7619,7 +8341,7 @@ export class MusicPlayer {
           this._inertElements.push(child);
         }
       }
-      console.log('[FocusTrap] marked %d siblings as inert', this._inertElements.length);
+      _dbg('[FocusTrap] marked %d siblings as inert', this._inertElements.length);
 
       // 2. Intercept Tab key directly to wrap focus within overlay
       const focusableSelector = 'button:not([hidden]):not([disabled]):not([style*="display: none"]):not([style*="display:none"]), [tabindex]:not([tabindex="-1"]):not([hidden]):not([style*="display: none"]):not([style*="display:none"]), a[href]:not([hidden]), input:not([hidden]):not([disabled]), select:not([hidden]):not([disabled]), textarea:not([hidden]):not([disabled])';
@@ -7635,7 +8357,7 @@ export class MusicPlayer {
       this._tabTrapHandler = (e) => {
         if (e.key !== 'Tab' || !this._overlayIsOpen) return;
         const focusables = getFocusables();
-        console.log('[FocusTrap] Tab pressed, focusables:', focusables.length, 'shift:', e.shiftKey, 'activeEl:', document.activeElement?.tagName, document.activeElement?.className?.slice?.(0, 40));
+        _dbg('[FocusTrap] Tab pressed, focusables:', focusables.length, 'shift:', e.shiftKey, 'activeEl:', document.activeElement?.tagName, document.activeElement?.className?.slice?.(0, 40));
         if (!focusables.length) return;
 
         const first = focusables[0];
@@ -7646,14 +8368,14 @@ export class MusicPlayer {
           if (document.activeElement === first || !overlayHost.contains(document.activeElement)) {
             e.preventDefault();
             last.focus();
-            console.log('[FocusTrap] wrapped to last:', last.tagName, last.className?.slice?.(0, 40));
+            _dbg('[FocusTrap] wrapped to last:', last.tagName, last.className?.slice?.(0, 40));
           }
         } else {
           // Tab: if on last element, wrap to first
           if (document.activeElement === last || !overlayHost.contains(document.activeElement)) {
             e.preventDefault();
             first.focus();
-            console.log('[FocusTrap] wrapped to first:', first.tagName, first.className?.slice?.(0, 40));
+            _dbg('[FocusTrap] wrapped to first:', first.tagName, first.className?.slice?.(0, 40));
           }
         }
       };
@@ -7663,7 +8385,7 @@ export class MusicPlayer {
       this._focusGuardHandler = (e) => {
         if (!this._overlayIsOpen) return;
         if (!overlayHost.contains(e.target)) {
-          console.log('[FocusTrap] focus escaped to:', e.target.tagName, e.target.id, e.target.className?.slice?.(0, 40));
+          _dbg('[FocusTrap] focus escaped to:', e.target.tagName, e.target.id, e.target.className?.slice?.(0, 40));
           e.stopPropagation();
           const focusables = getFocusables();
           if (focusables.length) focusables[0].focus();
@@ -7755,13 +8477,13 @@ export class MusicPlayer {
     if (!this._isCloseAnimating) {
       if (showOverlay && !document.body.classList.contains('music-overlay-open')) {
         // Save scroll position before locking (read was done above to avoid reflow)
-        console.log('[scroll-lock] LOCKING: scrollY=%d innerWidth=%d clientWidth=%d sbWidth=%d', currentScrollY, window.innerWidth, document.documentElement.clientWidth, window.innerWidth - document.documentElement.clientWidth);
+        _dbg('[scroll-lock] LOCKING: scrollY=%d innerWidth=%d clientWidth=%d sbWidth=%d', currentScrollY, window.innerWidth, document.documentElement.clientWidth, window.innerWidth - document.documentElement.clientWidth);
         document.body.style.setProperty('--scroll-y', `${currentScrollY}px`);
         this._showFakeScrollbar(currentScrollY);
       }
       document.body.classList.toggle('music-overlay-open', showOverlay);
       if (!showOverlay) {
-        console.log('[scroll-lock] UNLOCKING: restoring scrollY=%s', document.body.style.getPropertyValue('--scroll-y'));
+        _dbg('[scroll-lock] UNLOCKING: restoring scrollY=%s', document.body.style.getPropertyValue('--scroll-y'));
         this._removeFakeScrollbar();
         // Restore scroll position after unlocking
         const scrollY = parseInt(document.body.style.getPropertyValue('--scroll-y') || '0');

@@ -2,7 +2,7 @@
 """Compare aligner output timings with embedded LRC timestamps."""
 import json, subprocess, re, sys
 
-audio = '/Users/illiaromaniv/Music/Music/2018-11-20 - flac/11 Fibonacci.flac'
+audio = '/path/to/music/2018-11-20 - flac/11 Fibonacci.flac'
 output_file = 'test_fib_stdout.json'
 
 # Get embedded LRC

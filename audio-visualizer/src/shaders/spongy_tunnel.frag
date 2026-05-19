@@ -30,18 +30,23 @@ float map(vec3 p) {
     float scale = 1.0;
     orbitTrap = vec3(10.0);
 
+    // Clamp audio for stability
+    float safeBass = min(u_bass, 0.85);
+    float safeRms = min(u_rms, 0.8);
+    float safeTreble = min(u_treble, 0.85);
+
     // Динамічний ріст нод під трек
     vec3 nodeGrowth = vec3(
-        0.8 + u_bass * 0.6,
-        1.0 + u_rms * 0.4,
-        1.2 + u_treble * 0.3
+        0.8 + safeBass * 0.6,
+        1.0 + safeRms * 0.4,
+        1.2 + safeTreble * 0.3
     );
 
     for (int i = 0; i < 5; i++) {
         q = abs(q) - nodeGrowth;
 
         float r2 = dot(q, q);
-        float k = (1.85 + u_rms * 0.2) / clamp(r2, 0.15, 2.5);
+        float k = (1.85 + safeRms * 0.2) / clamp(r2, 0.15, 2.5);
         q *= k;
         scale *= k;
 
@@ -50,7 +55,7 @@ float map(vec3 p) {
     }
 
     float shapes = (length(q.xy) - 0.5) / scale;
-    float cavern = -(length(p.xy) - (3.5 + u_bass));
+    float cavern = -(length(p.xy) - (3.5 + safeBass));
 
     return max(shapes, cavern * 0.8);
 }
@@ -72,7 +77,7 @@ void main() {
     }
 
     vec3 ro = vec3(0.0, 0.0, u_time * 7.0);
-    vec3 rd = normalize(vec3(uv + (u_rms * 0.05 * sin(u_time)), 1.4));
+    vec3 rd = normalize(vec3(uv + (min(u_rms, 0.8) * 0.05 * sin(u_time)), 1.4));
 
     float t = 0.0, d = 0.0;
     for (int i = 0; i < 45; i++) {
@@ -93,10 +98,10 @@ void main() {
         vec3 objCol = mix(u_colors[1], u_colors[2], fract(t * 0.1 + orbitTrap.y * 0.2));
 
         col = objCol * diff;
-        col += fres * u_colors[1] * u_bass;
+        col += fres * u_colors[1] * min(u_bass, 0.85);
 
         // Гроза — спалахи під RMS
-        float lightning = pow(u_rms, 3.0) * 2.0;
+        float lightning = pow(min(u_rms, 0.8), 3.0) * 2.0;
         col += u_colors[2] * lightning * exp(-d * 2.0);
 
         col *= exp(-t * 0.05);

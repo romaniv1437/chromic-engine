@@ -288,6 +288,10 @@ function createWindow() {
     show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
+      additionalArguments: [
+        ...(process.argv.includes('--chromic-debug') ? ['--chromic-debug'] : []),
+        ...(process.argv.includes('--chromic-perf') ? ['--chromic-perf'] : []),
+      ],
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
@@ -299,6 +303,28 @@ function createWindow() {
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith('http')) shell.openExternal(url);
     return { action: 'deny' };
+  });
+
+  // Set Content-Security-Policy BEFORE loading the URL
+  // to suppress Electron security warning and allow worker blob scripts
+  mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [
+          "default-src 'self' http://127.0.0.1:*; " +
+          "script-src 'self' 'unsafe-inline' blob: http://127.0.0.1:*; " +
+          "script-src-elem 'self' 'unsafe-inline' blob: http://127.0.0.1:*; " +
+          "style-src 'self' 'unsafe-inline'; " +
+          "img-src 'self' data: blob: http://127.0.0.1:*; " +
+          "media-src 'self' blob: http://127.0.0.1:* file:; " +
+          "connect-src 'self' http://127.0.0.1:* ws://127.0.0.1:* https://cdn.jsdelivr.net; " +
+          "worker-src 'self' blob:; " +
+          "child-src 'self' blob:; " +
+          "font-src 'self' data: https://cdn.jsdelivr.net;"
+        ],
+      },
+    });
   });
 
   mainWindow.loadURL(`http://127.0.0.1:${serverPort}`);

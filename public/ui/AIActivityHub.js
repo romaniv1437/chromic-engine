@@ -1066,7 +1066,7 @@ export class AIActivityHub {
               padding:7px 12px;border-radius:6px;border:1px solid rgba(255,180,80,0.3);
               background:rgba(255,180,80,0.1);color:rgba(255,180,80,0.9);
               font-size:11px;font-weight:600;cursor:pointer;
-            ">🎨 Mood Colors</button>
+            ">Mood Colors</button>
           </div>
           <div class="ai-hub-settings-status" style="text-align:center;font-size:11px;min-height:16px;"></div>
         </form>
@@ -1157,7 +1157,7 @@ export class AIActivityHub {
     // Mood Colors button
     panel.querySelector('.ai-hub-mood-btn')?.addEventListener('click', async () => {
       const status = panel.querySelector('.ai-hub-settings-status');
-      if (status) status.textContent = '🎨 Extracting mood colors…';
+      if (status) status.textContent = 'Extracting mood colors…';
       try {
         await fetch('/api/ai/extract-mood-colors', { method: 'POST' });
         if (status) status.textContent = '✓ Mood colors extracted';

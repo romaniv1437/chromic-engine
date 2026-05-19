@@ -1,6 +1,6 @@
 import json, os, glob
 
-dir_path = '/Users/illiaromaniv/WebstormProjects/claudecode/media/music/Tame Impala - 2025 - Deadbeat 24-96 FLAC'
+dir_path = '/path/to/project/media/music/Tame Impala - 2025 - Deadbeat 24-96 FLAC'
 for f in sorted(glob.glob(os.path.join(dir_path, '*.lyrics.json'))):
     if 'backup' in f:
         continue

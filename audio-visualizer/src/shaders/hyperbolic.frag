@@ -41,7 +41,7 @@ void main() {
   vec2 z = uv;
   float edgeDist = 1.0;
 
-  for (int i = 0; i < 20; i++) {
+  for (int i = 0; i < 12; i++) {
     // Rotate to fundamental domain
     float a = floor(atan(z.y, z.x) / (6.2832 / n) + 0.5) * (6.2832 / n);
     float cs = cos(-a), sn = sin(-a);

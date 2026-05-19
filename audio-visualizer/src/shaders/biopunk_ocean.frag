@@ -36,7 +36,7 @@ float noise(vec2 p) {
 float fbm(vec2 p) {
     float val = 0.0;
     float amp = 0.5;
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 3; i++) {
         val += amp * noise(p);
         p *= 2.2;
         amp *= 0.45;
@@ -91,7 +91,7 @@ void main() {
     for (int i = 0; i < 64; i++) {
         d = map(ro + rd * t);
         if (d < 0.02 || t > 45.0) break;
-        t += d * 0.55;
+        t += d * 0.7;
     }
 
     vec3 col = vec3(0.0);

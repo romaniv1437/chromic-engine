@@ -25,11 +25,10 @@ float map(vec3 p) {
     orbitTrap = vec3(100.0);
     float scale = 1.0;
 
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < 5; i++) {
         p.xyz = abs(p.xyz);
         p -= vec3(1.2, 0.8, 1.0) * explodeForce * (0.2 + float(i) * 0.05);
         p.xy *= rot(twist + float(i) * 0.1);
-        p.yz *= rot(twist * 0.7 - u_mid * float(i) * 0.2);
         p *= 1.35;
         scale *= 1.35;
         orbitTrap = min(orbitTrap, abs(p));
@@ -68,14 +67,14 @@ void main() {
 
     vec3 col = u_colors[0] * 0.05;
 
-    for (int i = 0; i < 80; i++) {
+    for (int i = 0; i < 60; i++) {
         p = ro + rd * t;
         d = map(p);
-        if (d < 0.001 || t > 25.0) break;
-        t += d;
+        if (d < 0.002 || t > 25.0) break;
+        t += d * 0.8;
     }
 
-    if (d < 0.001) {
+    if (d < 0.002) {
         vec3 n = getNormal(p);
 
         vec3 lightPos = vec3(2.0 * sin(u_time), 3.0, -4.0);

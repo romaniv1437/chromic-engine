@@ -12,7 +12,7 @@ Usage:
 """
 import sqlite3, os, sys, json, subprocess, time, argparse, glob
 
-MEDIA_ROOT = '/Users/illiaromaniv/WebstormProjects/claudecode/media'
+MEDIA_ROOT = '/path/to/project/media'
 DB_PATH = os.path.join(MEDIA_ROOT, 'tracks.db')
 ALIGNER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'aligner.py')
 PYTHON = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'venv', 'bin', 'python3')

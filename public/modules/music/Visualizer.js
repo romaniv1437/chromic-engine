@@ -133,7 +133,7 @@ export const setTrackIdentity = (chillHue, driveHue) => {
   _identityDriveHue = driveHue;
   _identityHue = chillHue;
   MOOD_GRADIENT = buildMoodGradient(chillHue, driveHue);
-  console.log(`[viz-mood] 🎨 TRACK IDENTITY SET | chill: ${chillHue.toFixed(0)}° | drive: ${driveHue.toFixed(0)}° | gradient rebuilt`);
+  if(window.__DEBUG__)console.log(`[viz-mood] 🎨 TRACK IDENTITY SET | chill: ${chillHue.toFixed(0)}° | drive: ${driveHue.toFixed(0)}° | gradient rebuilt`);
 };
 
 // For backward compat: map old state names from the gradient position
@@ -271,7 +271,7 @@ export const resetMoodState = () => {
   _moodState.currentH = startGradient.h;
   _moodState.currentS = startGradient.s;
   _moodState.currentL = startGradient.l;
-  console.log('[viz-mood] 🎵 TRACK RESET — adaptive normalization cleared');
+  if(window.__DEBUG__)console.log('[viz-mood] 🎵 TRACK RESET — adaptive normalization cleared');
 };
 
 export const computeMoodProfile = (bands, { intensity = 1, sensitivity = 1, deltaTime = 1 / 60 } = {}) => {
@@ -306,8 +306,8 @@ export const computeMoodProfile = (bands, { intensity = 1, sensitivity = 1, delt
   // ── Step 3: Sample the continuous gradient at the smoothed excitement ──
   const targetColor = sampleGradient(smoothE);
 
-  // Periodic mood status log (~every 3 seconds)
-  if (!_moodState._lastStatusLog || performance.now() - _moodState._lastStatusLog > 3000) {
+  // Periodic mood status log (~every 30 seconds — diagnostic only)
+  if (!_moodState._lastStatusLog || performance.now() - _moodState._lastStatusLog > 30000) {
     _moodState._lastStatusLog = performance.now();
     console.log(
       `[viz-mood] 📊 STATUS | mood: "${moodState}" (excitement: ${smoothE.toFixed(3)}) | ` +
@@ -908,6 +908,12 @@ export class VisualizerManager {
 
   draw(frameTime = performance.now()) {
 
+    // Skip rendering when tab is hidden — zero GPU when minimized
+    if (document.hidden) {
+      this.frameId = requestAnimationFrame((t) => this.draw(t));
+      return;
+    }
+
     // FPS throttle
     if (this._fpsMax > 0) {
       const minInterval = 1000 / this._fpsMax;
@@ -967,7 +973,7 @@ export class VisualizerManager {
       this.activeColor = accent;
     } else {
       // Use smoothed mood hue — never raw FFT bins for color
-      const moodHue = this.mood?.moodColor?.h ?? _moodMemory.hue;
+      const moodHue = this.mood?.moodColor?.h ?? 220;
       this.activeColor = `hsl(${Math.round(moodHue)}, 70%, 60%)`;
     }
     const mood = computeMoodProfile({ bass, mid, treble, energy }, {

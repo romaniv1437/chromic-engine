@@ -59,9 +59,9 @@ module.exports = async function (context) {
     // --deep: sign nested code (frameworks, helpers)
     // --sign: identity to use (SHA-1 hash, name, or "-" for ad-hoc)
     // --timestamp: disabled for self-signed certs (would fail validation)
-    const signCmd = `codesign --force --deep --sign "${identity}" --options runtime "${appPath}"`;
-    console.log(`[afterSign] Running: codesign --force --deep --sign "${identityLabel}" --options runtime ...`);
-    
+    const signCmd = `codesign --force --deep --sign "${identity}" "${appPath}"`;
+    console.log(`[afterSign] Running: codesign --force --deep --sign "${identityLabel}" ...`);
+
     execSync(signCmd, { stdio: 'inherit' });
 
     console.log(`[afterSign] ✅ Signature applied successfully (${identityLabel})`);

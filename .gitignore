@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+package-lock.json
 
 # Build output
 dist/
@@ -31,13 +32,9 @@ venv/
 lyrics-engine/venv/
 lyrics-engine/node_modules/
 
-# Test outputs
-lyrics-engine/out*.json
-lyrics-engine/test*_stdout.json
-lyrics-engine/aligner_output.json
-
-# Dev scripts (not needed in release)
-_*.py
-
 # Media (user content)
 media/
+
+# macOS system font (dev only, not distributable)
+public/chromic-lyrics/vendor/SFNS.ttf
+public/chromic-lyrics/vendor/SFNS-ExtraBold.ttf

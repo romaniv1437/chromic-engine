@@ -610,6 +610,8 @@ export const renderMusicAlbumView = ({
         grid.appendChild(cachedGrid);
       }
       cachedGrid.style.display = '';
+      // Remove frozen state in case it was cached while overlay was open
+      cachedGrid.classList.remove('grid-frozen');
       // Ensure all cards are visible (no stagger reset)
       cachedGrid.querySelectorAll('.stagger-item').forEach((el) => {
         el.style.opacity = '1';
@@ -1539,7 +1541,7 @@ export const renderMusicAlbumView = ({
               if (!selectedKeys.length) return;
               if (!confirm(`Delete ${selectedKeys.length} album(s)? This cannot be undone.`)) return;
               for (const key of selectedKeys) {
-                onDeleteAlbum?.(key);
+                onDeleteAlbum?.(key, { skipConfirm: true });
               }
               _deactivateAlbumSelectMode(gridEl);
               break;
@@ -2553,7 +2555,9 @@ export const renderMusicAlbumView = ({
     if (expandButton && !event.target.closest?.('.album-track-row')) {
       event.preventDefault();
       const shuffle = expandButton.dataset.shuffle === 'true';
-      const sourceElement = grid.querySelector('.album-view-cover') || expandButton;
+      // Use the album-view-cover img as sourceElement — same pattern as grid tiles
+      const coverImg = grid.querySelector('.album-view-cover');
+      const sourceElement = coverImg || expandButton;
       onExpand(activeAlbum, { sourceElement, shuffle });
       return;
     }

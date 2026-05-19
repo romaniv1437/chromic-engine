@@ -18,6 +18,8 @@ export class LavaFlowScene extends BaseScene {
         u_bass: { value: 0 },
         u_rms: { value: 0 },
         u_smoothing: { value: 0.5 },
+        u_dim: { value: 0 },
+        u_blur: { value: 0 },
         u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
         u_debug: { value: false },
         u_colors: {
@@ -46,6 +48,14 @@ export class LavaFlowScene extends BaseScene {
   resize(w: number, h: number, dpr?: number) {
     const effectiveDpr = dpr || window.devicePixelRatio || 1;
     this.material.uniforms.u_resolution.value.set(w * effectiveDpr, h * effectiveDpr);
+  }
+
+  setDim(amount: number) {
+    this.material.uniforms.u_dim.value = amount;
+  }
+
+  setBlur(amount: number) {
+    this.material.uniforms.u_blur.value = amount;
   }
 
   dispose() {

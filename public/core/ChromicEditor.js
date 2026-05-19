@@ -1086,7 +1086,7 @@ export class ChromicEditor {
           this._dismissConfirmModal();
           this.deactivate();
         } else {
-          statusEl.textContent = '⚠️ Server unreachable. Use "Export" or "Copy" as backup.';
+          statusEl.textContent = 'Server unreachable. Use "Export" or "Copy" as backup.';
           btn.disabled = false;
         }
       } else if (action === 'export') {
@@ -1403,7 +1403,7 @@ export class ChromicEditor {
         </div>
         <div class="chromic-flow-lrc-embedded-ref" hidden style="border:1px solid rgba(255,200,100,0.2);border-radius:6px;margin:0 0 6px;padding:6px 8px;background:rgba(255,200,100,0.04);">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-            <span style="font-size:10px;font-weight:600;color:rgba(255,200,100,0.7);text-transform:uppercase;letter-spacing:0.5px;">🎵 Embedded Reference (from audio file — read-only anchor)</span>
+            <span style="font-size:10px;font-weight:600;color:rgba(255,200,100,0.7);text-transform:uppercase;letter-spacing:0.5px;">Embedded Reference (from audio file — read-only anchor)</span>
             <button type="button" class="chromic-flow-lrc-close-embedded" style="font-size:10px;padding:2px 6px;border-radius:3px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);cursor:pointer;">Hide</button>
           </div>
           <pre class="chromic-flow-lrc-embedded-content" style="font-size:11px;max-height:150px;overflow:auto;white-space:pre-wrap;color:rgba(255,255,255,0.5);margin:0;font-family:inherit;"></pre>
@@ -2189,7 +2189,7 @@ export class ChromicEditor {
     const saveBtn = document.createElement('button');
     saveBtn.type = 'button';
     saveBtn.className = 'flow-inline-btn flow-inline-save';
-    saveBtn.textContent = '💾 Save';
+    saveBtn.textContent = 'Save';
     saveBtn.addEventListener('click', (e) => {
       e.preventDefault(); e.stopPropagation();
       this._flowBar?.querySelector('.chromic-flow-save')?.click();
@@ -2237,7 +2237,7 @@ export class ChromicEditor {
   /** Load all existing timed words and cues from the lyrics DOM into the waveform painter */
   _flowLoadExistingWords() {
     if (!this._waveformPainter) return;
-    // Load words
+    // Load words from DOM (works in classic/CPU engine mode)
     const wordEls = document.querySelectorAll('.lyric-word[data-start][data-end]');
     wordEls.forEach(el => {
       const start = parseFloat(el.dataset.start);
@@ -2280,9 +2280,77 @@ export class ChromicEditor {
         });
       }
     });
-    const total = wordEls.length + cueEls.length;
+    let total = wordEls.length + cueEls.length;
+
+    // ── Fallback for GPU/premium mode: no DOM lyrics, read from GPU timeline ──
+    if (total === 0) {
+      const runtime = window.musicRuntime;
+      // Try GPU renderer timeline first, then lyrics engine timeline, then pending payload
+      const gpuTimeline = runtime?.mathVisualizer?.lyricsRenderer?.timeline;
+      const lyricsTimeline = runtime?.lyrics?.timeline;
+      const pendingTimeline = runtime?._pendingSyncedLyricsPayload?.enhancedLyrics?.timeline;
+      const timeline = (gpuTimeline?.length ? gpuTimeline : (lyricsTimeline?.length ? lyricsTimeline : pendingTimeline)) || [];
+
+      if (timeline.length) {
+        let wordCount = 0;
+        let cueCount = 0;
+        timeline.forEach((line, lineIdx) => {
+          if (line.type === 'vocal_cue') {
+            // Add cue
+            const start = line.start ?? 0;
+            const end = line.end ?? (start + 3);
+            if (start < end && end - start > 0.1) {
+              this._waveformPainter.addWord({
+                text: '• • •',
+                start,
+                end,
+                isCue: true,
+                lineIndex: lineIdx,
+              });
+              cueCount++;
+            }
+          } else if (line.words?.length) {
+            // Add individual words
+            line.words.forEach(w => {
+              const start = w.start ?? 0;
+              const end = w.end ?? start;
+              if (!isNaN(start) && !isNaN(end) && end > start) {
+                let style = 'normal';
+                if (w.isVocalStretch || w.stretch) style = 'stretch';
+                else if (w.adlib) style = 'ad-lib';
+                else if (w.spoken) style = 'spoken';
+                else if (w.whisper) style = 'whisper';
+                this._waveformPainter.addWord({
+                  text: w.text || w.word || '',
+                  start,
+                  end,
+                  isCue: false,
+                  style,
+                });
+                wordCount++;
+              }
+            });
+          } else if (line.text && line.start != null && line.end != null) {
+            // Line without word-level data — add as single block
+            this._waveformPainter.addWord({
+              text: line.text,
+              start: line.start,
+              end: line.end,
+              isCue: false,
+              style: 'normal',
+            });
+            wordCount++;
+          }
+        });
+        total = wordCount + cueCount;
+        if (total) {
+          console.log(`[ChromicEditor:Flow] GPU mode: Loaded ${wordCount} words + ${cueCount} cues from timeline into waveform`);
+        }
+      }
+    }
+
     if (total) {
-      console.log(`[ChromicEditor:Flow] Loaded ${wordEls.length} words + ${cueEls.length} cues into waveform`);
+      console.log(`[ChromicEditor:Flow] Loaded ${total} items into waveform`);
     }
   }
 
@@ -2773,7 +2841,7 @@ export class ChromicEditor {
 
       let html = `<div class="backup-header">
         <span>Lyrics Backups</span>
-        <button type="button" class="backup-create-btn" title="Save current state as backup">📸 Save Snapshot</button>
+        <button type="button" class="backup-create-btn" title="Save current state as backup"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:3px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Save Snapshot</button>
       </div>`;
 
       if (!backups || backups.length === 0) {
@@ -2977,14 +3045,14 @@ export class ChromicEditor {
     // Show "Validating..." feedback
     const indicator = this._flowBar?.querySelector('.flow-label');
     const origText = indicator?.textContent;
-    if (indicator) { indicator.textContent = '🔍 VALIDATING…'; indicator.style.color = '#FFD700'; }
+    if (indicator) { indicator.textContent = 'VALIDATING…'; indicator.style.color = '#FFD700'; }
 
     try {
       // Auto-save lyrics first to ensure sidecar exists
-      if (indicator) indicator.textContent = '💾 Saving lyrics…';
+      if (indicator) indicator.textContent = 'Saving lyrics…';
       await this._flowSaveAll();
 
-      if (indicator) indicator.textContent = '🔍 VALIDATING…';
+      if (indicator) indicator.textContent = 'VALIDATING…';
       const res = await fetch('/api/tracks/mark-gold', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -3014,7 +3082,7 @@ export class ChromicEditor {
         const errorMsg = data.error || 'REPAIR REQUIRED';
         console.warn('[Gold] Validation failed:', errorMsg, data.validation);
         if (indicator) {
-          indicator.textContent = `❌ ${errorMsg.length > 40 ? errorMsg.slice(0, 40) + '…' : errorMsg}`;
+          indicator.textContent = `${errorMsg.length > 40 ? errorMsg.slice(0, 40) + '…' : errorMsg}`;
           indicator.style.color = '#ff3b30';
           setTimeout(() => { indicator.textContent = origText; indicator.style.color = ''; }, 4000);
         }
@@ -3036,7 +3104,7 @@ export class ChromicEditor {
     const panel = document.createElement('div');
     panel.className = `chromic-inspector-report${isBlocking ? ' is-blocking' : ''}`;
 
-    const title = isBlocking ? '🛡️ Repair Required' : '⚠️ Validation Warnings';
+    const title = isBlocking ? 'Repair Required' : 'Validation Warnings';
     const scoreColor = validation.score >= 80 ? '#00ff78' : validation.score >= 50 ? '#FFD700' : '#ff3b30';
 
     let html = `
@@ -3077,7 +3145,7 @@ export class ChromicEditor {
     const autoFixable = (validation.warnings || []).filter(w => w.autoFixable).length;
     if (autoFixable > 0 || (validation.errors || []).some(e => e.type === 'empty_word' || e.type === 'negative_duration')) {
       html += `<div class="inspector-actions">
-        <button type="button" class="inspector-autofix">🔧 Auto-Fix ${autoFixable} issue${autoFixable !== 1 ? 's' : ''}</button>
+        <button type="button" class="inspector-autofix">Auto-Fix ${autoFixable} issue${autoFixable !== 1 ? 's' : ''}</button>
         <span class="inspector-hint">Trims micro-overlaps & removes empty words</span>
       </div>`;
     }
@@ -3137,7 +3205,7 @@ export class ChromicEditor {
         if (data.ok) {
           // Refresh lyrics and re-validate
           const indicator = this._flowBar?.querySelector('.flow-label');
-          if (indicator) { indicator.textContent = `🔧 Fixed ${data.fixCount} issues`; indicator.style.color = '#00ff78'; }
+          if (indicator) { indicator.textContent = `Fixed ${data.fixCount} issues`; indicator.style.color = '#00ff78'; }
           setTimeout(() => { if (indicator) { indicator.textContent = 'FLOW MODE'; indicator.style.color = ''; } }, 2500);
           // Reload waveform data
           this._flowRefreshAfterAutoFix?.();
@@ -3255,7 +3323,7 @@ export class ChromicEditor {
       if (res.ok) {
         const lastEl = this._flowBar?.querySelector('.flow-last-word');
         if (lastEl) lastEl.innerHTML = `${_svgCheck}Saved!`;
-        console.log(`[ChromicEditor:Flow] ✅ Saved ${timeline.length} entries`);
+        console.log(`[ChromicEditor:Flow] Saved ${timeline.length} entries`);
       } else {
         throw new Error(`HTTP ${res.status}`);
       }
@@ -3594,14 +3662,14 @@ export class ChromicEditor {
         ta.value = this._ensureLrcFormat(data.content);
         if (sourceBar) sourceBar.hidden = false;
         if (sourceLabel) sourceLabel.textContent = data.source === 'generated'
-          ? '🔄 Source: generated from alignment data (.lyrics.json) — click Save to create .lrc sidecar'
-          : '📄 Source: .lrc sidecar file';
+          ? 'Source: generated from alignment data (.lyrics.json) — click Save to create .lrc sidecar'
+          : 'Source: .lrc sidecar file';
         if (useEmbeddedBtn) useEmbeddedBtn.hidden = !data.embedded;
       } else if (data.embedded) {
         // No sidecar, but embedded lyrics found — show as template
         ta.value = this._ensureLrcFormat(data.embedded);
         if (sourceBar) sourceBar.hidden = false;
-        if (sourceLabel) sourceLabel.textContent = '🎵 Source: embedded metadata — click Save to create .lrc sidecar';
+        if (sourceLabel) sourceLabel.textContent = 'Source: embedded metadata — click Save to create .lrc sidecar';
         if (useEmbeddedBtn) useEmbeddedBtn.hidden = true;
       } else {
         ta.value = `# No .lrc file found\n# No embedded lyrics in metadata\n# Expected: ${data.path || '(unknown)'}\n# You can create one here — paste LRC content and click Save`;
@@ -3664,7 +3732,7 @@ export class ChromicEditor {
       if (this._flowLrcEmbedded) {
         const opt = document.createElement('option');
         opt.value = '__embedded__';
-        opt.textContent = '🎵 Embedded (original from audio file)';
+        opt.textContent = 'Embedded (original from audio file)';
         select.appendChild(opt);
       }
     } catch {}
@@ -3682,7 +3750,7 @@ export class ChromicEditor {
       if (val === '__embedded__') {
         ta.value = this._ensureLrcFormat(this._flowLrcEmbedded || '');
         const hint = this._flowBar?.querySelector('.chromic-flow-lrc-hint');
-        if (hint) hint.textContent = '🎵 Viewing embedded lyrics (read-only reference) — switch to Current to edit';
+        if (hint) hint.textContent = 'Viewing embedded lyrics (read-only reference) — switch to Current to edit';
         return;
       }
       // Load backup content
@@ -3696,7 +3764,7 @@ export class ChromicEditor {
         if (data.content != null) {
           ta.value = this._ensureLrcFormat(data.content);
           const hint = this._flowBar?.querySelector('.chromic-flow-lrc-hint');
-          if (hint) hint.textContent = `📂 Loaded backup — click Save to apply as current .lrc`;
+          if (hint) hint.textContent = `Loaded backup — click Save to apply as current .lrc`;
         }
       } catch (err) {
         ta.value = `# Error loading backup: ${err.message}`;
@@ -3722,15 +3790,15 @@ export class ChromicEditor {
       });
       const data = await res.json();
       if (data.ok) {
-        if (hint) hint.textContent = `✅ Saved — backup created automatically`;
+        if (hint) hint.textContent = `Saved — backup created automatically`;
         setTimeout(() => {
           if (hint) hint.textContent = 'Edit the .lrc sidecar file directly — backups are created automatically';
         }, 3000);
       } else {
-        if (hint) hint.textContent = `❌ Error: ${data.error}`;
+        if (hint) hint.textContent = `Error: ${data.error}`;
       }
     } catch (err) {
-      if (hint) hint.textContent = `❌ Error: ${err.message}`;
+      if (hint) hint.textContent = `Error: ${err.message}`;
     }
   }
 
@@ -3744,7 +3812,7 @@ export class ChromicEditor {
     await this._flowSaveLrc();
 
     // Step 2: Trigger re-alignment via the lyrics generation endpoint
-    if (hint) hint.textContent = '🔄 Re-aligning with Whisper… (this takes a minute)';
+    if (hint) hint.textContent = 'Re-aligning with Whisper… (this takes a minute)';
     try {
       const mr = window.musicRuntime;
       const track = mr?.items?.[mr?.currentTrackIndex];
@@ -3758,17 +3826,61 @@ export class ChromicEditor {
       });
       const data = await res.json();
       if (data.ok || data.status === 'running') {
-        if (hint) hint.textContent = '🔄 Aligner started — check AI Hub for progress';
-        // The AI Hub will track the task. Reload lyrics when done.
+        if (hint) hint.textContent = 'Aligner started…';
+        this._flowPollAlignerStatus(trackPath, hint);
         document.addEventListener('chromic:track-assets-updated', () => {
           this._flowLoadLrc();
         }, { once: true });
       } else {
-        if (hint) hint.textContent = `⚠️ ${data.error || 'Could not start aligner'}`;
+        if (hint) hint.textContent = `${data.error || 'Could not start aligner'}`;
       }
     } catch (err) {
-      if (hint) hint.textContent = `❌ Re-align error: ${err.message}`;
+      if (hint) hint.textContent = `Re-align error: ${err.message}`;
     }
+  }
+
+  /** Poll backend for aligner progress and show steps in the hint element */
+  _flowPollAlignerStatus(trackPath, hint) {
+    if (this._flowAlignerPollTimer) clearInterval(this._flowAlignerPollTimer);
+    let attempts = 0;
+    const maxAttempts = 150;
+    let relPath = trackPath;
+    try { relPath = decodeURIComponent(relPath); } catch {}
+    const encodedRelPath = relPath.split('/').map(s => encodeURIComponent(s)).join('/');
+
+    this._flowAlignerPollTimer = setInterval(async () => {
+      attempts++;
+      if (attempts > maxAttempts) {
+        clearInterval(this._flowAlignerPollTimer);
+        this._flowAlignerPollTimer = null;
+        if (hint) hint.textContent = 'Aligner timed out — check AI Hub';
+        return;
+      }
+      try {
+        const res = await fetch(`/api/lyrics-status/${encodedRelPath}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.status === 'generating' || data.status === 'running') {
+          if (hint && data.stepLabel) hint.textContent = data.stepLabel;
+          else if (hint && data.step) hint.textContent = `Step: ${data.step}`;
+        } else if (data.status === 'queued') {
+          const pos = data.queuePosition || 0;
+          if (hint) hint.textContent = pos > 0 ? `Queued (position ${pos})…` : 'Queued for processing…';
+        } else if (data.status === 'done' || data.lyrics) {
+          clearInterval(this._flowAlignerPollTimer);
+          this._flowAlignerPollTimer = null;
+          if (hint) hint.textContent = 'Alignment complete — lyrics updated';
+          this._flowLoadLrc();
+          setTimeout(() => {
+            if (hint) hint.textContent = 'Edit the .lrc sidecar file directly — backups are created automatically';
+          }, 4000);
+        } else if (data.status === 'not_found' && data.errorMessage) {
+          clearInterval(this._flowAlignerPollTimer);
+          this._flowAlignerPollTimer = null;
+          if (hint) hint.textContent = `Aligner failed: ${data.errorMessage.slice(0, 120)}`;
+        }
+      } catch {}
+    }, 5000);
   }
 
   /** Highlight the active ELRC line in the textarea based on current playback time */
@@ -4999,6 +5111,7 @@ class WaveformPainter {
     this._peaks = null;
   }
 }
+
 
 // Singleton
 export const chromicEditor = new ChromicEditor();

@@ -40,6 +40,9 @@ function init() {
     setPalette: (colors: [string, string, string]) => orchestrator!.setPalette(colors),
     setScene: (idx: number) => orchestrator!.setScene(idx),
     setUiVisible: (v: boolean) => orchestrator!.setUiVisible(v),
+    setBlur: (v: boolean) => orchestrator!.setBlur(v),
+    setDim: (v: boolean, opacity?: number) => orchestrator!.setDim(v, opacity),
+    setBlurDim: (v: boolean) => orchestrator!.setBlurDim(v),
     setAlbumArt: (url: string) => orchestrator!.setAlbumArt(url),
   };
 }

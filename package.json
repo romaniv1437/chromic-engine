@@ -5,7 +5,7 @@
   "main": "electron/main.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/romaniv1437/chromic-engine"
+    "url": "https://github.com/romaniv1437/draft-chromic-engine"
   },
   "scripts": {
     "install-all": "npm install && cd audio-visualizer && npm install",
@@ -36,6 +36,8 @@
     "rebuild:node": "npm rebuild better-sqlite3 sharp",
     "rebuild:electron": "npx --yes @electron/rebuild --force --module-dir .",
     "electron": "npx --yes @electron/rebuild --force --module-dir . 2>/dev/null; electron --js-flags='--max-old-space-size=4096 --expose-gc' electron/main.js",
+    "electron:debug": "npx --yes @electron/rebuild --force --module-dir . 2>/dev/null; electron --js-flags='--max-old-space-size=4096 --expose-gc' electron/main.js --chromic-debug",
+    "electron:perf": "npx --yes @electron/rebuild --force --module-dir . 2>/dev/null; electron --js-flags='--max-old-space-size=4096 --expose-gc' electron/main.js --chromic-perf",
     "electron:dev": "electron electron/main.js",
     "electron:build": "electron-builder",
     "electron:build:mac": "electron-builder --mac",
@@ -54,11 +56,11 @@
     "directories": {
       "output": "dist"
     },
-"publish": {
-    "provider": "github",
-    "owner": "romaniv1437",
-    "repo": "chromic-engine"
-  },
+    "publish": {
+      "provider": "github",
+      "owner": "romaniv1437",
+      "repo": "chromic-engine"
+    },
     "files": [
       "index.js",
       "app-icon.png",
@@ -73,7 +75,7 @@
     "asarUnpack": [
       "node_modules/better-sqlite3/**",
       "node_modules/sharp/**",
-      "node_modules/@img/**"
+      "public/chromic-lyrics/vendor/*.ttf"
     ],
     "extraResources": [
       {
@@ -107,7 +109,6 @@
       ],
       "category": "public.app-category.music",
       "icon": "build/icon.icns",
-      "identity": null,
       "hardenedRuntime": false,
       "gatekeeperAssess": false,
       "entitlements": null,
@@ -115,8 +116,9 @@
       "extendInfo": {
         "LSMinimumSystemVersion": "10.15.0"
       },
-      "type": "development"
+      "type": "distribution"
     },
+    "afterSign": "scripts/afterSignHook.js",
     "dmg": {
       "icon": "build/icon.icns",
       "title": "Install Chromic Engine",
@@ -168,7 +170,9 @@
     "multer": "^1.4.5-lts.2",
     "music-metadata": "^11.12.3",
     "node-fetch": "^2.7.0",
-    "sharp": "^0.34.5"
+    "sharp": "^0.34.5",
+    "three": "^0.162.0",
+    "troika-three-text": "^0.52.4"
   },
   "devDependencies": {
     "@electron/rebuild": "^4.0.4",

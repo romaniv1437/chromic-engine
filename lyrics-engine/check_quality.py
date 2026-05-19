@@ -5,7 +5,7 @@ if len(sys.argv) > 1:
 else:
     # Auto-discover all directories with lyrics files
     import glob as _g
-    _music = '/Users/illiaromaniv/WebstormProjects/claudecode/media/music'
+    _music = '/path/to/project/media/music'
     dirs = sorted(set(os.path.dirname(f) for f in _g.glob(os.path.join(_music, '**', '*.lyrics.json'), recursive=True) if 'backup' not in f))
 
 for dir_path in dirs:

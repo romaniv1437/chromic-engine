@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChromicLyrics GPU</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #0a0a12; }
+    #canvas-container { position: absolute; inset: 0; width: 100%; height: 100%; }
+    canvas { display: block; width: 100%; height: 100%; }
+    /* Top/bottom fade mask — matches DOM panel mask-image */
+    #canvas-container {
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
+      mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
+    }
+  </style>
+</head>
+<body>
+
+<div id="canvas-container"></div>
+
+<script type="module">
+import { THREE, Text } from '/chromic-lyrics/vendor/gpu-deps.bundle.js';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FONT — macOS SF (dev, full CJK) → Noto Sans Bold (dist, OFL)
+// ═══════════════════════════════════════════════════════════════════════════
+const FONT_URL_PRIMARY  = '/chromic-lyrics/vendor/SFNS.ttf';
+const FONT_URL_FALLBACK = '/chromic-lyrics/vendor/NotoSans-Bold.ttf';
+async function resolveFont() {
+  try {
+    const res = await fetch(FONT_URL_PRIMARY, { method: 'HEAD' });
+    if (res.ok) return FONT_URL_PRIMARY;
+  } catch {}
+  return FONT_URL_FALLBACK;
+}
+const FONT_URL = await resolveFont();
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DESIGN SYSTEM — pixel-matching DOM styles.css
+// ═══════════════════════════════════════════════════════════════════════════
+// :root { --lyric-unfilled: rgba(255,255,255,0.5); --lyric-filled: #fff; }
+const UNFILLED = 0.3;
+const FILLED   = 1.0;
+
+// .lyrics-line { font-size: clamp(1.6rem, 3.2vw, 2.8rem); font-weight: 800; line-height: 1.3; margin-bottom: 3rem; }
+const FONT_SIZE       = 0.42;
+const FONT_SIZE_ADLIB = 0.36;   // .lyric-word.is-adlib { font-size: 0.88em; }
+const LINE_HEIGHT     = 1.3;
+const LINE_MARGIN     = 0.9;    // 3rem scaled to scene units
+const WORD_GAP        = 0.10;
+
+// Line states from CSS — { opacity, scale, offsetY (scene units) }
+// .lyrics-line           { opacity: 0.25; transform: scale(0.92) translateY(20px); filter: blur(5px) }
+// .lyrics-line.active    { opacity: 1;    transform: scale(1.05) translateY(0);    filter: blur(0) }
+// .lyrics-line.past      { opacity: 0.7;  transform: scale(0.98) translateY(-4px); filter: none }
+// .lyrics-line.future-1  { opacity: 0.7;  transform: scale(0.98) translateY(6px);  filter: blur(0) }
+// .lyrics-line.future-2  { opacity: 0.4;  transform: scale(0.95) translateY(12px); filter: blur(2px) }
+// .lyrics-line.future-3  { opacity: 0.2;  transform: scale(0.93) translateY(16px); filter: blur(4px) }
+// .lyrics-line.future-4  { opacity: 0.1;  transform: scale(0.92) translateY(20px); filter: blur(6px) }
+// .lyrics-line.past far  { opacity: 0.4 }
+const STATES = {
+  active:   { op: 1.0,  sc: 1.05, oy: 0     },
+  past:     { op: 0.7,  sc: 0.98, oy: -0.03  },
+  pastFar:  { op: 0.4,  sc: 0.98, oy: -0.03  },
+  future:   { op: 0.08, sc: 0.92, oy: 0.15   },
+  future1:  { op: 0.7,  sc: 0.98, oy: 0.04   },
+  future2:  { op: 0.4,  sc: 0.95, oy: 0.08   },
+  future3:  { op: 0.2,  sc: 0.93, oy: 0.12   },
+  future4:  { op: 0.1,  sc: 0.92, oy: 0.15   },
+  // .adlib-phrase.active { opacity: 0.7 }  .adlib-phrase.past { opacity: 0.5 }  future: invisible
+  adlibOn:  { op: 0.7,  sc: 1.0,  oy: 0      },
+  adlibOff: { op: 0.5,  sc: 1.0,  oy: 0      },
+  adlibHid: { op: 0.0,  sc: 1.0,  oy: 0.04   },
+};
+
+// Lerp speed — DOM uses transition: 0.6s cubic-bezier(0.4,0,0.2,1)
+// We approximate with exponential lerp: ~95% convergence in 0.6s → factor ≈ 5
+const LERP_K = 5.0;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THREE.JS SCENE
+// ═══════════════════════════════════════════════════════════════════════════
+const container = document.getElementById('canvas-container');
+const W = container.clientWidth, H = container.clientHeight;
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(W, H);
+renderer.setClearColor(0x0a0a12, 1);
+container.appendChild(renderer.domElement);
+
+const scene  = new THREE.Scene();
+const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100);
+camera.position.z = 10;
+
+function sizeCamera() {
+  const a = container.clientWidth / container.clientHeight;
+  const vh = 6;
+  camera.left = -vh * a / 2; camera.right = vh * a / 2;
+  camera.top  =  vh / 2;     camera.bottom = -vh / 2;
+  camera.updateProjectionMatrix();
+}
+sizeCamera();
+window.addEventListener('resize', () => {
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  sizeCamera();
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════════════
+let lines = [];       // [{group, entries[], lineData, isAdlib, fontSize, _baseY, _curOp, _curSc, _curOy}]
+let allEntries = [];
+let ready = false;
+let ct = 0;           // currentTime from parent
+let camY = 0, camTargetY = 0;
+let scrollOff = 0, scrollDecay = 0;
+
+renderer.domElement.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  scrollOff += e.deltaY * 0.003;
+  scrollDecay = 3;
+}, { passive: false });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BUILD — from .lyrics.json [{time, end, text, words:[{word,start,end,...}]}]
+// ═══════════════════════════════════════════════════════════════════════════
+function wordType(w) {
+  if (w.stretch) return 'stretch';
+  if (w.sung)    return 'sung';
+  if (w.spoken)  return 'spoken';
+  if (w.whisper) return 'whisper';
+  return 'normal';
+}
+
+function build(raw) {
+  // teardown
+  for (const L of lines) { scene.remove(L.group); for (const e of L.entries) e.mesh.dispose(); }
+  lines = []; allEntries = []; ready = false;
+
+  const src = raw.filter(l => l.type !== 'vocal_cue' && l.words?.length);
+  if (!src.length) return;
+
+  let syncN = 0, synced = 0;
+
+  for (let li = 0; li < src.length; li++) {
+    const sl = src[li];
+    const adlib = (sl.words || []).every(w => w.adlib) || !!sl.adlib;
+    const fs = adlib ? FONT_SIZE_ADLIB : FONT_SIZE;
+    const grp = new THREE.Group();
+    scene.add(grp);
+    const entries = [];
+    const ld = { start: +sl.time || 0, end: +sl.end || 0 };
+
+    for (let wi = 0; wi < sl.words.length; wi++) {
+      const w = sl.words[wi];
+      const txt = w.word || w.text || '';
+      const m = new Text();
+      m.text = txt;
+      m.font = FONT_URL;
+      m.fontSize = fs;
+      m.fontWeight = adlib ? 400 : 800;
+      m.anchorX = 'left';
+      m.anchorY = 'middle';
+      m.color = 0xffffff;
+      m.sdfGlyphSize = 64;
+      m.gpuAccelerateSDF = true;
+      grp.add(m);
+
+      entries.push({
+        mesh: m,
+        start: w.start, end: w.end,
+        txt, li, wi,
+        adlib: !!w.adlib || adlib,
+        wtype: wordType(w),
+        _w: 0, _prog: 0, _wave: 0,
+        _cop: 1,  // current opacity (lerped)
+      });
+      allEntries.push(entries[entries.length - 1]);
+      syncN++;
+    }
+    lines.push({
+      group: grp, entries, lineData: ld,
+      isAdlib: adlib, fontSize: fs, _baseY: 0,
+      _curOp: 0.08, _curSc: 0.92, _curOy: 0.15,
+    });
+  }
+
+  const onSync = () => { if (++synced >= syncN) { layout(); ready = true; } };
+  for (const L of lines) for (const e of L.entries) e.mesh.sync(onSync);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LAYOUT — center each line, left-aligned internally
+// ═══════════════════════════════════════════════════════════════════════════
+function layout() {
+  // Compute camera width for left-alignment
+  const camW = camera.right - camera.left;
+  const leftEdge = camera.left + camW * 0.08; // 8% padding from left
+
+  let y = 2.5;
+  for (const L of lines) {
+    let tw = 0;
+    for (const e of L.entries) {
+      const b = e.mesh.textRenderInfo?.blockBounds;
+      e._w = b ? (b[2] - b[0]) : e.txt.length * L.fontSize * 0.5;
+      tw += e._w + WORD_GAP;
+    }
+    tw -= WORD_GAP;
+
+    // Left-align: start from left edge (matching DOM transform-origin: center left)
+    let x = leftEdge;
+    for (const e of L.entries) {
+      e.mesh.position.x = x;
+      e.mesh.position.y = 0;
+      x += e._w + WORD_GAP;
+    }
+    L.group.position.set(0, y, 0);
+    L._baseY = y;
+    y -= L.fontSize * LINE_HEIGHT + (L.isAdlib ? LINE_MARGIN * 0.5 : LINE_MARGIN);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PER-FRAME UPDATE
+// ═══════════════════════════════════════════════════════════════════════════
+function getState(li, activeIdx, isAdlib) {
+  if (isAdlib) {
+    if (li === activeIdx) return STATES.adlibOn;
+    if (li < activeIdx) return STATES.adlibOff;
+    return STATES.adlibHid;
+  }
+  if (li === activeIdx) return STATES.active;
+  if (li < activeIdx) return (activeIdx - li > 5) ? STATES.pastFar : STATES.past;
+  const d = li - activeIdx;
+  if (d === 1) return STATES.future1;
+  if (d === 2) return STATES.future2;
+  if (d === 3) return STATES.future3;
+  if (d === 4) return STATES.future4;
+  return STATES.future;
+}
+
+const _c = new THREE.Color();
+
+function update(dt) {
+  // Find active line
+  let activeIdx = -1;
+  for (let i = 0; i < lines.length; i++) {
+    const ld = lines[i].lineData;
+    if (ct >= ld.start - 0.3 && ct <= ld.end + 0.1) activeIdx = i;
+  }
+
+  const f = 1 - Math.exp(-LERP_K * dt); // smooth lerp factor
+
+  for (let li = 0; li < lines.length; li++) {
+    const L = lines[li];
+    const st = getState(li, activeIdx, L.isAdlib);
+    const g = L.group;
+
+    // Lerp line transform properties
+    L._curOp += (st.op - L._curOp) * f;
+    L._curSc += (st.sc - L._curSc) * f;
+    L._curOy += (st.oy - L._curOy) * f;
+
+    g.scale.set(L._curSc, L._curSc, 1);
+    g.position.y = L._baseY + L._curOy;
+
+    // Per-word
+    for (const e of L.entries) {
+      // Fill progress 0→1
+      if (ct >= e.end)       e._prog = 1;
+      else if (ct >= e.start) e._prog = Math.min(1, (ct - e.start) / (e.end - e.start));
+      else                    e._prog = 0;
+
+      // Stretch/sung glow wave
+      const special = e.wtype === 'stretch' || e.wtype === 'sung';
+      if (special && e._prog > 0 && e._prog < 1) {
+        e._wave += (Math.sin(e._prog * Math.PI) * 0.8 - e._wave) * f;
+      } else {
+        e._wave += (0 - e._wave) * f * 0.5;
+      }
+
+      // Lerp per-word opacity toward line state
+      e._cop += (L._curOp - e._cop) * f;
+
+      // Color: unfilled (0.5 brightness) → filled (1.0 brightness), multiplied by line opacity
+      // DOM: unfilled = rgba(255,255,255,0.5), filled = #fff, line opacity via CSS opacity
+      const b = (UNFILLED + (FILLED - UNFILLED) * e._prog) * e._cop;
+      _c.setRGB(b, b, b);
+      e.mesh.color = _c.getHex();
+
+      // Stretch/sung glow
+      if (e._wave > 0.005) {
+        e.mesh.scale.set(1, 1 + 0.06 * e._wave, 1);
+        e.mesh.outlineWidth = 0.01 * e._wave;
+        e.mesh.outlineColor = 0xffffff;
+        e.mesh.outlineOpacity = 0.35 * e._wave * e._cop;
+      } else {
+        e.mesh.scale.set(1, 1, 1);
+        e.mesh.outlineWidth = 0;
+        e.mesh.outlineOpacity = 0;
+      }
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CAMERA SCROLL — follow active line (DOM auto-scroll behavior)
+// ═══════════════════════════════════════════════════════════════════════════
+function scroll(dt) {
+  for (const L of lines) {
+    if (ct >= L.lineData.start - 0.5 && ct <= L.lineData.end + 0.3) {
+      camTargetY = L._baseY + 0.3;
+    }
+  }
+  if (scrollDecay > 0) {
+    scrollDecay -= dt;
+    if (scrollDecay <= 0) { scrollOff *= 0.9; if (Math.abs(scrollOff) < 0.01) scrollOff = 0; }
+  }
+  // Smooth camera lerp — matches DOM lerpScrollTo behavior
+  const target = camTargetY + scrollOff;
+  camY += (target - camY) * (1 - Math.exp(-4 * dt));
+  camera.position.y = camY;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CLICK TO SEEK
+// ═══════════════════════════════════════════════════════════════════════════
+const ray = new THREE.Raycaster(), mv = new THREE.Vector2();
+renderer.domElement.addEventListener('click', (ev) => {
+  const r = renderer.domElement.getBoundingClientRect();
+  mv.x = ((ev.clientX - r.left) / r.width) * 2 - 1;
+  mv.y = -((ev.clientY - r.top) / r.height) * 2 + 1;
+  ray.setFromCamera(mv, camera);
+  const h = ray.intersectObjects(allEntries.map(e => e.mesh), true);
+  if (h.length) {
+    let o = h[0].object;
+    while (o && !o.text && o.parent) o = o.parent;
+    const e = allEntries.find(x => x.mesh === o);
+    if (e) { scrollOff = 0; window.parent.postMessage({ type: 'chromic-gpu-seek', time: lines[e.li].lineData.start }, '*'); }
+  }
+});
+renderer.domElement.addEventListener('mousemove', (ev) => {
+  const r = renderer.domElement.getBoundingClientRect();
+  mv.x = ((ev.clientX - r.left) / r.width) * 2 - 1;
+  mv.y = -((ev.clientY - r.top) / r.height) * 2 + 1;
+  ray.setFromCamera(mv, camera);
+  renderer.domElement.style.cursor = ray.intersectObjects(allEntries.map(e => e.mesh), true).length ? 'pointer' : 'default';
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// postMessage — receive lyrics + time from parent
+// ═══════════════════════════════════════════════════════════════════════════
+window.addEventListener('message', (ev) => {
+  const m = ev.data;
+  if (!m?.type) return;
+  if (m.type === 'chromic-gpu-lyrics' && Array.isArray(m.lines) && m.lines.length) {
+    console.log('[GPU] Building scene:', m.lines.length, 'lines');
+    build(m.lines);
+  }
+  if (m.type === 'chromic-gpu-time') ct = m.currentTime || 0;
+});
+window.parent.postMessage({ type: 'chromic-gpu-ready' }, '*');
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RENDER LOOP
+// ═══════════════════════════════════════════════════════════════════════════
+let prev = performance.now();
+(function loop(now) {
+  requestAnimationFrame(loop);
+  const dt = Math.min((now - prev) / 1000, 0.1);
+  prev = now;
+  if (ready) { update(dt); scroll(dt); }
+  renderer.render(scene, camera);
+})(performance.now());
+
+</script>
+</body>
+</html>
+
+
+

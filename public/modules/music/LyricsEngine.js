@@ -146,7 +146,7 @@ export const buildAuthoritativeTimeline = (beTimeline, duration) => {
   // Sort by start time
   valid.sort((a, b) => a.start - b.start);
 
-  console.log(`[buildAuthoritativeTimeline] ${valid.length} valid entries, duration=${duration}`);
+  debug.log(`[buildAuthoritativeTimeline] ${valid.length} valid entries, duration=${duration}`);
 
   const timeline = [];
 
@@ -176,7 +176,7 @@ export const buildAuthoritativeTimeline = (beTimeline, duration) => {
     }
   }
 
-  console.log(`[buildAuthoritativeTimeline] Result: ${timeline.length} segments (${timeline.filter(e => e.type === 'vocal_cue').length} cues)`);
+  debug.log(`[buildAuthoritativeTimeline] Result: ${timeline.length} segments (${timeline.filter(e => e.type === 'vocal_cue').length} cues)`);
   return timeline;
 };
 
@@ -263,11 +263,15 @@ export class LyricsEngine {
     this._translations = []; // Array of translated strings, parallel to timeline
     this._contextTooltip = null; // Genius-style tooltip element
 
+    // ── Store bound listener refs for cleanup in destroy() ──
+    this._scrollParent = null;
+
     // Smart scroll: pause auto-scroll when user scrolls manually
     const scrollParent = container?.closest('.music-immersive-lyrics-panel') || container;
+    this._scrollParent = scrollParent;
     if (scrollParent) {
       // Dampen scroll velocity — reduce wheel deltaY by 60% for smoother feel
-      scrollParent.addEventListener('wheel', (e) => {
+      this._onWheel = (e) => {
         e.preventDefault();
         // User is actively scrolling — cancel any auto-scroll flag
         this._isAutoScrolling = false;
@@ -278,7 +282,8 @@ export class LyricsEngine {
           if (this.container) this.container.classList.add('is-scrolling-active');
         }
         scrollParent.scrollTop += e.deltaY * 0.4;
-      }, { passive: false });
+      };
+      scrollParent.addEventListener('wheel', this._onWheel, { passive: false });
 
       // Single unified scroll handler — minimal work per event
       let _scrolling = false;
@@ -286,7 +291,7 @@ export class LyricsEngine {
       let _scrollActiveTimer = 0;
       let _eventCount = 0;
 
-      const onScrollInput = () => {
+      this._onScrollInput = () => {
         // Ignore scroll events triggered by auto-scroll (lerpScrollTo)
         if (this._isAutoScrolling) return;
         _eventCount++;
@@ -327,24 +332,25 @@ export class LyricsEngine {
         }
       };
 
-      scrollParent.addEventListener('scroll', onScrollInput, { passive: true });
-      scrollParent.addEventListener('touchstart', onScrollInput, { passive: true });
-      scrollParent.addEventListener('touchmove', onScrollInput, { passive: true });
+      scrollParent.addEventListener('scroll', this._onScrollInput, { passive: true });
+      scrollParent.addEventListener('touchstart', this._onScrollInput, { passive: true });
+      scrollParent.addEventListener('touchmove', this._onScrollInput, { passive: true });
     }
 
     // Force rAF loop to re-evaluate on play/seek events
     if (audioElement) {
-      const forceResync = () => { this._lastNow = -1; };
-      audioElement.addEventListener('play', forceResync);
-      audioElement.addEventListener('seeked', () => {
+      this._forceResync = () => { this._lastNow = -1; };
+      this._onSeeked = () => {
         this.isSeeking = false;
-        forceResync();
-      });
-      audioElement.addEventListener('playing', forceResync);
+        this._forceResync();
+      };
+      audioElement.addEventListener('play', this._forceResync);
+      audioElement.addEventListener('seeked', this._onSeeked);
+      audioElement.addEventListener('playing', this._forceResync);
     }
 
     if (container) {
-      container.addEventListener('click', (e) => {
+      this._onContainerClick = (e) => {
         if (e.shiftKey) return;
         const word = e.target.closest('.lyric-word');
         const line = e.target.closest('.lyrics-line[data-start]');
@@ -359,7 +365,7 @@ export class LyricsEngine {
             // Don't block re-clicks — let preciseSeek handle serialization
 
             const audio = this.audioElement;
-              console.log(`[lyrics-sync] LINE CLICK: seekTo=${seekTarget.toFixed(2)} prevAudioTime=${audio.currentTime.toFixed(2)} prevActiveIdx=${this.activeLineIndex} lineIndex=${lineIdx}`);
+              debug.log(`[lyrics-sync] LINE CLICK: seekTo=${seekTarget.toFixed(2)} prevAudioTime=${audio.currentTime.toFixed(2)} prevActiveIdx=${this.activeLineIndex} lineIndex=${lineIdx}`);
 
             // FULL LOCK: block rAF loop entirely during seek
             this.isSeeking = true;
@@ -425,11 +431,11 @@ export class LyricsEngine {
                     toTime: actualTime,
                     duration: 400, // ms
                   };
-                  console.log(`[lyrics-sync] Catch-up: drift=${drift.toFixed(3)}s, interpolating ${seekTarget.toFixed(2)} → ${actualTime.toFixed(3)}`);
+                  debug.log(`[lyrics-sync] Catch-up: drift=${drift.toFixed(3)}s, interpolating ${seekTarget.toFixed(2)} → ${actualTime.toFixed(3)}`);
                 }
                 this.isSeeking = false;
                 this._lastNow = -1;
-                console.log(`[lyrics-sync] LINE CLICK preciseSeek done: actualTime=${actualTime?.toFixed(3)} target=${seekTarget.toFixed(2)} drift=${drift.toFixed(3)}`);
+                debug.log(`[lyrics-sync] LINE CLICK preciseSeek done: actualTime=${actualTime?.toFixed(3)} target=${seekTarget.toFixed(2)} drift=${drift.toFixed(3)}`);
               });
             } else {
               const wasPlaying = !audio.paused;
@@ -455,7 +461,8 @@ export class LyricsEngine {
             this._scrollGuardActive = false;
           }
         }
-      });
+      };
+      container.addEventListener('click', this._onContainerClick);
     }
   }
 
@@ -495,7 +502,7 @@ export class LyricsEngine {
     this._gammaCandidate = { h, s, l };
     this._gammaConfidence = 0;
     this._gammaLastMoodState = null;
-    console.log(`[gamma-vault] 🔃 HARD RESET (track change) | color: H:${h} S:${s} L:${l} | confidence & state cleared`);
+    debug.log(`[gamma-vault] 🔃 HARD RESET (track change) | color: H:${h} S:${s} L:${l} | confidence & state cleared`);
   }
 
   /**
@@ -535,7 +542,7 @@ export class LyricsEngine {
         };
         this._gammaConfidence = 0;
         this._gammaLastMoodState = vizMoodState;
-        console.log(
+        debug.log(
           `[gamma-vault] 🔄 MOOD STATE CHANGED: "${prevState}" → "${vizMoodState}" | ` +
           `candidate H:${vizMoodColor.h.toFixed(1)} S:${vizMoodColor.s.toFixed(1)} L:${vizMoodColor.l.toFixed(1)} | ` +
           `confidence RESET to 0 (need ${this._gammaConfidenceRequired})`
@@ -551,7 +558,7 @@ export class LyricsEngine {
 
         // Log confidence progress every 30 frames (~0.5s)
         if (this._gammaConfidence % 30 === 0 && this._gammaConfidence < this._gammaConfidenceRequired) {
-          console.log(
+          debug.log(
             `[gamma-vault] ⏳ confidence: ${this._gammaConfidence}/${this._gammaConfidenceRequired} ` +
             `(${((this._gammaConfidence / this._gammaConfidenceRequired) * 100).toFixed(0)}%) | ` +
             `state: "${vizMoodState}" | candidate H:${vizMoodColor.h.toFixed(1)}`
@@ -564,7 +571,7 @@ export class LyricsEngine {
           this._trackGammaTarget.h = this._gammaCandidate.h;
           this._trackGammaTarget.s = this._gammaCandidate.s;
           this._trackGammaTarget.l = this._gammaCandidate.l;
-          console.log(
+          debug.log(
             `[gamma-vault] ✅ CONFIDENCE GATE PASSED — COMMITTING TARGET | ` +
             `state: "${vizMoodState}" held ${this._gammaConfidenceRequired} frames (~${(this._gammaConfidenceRequired / 60).toFixed(1)}s) | ` +
             `target H:${this._trackGammaTarget.h.toFixed(1)} S:${this._trackGammaTarget.s.toFixed(1)} L:${this._trackGammaTarget.l.toFixed(1)} | ` +
@@ -613,7 +620,7 @@ export class LyricsEngine {
     if (hueMoving || Math.abs(sDiff) > 0.1 || Math.abs(lDiff) > 0.1) {
       if (!this._gammaLerpLogTime || performance.now() - this._gammaLerpLogTime > 2000) {
         this._gammaLerpLogTime = performance.now();
-        console.log(
+        debug.log(
           `[gamma-vault] 🍯 HONEY LERP in progress | ` +
           `current H:${g.h.toFixed(1)} → target H:${t.h.toFixed(1)} (Δ${hDiff.toFixed(1)}°) | ` +
           `S:${g.s.toFixed(1)}→${t.s.toFixed(1)} L:${g.l.toFixed(1)}→${t.l.toFixed(1)} | ` +
@@ -821,7 +828,9 @@ export class LyricsEngine {
       } else {
         el = document.createElement('p');
         const isBgLine = entry.text && /^\s*\(/.test(entry.text) && /\)\s*$/.test(entry.text);
-        el.className = `lyrics-line${isBgLine ? ' is-bg-vocal' : ''}`;
+        // Detect overlapping bg-vocal lines (this line's time overlaps with previous/next non-bg line)
+        const isOverlap = isBgLine && this._detectTimeOverlap(index);
+        el.className = `lyrics-line${isBgLine ? ' is-bg-vocal' : ''}${isOverlap ? ' is-overlap' : ''}`;
         el.dataset.lineIndex = String(index);
         el.dataset.start = String(entry.start);
 
@@ -841,16 +850,113 @@ export class LyricsEngine {
           });
           entry.words = words;
         }
-        const wordsHtml = words.map((w, wi) => {
-          const isStretch = w.isVocalStretch || w.emphasis || w.is_extra || w.stress || w.bold;
-          const isBgVocal = entry.text && /^\s*\(/.test(entry.text) && /\)\s*$/.test(entry.text);
-          const bgClass = isBgVocal ? ' is-bg-vocal' : '';
-          const stretchAttr = isStretch ? ' data-vocal-stretch="true"' : '';
-          const styleAttr = w.style && w.style !== 'normal' ? ` data-style="${w.style}"` : '';
-          const timeAttrs = `${w.start != null ? ` data-start="${w.start}"` : ''}${w.end != null ? ` data-end="${w.end}"` : ''}`;
-          return `<span class="lyric-word${bgClass}"${stretchAttr}${styleAttr}${timeAttrs} data-word-index="${wi}">${esc(w.text)}</span>`;
-        }).join(' ');
-        el.innerHTML = wordsHtml;
+
+        // Adlib flags: trust BE-provided flag only — FE is a dumb renderer
+        const adlibFlags = new Array(words.length).fill(false);
+        if (!isBgLine) {
+          for (let wi = 0; wi < words.length; wi++) {
+            adlibFlags[wi] = !!words[wi].adlib;
+          }
+        }
+
+        // Two-tier rendering: main vocals on top, adlibs below
+        // Adlibs animate at their own word timestamps (not waiting for line end)
+        const hasInlineAdlibs = adlibFlags.some(Boolean);
+
+        // All words rendered inline — adlibs are just standard words with is-adlib class
+        if (hasInlineAdlibs) {
+          // Two-tier: main vocals on top, adlibs fly in from below
+          const mainDiv = document.createElement('span');
+          mainDiv.className = 'main-vocals';
+          const adlibDiv = document.createElement('span');
+          adlibDiv.className = 'adlibs-wrapper';
+
+          let currentPhrase = null;
+          words.forEach((w, wi) => {
+            const isStretch = w.stretch || w.isVocalStretch || w.emphasis || w.is_extra || w.stress || w.bold;
+            const isAdlib = adlibFlags[wi];
+            const isWhisper = !!w.whisper;
+            const isSpoken = !!w.spoken;
+            const isSung = !!w.sung;
+            const span = document.createElement('span');
+            let cls = 'lyric-word';
+            if (isAdlib) cls += ' is-adlib';
+            if (isStretch) cls += ' is-stretch';
+            if (isWhisper) cls += ' is-whisper';
+            if (isSpoken) cls += ' is-spoken';
+            if (isSung) cls += ' is-sung';
+            if (isBgLine) cls += ' is-bg-vocal';
+            span.className = cls;
+            if (w.start != null) span.dataset.start = String(w.start);
+            if (w.end != null) span.dataset.end = String(w.end);
+            span.dataset.wordIndex = String(wi);
+            const wordText = w.text || w.word || '';
+            if ((isSung || isStretch) && !isAdlib) {
+              span.dataset.charSplit = 'true';
+              for (let ci = 0; ci < wordText.length; ci++) {
+                const charSpan = document.createElement('span');
+                charSpan.className = 'lyric-char';
+                charSpan.textContent = wordText[ci];
+                span.appendChild(charSpan);
+              }
+            } else {
+              span.textContent = wordText;
+            }
+            span.dataset.text = wordText;
+
+            if (isAdlib) {
+              if (!currentPhrase) {
+                currentPhrase = document.createElement('span');
+                currentPhrase.className = 'adlib-phrase';
+                if (w.start != null) currentPhrase.dataset.start = String(w.start);
+              }
+              currentPhrase.appendChild(span);
+              currentPhrase.appendChild(document.createTextNode(' '));
+              if (w.end != null) currentPhrase.dataset.end = String(w.end);
+            } else {
+              if (currentPhrase) {
+                adlibDiv.appendChild(currentPhrase);
+                currentPhrase = null;
+              }
+              mainDiv.appendChild(span);
+              mainDiv.appendChild(document.createTextNode(' '));
+            }
+          });
+          if (currentPhrase) {
+            adlibDiv.appendChild(currentPhrase);
+            currentPhrase = null;
+          }
+          el.appendChild(mainDiv);
+          if (adlibDiv.childNodes.length > 0) {
+            el.appendChild(adlibDiv);
+          }
+        } else {
+          const wordsHtml = words.map((w, wi) => {
+            const isStretch = w.stretch || w.isVocalStretch || w.emphasis || w.is_extra || w.stress || w.bold;
+            const isWhisper = !!w.whisper;
+            const isSpoken = !!w.spoken;
+            const isSung = !!w.sung;
+            const bgClass = isBgLine ? ' is-bg-vocal' : '';
+            const stretchClass = isStretch ? ' is-stretch' : '';
+            const whisperClass = isWhisper ? ' is-whisper' : '';
+            const spokenClass = isSpoken ? ' is-spoken' : '';
+            const sungClass = isSung ? ' is-sung' : '';
+            const styleAttr = w.style && w.style !== 'normal' ? ` data-style="${w.style}"` : '';
+            const timeAttrs = `${w.start != null ? ` data-start="${w.start}"` : ''}${w.end != null ? ` data-end="${w.end}"` : ''}`;
+            const wordTxt = esc(w.text || w.word || '');
+            const dataText = ` data-text="${wordTxt}"`;
+            // For sung/stretch, split into per-character spans
+            let innerContent;
+            if (isSung || isStretch) {
+              innerContent = wordTxt.split('').map(ch => `<span class="lyric-char">${ch}</span>`).join('');
+            } else {
+              innerContent = wordTxt;
+            }
+            const charSplitAttr = (isSung || isStretch) ? ' data-char-split="true"' : '';
+            return `<span class="lyric-word${bgClass}${stretchClass}${whisperClass}${spokenClass}${sungClass}"${styleAttr}${timeAttrs}${dataText}${charSplitAttr} data-word-index="${wi}">${innerContent}</span>`;
+          }).join(' ');
+          el.innerHTML = wordsHtml;
+        }
 
         // Translation text (populated by setTranslations)
         const transIdx = this.timeline.slice(0, index + 1).filter(e => e.type !== 'vocal_cue').length - 1;
@@ -893,7 +999,19 @@ export class LyricsEngine {
         this._wordSpansCache.push(null);
         this._dotSpansCache.push(el ? Array.from(el.querySelectorAll('.dot')) : []);
       } else {
-        this._wordSpansCache.push(el ? Array.from(el.querySelectorAll('.lyric-word')) : []);
+        if (el) {
+          const allWords = Array.from(el.querySelectorAll('.lyric-word'));
+          // Sort by data-word-index so spans[i] matches words[i] even with two-tier adlib layout
+          const sorted = new Array(allWords.length);
+          let needsSort = false;
+          for (const s of allWords) {
+            const wi = s.dataset.wordIndex;
+            if (wi != null) { sorted[Number(wi)] = s; needsSort = true; }
+          }
+          this._wordSpansCache.push(needsSort ? sorted.filter(Boolean) : allWords);
+        } else {
+          this._wordSpansCache.push([]);
+        }
         this._dotSpansCache.push(null);
       }
     }
@@ -956,7 +1074,7 @@ export class LyricsEngine {
       scrollParent.scrollTop = Math.max(0, lineTop - containerHeight / 2 + lineHeight / 2);
     }
     // DEBUG: Log build result
-    console.log(`[lyrics-sync] _buildChunkedDOM DONE: lines=${this.lineElements.length} initialIdx=${initialIdx} panelH=${scrollParent?.clientHeight}`);
+    debug.log(`[lyrics-sync] _buildChunkedDOM DONE: lines=${this.lineElements.length} initialIdx=${initialIdx} panelH=${scrollParent?.clientHeight}`);
 
     // Bind context menu for Genius-style tooltips
     this._bindContextMenu();
@@ -970,21 +1088,21 @@ export class LyricsEngine {
    * Updates existing DOM elements without rebuilding.
    */
   setTranslations(translations) {
-    console.log(`[LyricsEngine] setTranslations called with ${translations?.length || 0} translations`);
+    debug.log(`[LyricsEngine] setTranslations called with ${translations?.length || 0} translations`);
     this._translations = Array.isArray(translations) ? translations : [];
     if (!this.container) {
       console.warn(`[LyricsEngine] setTranslations: no container, translations will not render`);
       return;
     }
     const spans = this.container.querySelectorAll('.lyrics-translation');
-    console.log(`[LyricsEngine] Found ${spans.length} translation spans in DOM`);
+    debug.log(`[LyricsEngine] Found ${spans.length} translation spans in DOM`);
     spans.forEach((span) => {
       const idx = parseInt(span.dataset.transIndex, 10);
       if (!isNaN(idx) && this._translations[idx]) {
         span.textContent = this._translations[idx];
       }
     });
-    console.log(`[LyricsEngine] Applied ${this._translations.filter(Boolean).length} non-empty translations`);
+    debug.log(`[LyricsEngine] Applied ${this._translations.filter(Boolean).length} non-empty translations`);
   }
 
   /**
@@ -992,7 +1110,7 @@ export class LyricsEngine {
    */
   _bindTranslationEditing() {
     if (!this.container) return;
-    this.container.addEventListener('click', (e) => {
+    this._onTranslationClick = (e) => {
       const transEl = e.target.closest('.lyrics-translation');
       if (!transEl || !this.container.classList.contains('show-translations')) return;
       if (transEl.querySelector('input')) return; // Already editing
@@ -1024,7 +1142,8 @@ export class LyricsEngine {
         if (ke.key === 'Enter') { ke.preventDefault(); input.blur(); }
         if (ke.key === 'Escape') { transEl.textContent = currentText; }
       });
-    });
+    };
+    this.container.addEventListener('click', this._onTranslationClick);
   }
 
   /**
@@ -1032,7 +1151,7 @@ export class LyricsEngine {
    */
   _bindContextMenu() {
     if (!this.container) return;
-    this.container.addEventListener('contextmenu', async (e) => {
+    this._onContextMenu = async (e) => {
       const wordEl = e.target.closest('.lyric-word');
       if (!wordEl) return;
       e.preventDefault();
@@ -1064,10 +1183,12 @@ export class LyricsEngine {
       } catch {
         this._hideContextTooltip();
       }
-    });
+    };
+    this.container.addEventListener('contextmenu', this._onContextMenu);
 
     // Hide tooltip on click anywhere
-    document.addEventListener('click', () => this._hideContextTooltip(), { passive: true });
+    this._onDocClickHideTooltip = () => this._hideContextTooltip();
+    document.addEventListener('click', this._onDocClickHideTooltip, { passive: true });
   }
 
   _showContextTooltip(x, y, text) {
@@ -1095,34 +1216,91 @@ export class LyricsEngine {
   }
 
   /**
+   * Detect if a bg-vocal line's time range overlaps with a non-bg-vocal (main) line.
+   * Used to mark overlapping lines so they can be shown simultaneously.
+   */
+  _detectTimeOverlap(lineIndex) {
+    const entry = this.timeline[lineIndex];
+    if (!entry || entry.type === 'vocal_cue') return false;
+    // Check neighbors (±3 lines) for time overlap with a non-bg line
+    for (let d = -3; d <= 3; d++) {
+      if (d === 0) continue;
+      const other = this.timeline[lineIndex + d];
+      if (!other || other.type === 'vocal_cue') continue;
+      const otherIsBg = other.text && /^\s*\(/.test(other.text) && /\)\s*$/.test(other.text);
+      if (otherIsBg) continue; // Both bg — not a main+bg overlap
+      // Check time overlap
+      if (entry.start < other.end && entry.end > other.start) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Assign classes to ALL lines based on a reference active index.
    * Ensures every line has a proper visibility class from the start.
    */
   _assignAllLineClasses(activeIdx) {
     const prevIdx = this._prevActiveIndex ?? -1;
+    const now = (this.audioElement?.currentTime || 0) + (this.syncOffset || 0);
+
+    // Helper: check if a line should be co-active (overlapping bg-vocal within active time)
+    const isCoActive = (i) => {
+      if (i === activeIdx) return false;
+      const el = this.lineElements[i];
+      if (!el || !el.classList.contains('is-overlap')) return false;
+      const entry = this.timeline[i];
+      if (!entry) return false;
+      // Check if this bg-vocal line's time overlaps with current audio time
+      return now >= entry.start && now < entry.end;
+    };
 
     // Optimization: if moving forward by 1, only update the 2 changed lines + nearby future lines
     if (prevIdx >= 0 && activeIdx === prevIdx + 1) {
-      // Previous active → past
+      // Previous active → past (unless it's a co-active overlap)
       const prevEl = this.lineElements[prevIdx];
       if (prevEl) {
-        prevEl.classList.remove('active', 'future', 'future-1', 'future-2', 'future-3', 'future-4');
-        prevEl.classList.add('past');
+        if (isCoActive(prevIdx)) {
+          prevEl.classList.remove('future', 'future-1', 'future-2', 'future-3', 'future-4', 'past');
+          prevEl.classList.add('active', 'co-active');
+        } else {
+          prevEl.classList.remove('active', 'co-active', 'future', 'future-1', 'future-2', 'future-3', 'future-4');
+          prevEl.classList.add('past');
+        }
       }
       // New active
       const activeEl = this.lineElements[activeIdx];
       if (activeEl) {
-        activeEl.classList.remove('past', 'future', 'future-1', 'future-2', 'future-3', 'future-4');
+        activeEl.classList.remove('past', 'co-active', 'future', 'future-1', 'future-2', 'future-3', 'future-4');
         activeEl.classList.add('active');
       }
-      // Update future-N classes (only the few that shifted)
+      // Update future-N classes (only the few that shifted) + check co-active overlaps
       for (let d = 1; d <= 5; d++) {
         const i = activeIdx + d;
         if (i >= this.lineElements.length) break;
         const el = this.lineElements[i];
         if (!el) continue;
-        el.classList.remove('future', 'future-1', 'future-2', 'future-3', 'future-4');
-        el.classList.add(d <= 4 ? `future-${d}` : 'future');
+        el.classList.remove('future', 'future-1', 'future-2', 'future-3', 'future-4', 'co-active');
+        if (isCoActive(i)) {
+          el.classList.add('active', 'co-active');
+        } else {
+          el.classList.add(d <= 4 ? `future-${d}` : 'future');
+        }
+      }
+      // Also check a few lines before active for lingering co-active bg vocals
+      for (let d = 1; d <= 3; d++) {
+        const i = activeIdx - d;
+        if (i < 0 || i === prevIdx) continue;
+        const el = this.lineElements[i];
+        if (!el) continue;
+        if (isCoActive(i)) {
+          el.classList.remove('past');
+          el.classList.add('active', 'co-active');
+        } else {
+          el.classList.remove('active', 'co-active');
+          if (!el.classList.contains('past')) el.classList.add('past');
+        }
       }
       return;
     }
@@ -1132,9 +1310,11 @@ export class LyricsEngine {
       const el = this.lineElements[i];
       if (!el) continue;
       const cl = el.classList;
-      cl.remove('active', 'past', 'future', 'future-1', 'future-2', 'future-3', 'future-4');
+      cl.remove('active', 'co-active', 'past', 'future', 'future-1', 'future-2', 'future-3', 'future-4');
       if (i === activeIdx) {
         cl.add('active');
+      } else if (isCoActive(i)) {
+        cl.add('active', 'co-active');
       } else if (i < activeIdx) {
         cl.add('past');
       } else {
@@ -1279,12 +1459,12 @@ export class LyricsEngine {
     const duration = this.audioElement?.duration || 0;
     const currentTime = this.audioElement?.currentTime || 0;
     const paused = this.audioElement?.paused;
-    console.log(`[lyrics-sync] setTrack called: duration=${duration.toFixed(2)} currentTime=${currentTime.toFixed(2)} paused=${paused} hasEnhanced=${!!track?.enhancedLyrics?.timeline?.length} trackTitle="${track?.title || track?.name || '?'}"`);
-    console.log(`[lyrics-sync] setTrack container:`, this.container ? `${this.container.tagName}#${this.container.id} inDOM=${document.contains(this.container)} clientH=${this.container.clientHeight}` : 'NULL');
+    debug.log(`[lyrics-sync] setTrack called: duration=${duration.toFixed(2)} currentTime=${currentTime.toFixed(2)} paused=${paused} hasEnhanced=${!!track?.enhancedLyrics?.timeline?.length} trackTitle="${track?.title || track?.name || '?'}"`);
+    debug.log(`[lyrics-sync] setTrack container:`, this.container ? `${this.container.tagName}#${this.container.id} inDOM=${document.contains(this.container)} clientH=${this.container.clientHeight}` : 'NULL');
 
     // Wait for container to have real dimensions (overlay animation may still be running)
     if (this.container && this.container.clientHeight === 0) {
-      console.log(`[lyrics-sync] container clientH=0, waiting for layout...`);
+      debug.log(`[lyrics-sync] container clientH=0, waiting for layout...`);
       // Ensure the lyrics panel is visible (display:block) by adding has-lyrics early
       const shell = this.container.closest('.music-immersive-shell');
       if (shell && !shell.classList.contains('has-lyrics')) {
@@ -1304,12 +1484,12 @@ export class LyricsEngine {
       });
       // Check if a newer generation started while we waited
       if (generation !== this._setTrackGeneration) {
-        console.log(`[lyrics-sync] setTrack layout wait: stale generation ${generation} vs ${this._setTrackGeneration}, proceeding anyway to avoid missing lyrics`);
-        console.log(`[lyrics-sync] container now has clientH=${this.container.clientHeight}`);
+        debug.log(`[lyrics-sync] setTrack layout wait: stale generation ${generation} vs ${this._setTrackGeneration}, proceeding anyway to avoid missing lyrics`);
+        debug.log(`[lyrics-sync] container now has clientH=${this.container.clientHeight}`);
         // DON'T return — proceed anyway so lyrics aren't missing.
         // If the newer generation also completes, it will overwrite us (which is fine).
       }
-      console.log(`[lyrics-sync] container now has clientH=${this.container.clientHeight}`);
+      debug.log(`[lyrics-sync] container now has clientH=${this.container.clientHeight}`);
     }
 
 
@@ -1356,7 +1536,7 @@ export class LyricsEngine {
     if (generation !== this._setTrackGeneration) {
       if (shimmerTimeout) clearTimeout(shimmerTimeout);
       if (shimmerEl) shimmerEl.remove();
-      console.log(`[lyrics-sync] setTrack ABORTED (stale generation ${generation} vs ${this._setTrackGeneration})`);
+      debug.log(`[lyrics-sync] setTrack ABORTED (stale generation ${generation} vs ${this._setTrackGeneration})`);
       return;
     }
 
@@ -1395,14 +1575,14 @@ export class LyricsEngine {
     // Reset Mood Vault — new track, fresh gamma
     this._gammaConfidence = 0;
     this._gammaLastMoodState = null;
-    console.log(`[gamma-vault] 🎵 NEW TRACK — Mood Vault reset | confidence=0, state=null, waiting for visualizer mood`);
+    debug.log(`[gamma-vault] 🎵 NEW TRACK — Mood Vault reset | confidence=0, state=null, waiting for visualizer mood`);
 
     // DEBUG: Log timeline state after build
     const nowAfterBuild = this.audioElement?.currentTime || 0;
-    console.log(`[lyrics-sync] Timeline built: ${this.timeline.length} entries, audioTime now=${nowAfterBuild.toFixed(2)}, duration=${this.audioElement?.duration || 0}`);
+    debug.log(`[lyrics-sync] Timeline built: ${this.timeline.length} entries, audioTime now=${nowAfterBuild.toFixed(2)}, duration=${this.audioElement?.duration || 0}`);
     if (this.timeline.length > 0) {
-      console.log(`[lyrics-sync] First entry: type=${this.timeline[0].type} start=${this.timeline[0].start.toFixed(2)} end=${this.timeline[0].end.toFixed(2)} text="${(this.timeline[0].text||'').substring(0,30)}"`);
-      console.log(`[lyrics-sync] Last entry: type=${this.timeline[this.timeline.length-1].type} start=${this.timeline[this.timeline.length-1].start.toFixed(2)} end=${this.timeline[this.timeline.length-1].end.toFixed(2)}`);
+      debug.log(`[lyrics-sync] First entry: type=${this.timeline[0].type} start=${this.timeline[0].start.toFixed(2)} end=${this.timeline[0].end.toFixed(2)} text="${(this.timeline[0].text||'').substring(0,30)}"`);
+      debug.log(`[lyrics-sync] Last entry: type=${this.timeline[this.timeline.length-1].type} start=${this.timeline[this.timeline.length-1].start.toFixed(2)} end=${this.timeline[this.timeline.length-1].end.toFixed(2)}`);
       // Find what line should be active right now
       let expectedIdx = -1;
       for (let i = 0; i < this.timeline.length; i++) {
@@ -1413,7 +1593,7 @@ export class LyricsEngine {
           if (nowAfterBuild >= this.timeline[i].end) { expectedIdx = i; break; }
         }
       }
-      console.log(`[lyrics-sync] Expected active line at build time: idx=${expectedIdx}`);
+      debug.log(`[lyrics-sync] Expected active line at build time: idx=${expectedIdx}`);
     }
 
     // Task 2: Use chunked DOM rendering (micro-batched)
@@ -1422,7 +1602,7 @@ export class LyricsEngine {
     if (this.container) void this.container.offsetHeight;
     this.start();
     this.updateActiveLine();
-    console.log(`[lyrics-sync] setTrack DONE: activeIdx=${this.activeLineIndex} frameId=${this.frameId} lineElements=${this.lineElements.length} audioTime=${this.audioElement?.currentTime?.toFixed(2)}`);
+    debug.log(`[lyrics-sync] setTrack DONE: activeIdx=${this.activeLineIndex} frameId=${this.frameId} lineElements=${this.lineElements.length} audioTime=${this.audioElement?.currentTime?.toFixed(2)}`);
 
     // On reload, the lyrics panel may not be fully laid out yet (clientH=0).
     // Poll until container has real dimensions, then re-sync scroll position.
@@ -1463,7 +1643,7 @@ export class LyricsEngine {
         scrollParent.scrollTop = Math.max(0, lineTop - containerHeight / 2 + lineHeight / 2);
         clearTimeout(this._autoScrollResetTimer);
         this._autoScrollResetTimer = setTimeout(() => { this._isAutoScrolling = false; }, 150);
-        console.log(`[lyrics-sync] resyncScroll: scrolled to activeIdx=${this.activeLineIndex} scrollTop=${scrollParent.scrollTop} containerH=${containerHeight}`);
+        debug.log(`[lyrics-sync] resyncScroll: scrolled to activeIdx=${this.activeLineIndex} scrollTop=${scrollParent.scrollTop} containerH=${containerHeight}`);
       }
     };
     this._resyncTimer = setTimeout(resyncScroll, 100);
@@ -1524,15 +1704,15 @@ export class LyricsEngine {
       return raw;
     })();
 
-    // DEBUG: Log sync state every 2 seconds
-    if (!this._lastSyncDebugTime || now - this._lastSyncDebugTime > 2) {
+    // DEBUG: Log sync state every 2 seconds (only in debug mode)
+    if (window.__DEBUG__ && !window._chromicScrollGuardianScrolling && (!this._lastSyncDebugTime || now - this._lastSyncDebugTime > 2)) {
       this._lastSyncDebugTime = now;
       const firstStart = this.timeline[0]?.start;
       const lastEnd = this.timeline[this.timeline.length - 1]?.end;
-      console.log(`[lyrics-sync] audioTime=${now.toFixed(2)} activeIdx=${this.activeLineIndex} timelineRange=[${firstStart?.toFixed(2)}..${lastEnd?.toFixed(2)}] lines=${this.timeline.length} paused=${this.audioElement?.paused}`);
+      debug.log(`[lyrics-sync] audioTime=${now.toFixed(2)} activeIdx=${this.activeLineIndex} timelineRange=[${firstStart?.toFixed(2)}..${lastEnd?.toFixed(2)}] lines=${this.timeline.length} paused=${this.audioElement?.paused}`);
       if (this.activeLineIndex >= 0 && this.activeLineIndex < this.timeline.length) {
         const active = this.timeline[this.activeLineIndex];
-        console.log(`[lyrics-sync] activeLine: start=${active.start.toFixed(2)} end=${active.end.toFixed(2)} text="${(active.text || '').substring(0, 40)}"`);
+        debug.log(`[lyrics-sync] activeLine: start=${active.start.toFixed(2)} end=${active.end.toFixed(2)} text="${(active.text || '').substring(0, 40)}"`);
       }
     }
 
@@ -1648,7 +1828,7 @@ export class LyricsEngine {
                 el.style.transform = '';
               }
             }
-            console.log('[lyrics-anim] cleared cross-fade inline styles for line transition');
+            debug.log('[lyrics-anim] cleared cross-fade inline styles for line transition');
           }
         }
 
@@ -1737,8 +1917,9 @@ export class LyricsEngine {
       this._prevActiveIndex = nextIndex;
 
       // Scroll — only on line change, and only if user isn't manually scrolling
+      // Also skip during main page scroll to avoid triggering compositor jank
       const activeLine = this.lineElements[nextIndex];
-      if (activeLine && this.container && !this.userIsScrolling) {
+      if (activeLine && this.container && !this.userIsScrolling && !window._chromicScrollGuardianScrolling) {
         const scrollParent = this.container.closest('.music-immersive-lyrics-panel') || this.container;
         const lineTop = activeLine.offsetTop;
         const lineHeight = activeLine.offsetHeight;
@@ -1766,6 +1947,19 @@ export class LyricsEngine {
       this._updateDots(now, nextIndex);
     } else if (activeEntry?.type === 'line' || activeEntry?.words?.length) {
       this._updateWordProgress(now, nextIndex);
+    }
+
+    // Also update word progress for any co-active overlapping lines (bg vocals playing simultaneously)
+    for (let d = -3; d <= 3; d++) {
+      if (d === 0) continue;
+      const i = nextIndex + d;
+      if (i < 0 || i >= this.lineElements.length) continue;
+      const el = this.lineElements[i];
+      if (!el || !el.classList.contains('co-active')) continue;
+      const coEntry = this.timeline[i];
+      if (coEntry?.words?.length) {
+        this._updateWordProgress(now, i);
+      }
     }
   }
 
@@ -1860,7 +2054,7 @@ export class LyricsEngine {
           // Set progress BEFORE adding class to avoid 1-frame blink at 0%
           span.style.setProperty('--progress', `${clamped}%`);
           span.classList.add('active');
-          span.classList.remove('past');
+          span.classList.remove('past', 'incoming');
           // ── Word blink: fire color pulse on each new word ──
           this._triggerWordBlink(idx, i);
         } else {
@@ -1870,16 +2064,94 @@ export class LyricsEngine {
             span.style.setProperty('--progress', `${clamped}%`);
           }
         }
+        // Per-character continuous wave for sung/stretch words
+        if (span.dataset.charSplit) {
+          const chars = span.children;
+          const len = chars.length;
+          if (len > 0) {
+            const t = clamped / 100;
+            const smoothT = t * t * (3 - 2 * t); // smoothstep easing
+            const pad = 2; // wave rolls in from outside the word
+            const minCenter = -pad;
+            const maxCenter = len - 1 + pad;
+            const center = minCenter + smoothT * (maxCenter - minCenter);
+            const sigma = 1.8;
+            for (let ci = 0; ci < len; ci++) {
+              const dist = ci - center;
+              const ch = chars[ci];
+              // Wave weight (Gaussian) for scaleY + glow
+              const weight = Math.exp(-(dist * dist) / (2 * sigma * sigma));
+              const prevW = ch._ww || 0;
+              if (Math.abs(weight - prevW) > 0.02) {
+                ch.style.setProperty('--wave-weight', weight.toFixed(3));
+                ch._ww = weight;
+              }
+              // Char-progress: continuous 0→1 fractional fill for this specific char
+              // Maps the wave center position to a per-char gradient position
+              const charProgress = Math.max(0, Math.min(1, (center - (ci - 0.5)) + 0.5));
+              const prevP = ch._cp || 0;
+              if (Math.abs(charProgress - prevP) > 0.01) {
+                ch.style.setProperty('--char-progress', charProgress.toFixed(3));
+                ch._cp = charProgress;
+              }
+            }
+          }
+        }
       } else if (now >= w.end) {
         if (!span.classList.contains('past')) {
           span.classList.remove('active');
           span.classList.add('past');
           span.style.setProperty('--progress', '100%');
+          // Reset char vars for past state
+          if (span.dataset.charSplit) {
+            const chars = span.children;
+            for (let ci = 0; ci < chars.length; ci++) {
+              chars[ci].style.setProperty('--wave-weight', '0');
+              chars[ci].style.setProperty('--char-progress', '1');
+              chars[ci]._ww = 0;
+              chars[ci]._cp = 1;
+            }
+          }
         }
       } else {
         if (span.classList.contains('active') || span.classList.contains('past')) {
-          span.classList.remove('active', 'past');
+          span.classList.remove('active', 'past', 'incoming');
           span.style.setProperty('--progress', '0%');
+          // Reset char vars on seek-back
+          if (span.dataset.charSplit) {
+            const chars = span.children;
+            for (let ci = 0; ci < chars.length; ci++) {
+              chars[ci].style.setProperty('--wave-weight', '0');
+              chars[ci].style.setProperty('--char-progress', '0');
+              chars[ci]._ww = 0;
+              chars[ci]._cp = 0;
+            }
+          }
+        }
+      }
+      // Adlib pre-reveal & phrase activation
+      if (span.classList.contains('is-adlib')) {
+        const timeUntil = w.start - now;
+        // Pre-reveal: add 'incoming' ~400ms before
+        if (!span.classList.contains('incoming') && !span.classList.contains('active') && !span.classList.contains('past')) {
+          if (timeUntil > 0 && timeUntil <= 0.4) {
+            span.classList.add('incoming');
+          }
+        }
+        // Activate parent adlib-phrase
+        const phrase = span.closest('.adlib-phrase');
+        if (phrase) {
+          const phraseStart = parseFloat(phrase.dataset.start);
+          const phraseEnd = parseFloat(phrase.dataset.end);
+          if (!isNaN(phraseStart) && now >= phraseStart - 0.15) {
+            if (!isNaN(phraseEnd) && now >= phraseEnd) {
+              phrase.classList.remove('active');
+              phrase.classList.add('past');
+            } else if (!phrase.classList.contains('active')) {
+              phrase.classList.add('active');
+              phrase.classList.remove('past');
+            }
+          }
         }
       }
     }
@@ -1928,7 +2200,7 @@ export class LyricsEngine {
   start() {
     this.stop();
     if (!this.timeline || this.timeline.length === 0) return;
-    console.log(`[lyrics-sync] start() rAF loop starting, timeline=${this.timeline.length} entries, audioTime=${(this.audioElement?.currentTime||0).toFixed(2)}`);
+    debug.log(`[lyrics-sync] start() rAF loop starting, timeline=${this.timeline.length} entries, audioTime=${(this.audioElement?.currentTime||0).toFixed(2)}`);
 
     this._debugFrameCount = 0;
     this._lastFrameTime = 0;
@@ -2024,6 +2296,43 @@ export class LyricsEngine {
     this.stop();
     this._cancelLerpScroll();
     this._streamAbortController?.abort();
+
+    // ── Remove all event listeners added in constructor ──
+    const sp = this._scrollParent;
+    if (sp) {
+      if (this._onWheel) sp.removeEventListener('wheel', this._onWheel);
+      if (this._onScrollInput) {
+        sp.removeEventListener('scroll', this._onScrollInput);
+        sp.removeEventListener('touchstart', this._onScrollInput);
+        sp.removeEventListener('touchmove', this._onScrollInput);
+      }
+    }
+    const audio = this.audioElement;
+    if (audio) {
+      if (this._forceResync) {
+        audio.removeEventListener('play', this._forceResync);
+        audio.removeEventListener('playing', this._forceResync);
+      }
+      if (this._onSeeked) audio.removeEventListener('seeked', this._onSeeked);
+    }
+    if (this._onDocClickHideTooltip) {
+      document.removeEventListener('click', this._onDocClickHideTooltip);
+      this._onDocClickHideTooltip = null;
+    }
+    if (this.container) {
+      if (this._onContainerClick) this.container.removeEventListener('click', this._onContainerClick);
+      if (this._onTranslationClick) this.container.removeEventListener('click', this._onTranslationClick);
+      if (this._onContextMenu) this.container.removeEventListener('contextmenu', this._onContextMenu);
+    }
+    this._onContainerClick = null;
+    this._onTranslationClick = null;
+    this._onContextMenu = null;
+    this._onWheel = null;
+    this._onScrollInput = null;
+    this._forceResync = null;
+    this._onSeeked = null;
+    this._scrollParent = null;
+
     if (this._intersectionObserver) {
       this._intersectionObserver.disconnect();
       this._intersectionObserver = null;

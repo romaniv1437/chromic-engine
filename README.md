@@ -10,21 +10,26 @@ A performance-obsessed desktop music player built with Electron + vanilla JS. Ze
 
 ### AI Alignment — Tame Impala
 
-https://github.com/user-attachments/assets/d2eda623-ad97-49a4-b44f-d85c62a750ed
+https://github.com/user-attachments/assets/fab627d9-7f64-4e58-8233-7d5fe028a073
 
 > Local Whisper transcription with word-level alignment. Every word syncs to sub-millisecond accuracy.
 
 ### AI Alignment — Japanese (CJK Grouping)
 
-https://github.com/user-attachments/assets/be2cdf69-77e2-4ef1-b218-9eb769de9608
+https://github.com/user-attachments/assets/9b716ce3-19ca-48b7-9afa-8216de3f9913
 
 > CJK characters are intelligently grouped into semantic phrases for natural highlight animation.
 
 ### Flow Mode — Pro Lyrics Editor
 
-https://github.com/user-attachments/assets/8e68b9e8-2dae-4b5b-8919-1c1292d02481
+https://github.com/user-attachments/assets/cd1dce07-e9bf-4f2e-b296-d4d66cb296cc
 
 > Word-level timeline editing with hotkey calibration, seek-to-line, and LRC/JSON export.
+
+
+### Troika Three.js — Bloom effect (unrealbloompass)
+
+https://github.com/user-attachments/assets/93406b27-b946-494a-99fa-d98e3a1bd0bd
 
 ---
 
@@ -55,11 +60,11 @@ Download from [Releases](https://github.com/romaniv1437/chromic-engine/releases)
 ### Development
 
 ```bash
-npm run install-all
-npm run dev
+npm install
+npm run electron
 ```
 
-Requirements: Node.js 18+, FFmpeg, Python 3.10+ (for AI lyrics)
+Requirements: Node.js 18+, FFmpeg, Python 3.10+ (for AI lyrics). See [AI Setup](docs/AI_SETUP.md) for details.
 
 ---
 
@@ -74,9 +79,22 @@ Requirements: Node.js 18+, FFmpeg, Python 3.10+ (for AI lyrics)
 
 ---
 
-## License
+## ⚖️ Licensing & Commercial Use
 
-MIT
+Chromic Engine is **free and open-source for personal, private, and educational use**.
+
+| Use Case | Allowed? |
+|----------|----------|
+| 🏠 Personal listening at home | ✅ Free |
+| 🎓 Academic research & coursework | ✅ Free |
+| 🛠️ Learning, forking, tinkering | ✅ Free |
+| 🍸 Bars, lounges, karaoke venues | ❌ Commercial license required |
+| 🏪 Retail, restaurants, gyms, hotels | ❌ Commercial license required |
+| 📦 Bundling in a paid product or SaaS | ❌ Commercial license required |
+
+> **For businesses:** If you'd like to use Chromic Engine in a commercial setting, I offer flexible licensing arrangements. Reach out via [GitHub](https://github.com/romaniv1437) or email **romaniv1437@icloud.com** to discuss terms.
+
+See the full [LICENSE](LICENSE) file for legal details.
 
 ---
 

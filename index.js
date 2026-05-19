@@ -35,6 +35,38 @@ const DEBUG_LOGS = process.argv.includes('--debug') || process.env.DEBUG_LOGS ==
 const MEDIA_ROOT = process.env.CHROMIC_MEDIA_ROOT || path.join(__dirname, 'media');
 const MEDIA_DB_PATH = path.join(MEDIA_ROOT, 'database.json');
 const WATCH_HISTORY_PATH = path.join(MEDIA_ROOT, 'watch-history.json');
+
+// ── Performance Profiler API (stores snapshots from renderer) ──────────────
+const _perfSnapshots = [];
+const PERF_LOG_PATH = path.join(MEDIA_ROOT, '.chromic-perf-log.json');
+
+app.post('/api/perf/snapshot', express.json({ limit: '1mb' }), (req, res) => {
+  const snapshot = { ...req.body, _serverTime: new Date().toISOString() };
+  _perfSnapshots.push(snapshot);
+  // Keep last 500 snapshots in memory
+  if (_perfSnapshots.length > 500) _perfSnapshots.shift();
+  // Also append to disk
+  try {
+    fs.appendFileSync(PERF_LOG_PATH, JSON.stringify(snapshot) + '\n');
+  } catch (_) {}
+  res.json({ ok: true, count: _perfSnapshots.length });
+});
+
+app.get('/api/perf/snapshots', (req, res) => {
+  const last = parseInt(req.query.last) || 50;
+  res.json(_perfSnapshots.slice(-last));
+});
+
+app.get('/api/perf/latest', (req, res) => {
+  res.json(_perfSnapshots[_perfSnapshots.length - 1] || null);
+});
+
+app.delete('/api/perf/snapshots', (req, res) => {
+  _perfSnapshots.length = 0;
+  try { fs.writeFileSync(PERF_LOG_PATH, ''); } catch (_) {}
+  res.json({ ok: true });
+});
+// ───────────────────────────────────────────────────────────────────────────
 const PREVIEW_SIDECAR_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif', '.svg'];
 const ALBUM_COVER_BASENAMES = ['cover', 'folder', 'album', 'front', 'artwork'];
 const MOVIE_EXTENSIONS = ['.mp4', '.mkv', '.webm', '.mov', '.avi', '.m4v'];
@@ -2197,7 +2229,7 @@ app.get('/api/track-cover', (req, res) => {
 // Stream audio from any indexed absolute path (for linked library files)
 app.get('/api/stream', (req, res) => {
   const absPath = req.query.path;
-  if (!absPath) return res.status(400).json({ error: 'Missing path parameter' });
+  if (!absPath) return res.status(204).end();
 
   // Security: only allow streaming files that are in a linked library path or MEDIA_ROOT
   const normalized = path.resolve(absPath);
@@ -2246,6 +2278,7 @@ app.post('/api/library/link-folder', express.json(), async (req, res) => {
 
   // Start async scan
   scanLibraryFolder(resolved).catch(e => console.error('[Library] Scan error:', e.message));
+  startWatchingFolder(resolved);
 
   return res.json({ ok: true, folders: _libraryPaths });
 });
@@ -2256,6 +2289,7 @@ app.post('/api/library/unlink-folder', express.json(), (req, res) => {
   const resolved = path.resolve(folderPath || '');
   _libraryPaths = _libraryPaths.filter(p => p !== resolved);
   saveLibraryPaths();
+  stopWatchingFolder(resolved);
   // Remove indexed tracks from this folder
   try {
     tracksDb.prepare(`DELETE FROM tracks WHERE source = 'linked' AND absolute_path LIKE ?`).run(resolved + '%');
@@ -2449,7 +2483,10 @@ setTimeout(() => {
     console.log(`[Library] Auto-scanning ${_libraryPaths.length} linked folder(s)...`);
     (async () => {
       for (const folder of _libraryPaths) {
-        if (fs.existsSync(folder)) await scanLibraryFolder(folder);
+        if (fs.existsSync(folder)) {
+          await scanLibraryFolder(folder);
+          startWatchingFolder(folder);
+        }
         else console.warn(`[Library] Linked folder not found: ${folder}`);
       }
     })().catch(e => console.error('[Library] Auto-scan error:', e.message));
@@ -3139,6 +3176,19 @@ function ensureLyricsVenvExists() {
   return fs.existsSync(LYRICS_PYTHON);
 }
 
+/** Async version — does NOT block the event loop */
+async function ensureLyricsVenvExistsAsync() {
+  if (fs.existsSync(LYRICS_PYTHON)) return true;
+  const bootstrapPython = getPythonBootstrapBin();
+  fs.mkdirSync(path.dirname(LYRICS_VENV_DIR), { recursive: true });
+  const mkVenv = await runCommandCaptureAsync(bootstrapPython, ['-m', 'venv', LYRICS_VENV_DIR]);
+  if (!mkVenv.ok) {
+    console.warn(`[LyricsEngine] Failed to create lyrics venv: ${mkVenv.error || mkVenv.stderr || mkVenv.stdout}`);
+    return false;
+  }
+  return fs.existsSync(LYRICS_PYTHON);
+}
+
 function installMissingAlignerDepsIfNeeded(stderrText = '', relativePath = null) {
   const text = String(stderrText || '');
   const missingModules = [];
@@ -3247,6 +3297,81 @@ function ensureWhisperEngineDeps(engine, relativePath = null) {
         if (cudaDlls.length) {
           console.log(`[LyricsEngine] Removed ${cudaDlls.length} CUDA DLLs from ctranslate2 (CPU-only mode)`);
         }
+      }
+    } catch (e) {
+      console.warn(`[LyricsEngine] Failed to clean CUDA DLLs: ${e.message}`);
+    }
+  }
+
+  return true;
+}
+
+/** Async version — does NOT block the event loop during pip install */
+async function ensureWhisperEngineDepsAsync(engine, relativePath = null) {
+  const normalized = resolveWhisperEngineForPlatform(engine);
+  const depsByEngine = {
+    faster: ['faster-whisper==1.0.3', 'ctranslate2==4.4.0'],
+    whisperx: ['whisperx', 'faster-whisper==1.0.3', 'ctranslate2==4.4.0'],
+    mlx: ['mlx-whisper'],
+    openai: ['openai-whisper', 'soundfile', 'imageio-ffmpeg'],
+  };
+  const deps = depsByEngine[normalized] || depsByEngine.faster;
+  if (!(await ensureLyricsVenvExistsAsync())) return false;
+  const pipBin = getLyricsPipBin();
+  if (!fs.existsSync(pipBin)) return false;
+
+  const venvPython = LYRICS_PYTHON;
+  const mainPkg = deps[0].split('==')[0].split('[')[0];
+  const checkInstalled = await runCommandCaptureAsync(venvPython, ['-c', `import importlib.util; exit(0 if importlib.util.find_spec("${mainPkg.replace('-', '_')}") else 1)`]);
+  const alreadyInstalled = checkInstalled.ok;
+
+  if (alreadyInstalled) return true;
+
+  if (relativePath) {
+    const info = _whisperEnhancing.get(relativePath);
+    if (info && info.status === 'running') {
+      info.step = 'installing_dependencies';
+      info.stepLabel = `Preparing AI runtime (${normalized}): ${deps.join(', ')}`;
+      if (!info.steps) info.steps = [];
+      info.steps.push({ step: info.step, label: info.stepLabel, at: Date.now() });
+    }
+  }
+
+  if (process.platform === 'win32' && normalized === 'openai') {
+    try {
+      const nvidiaSmi = await runCommandCaptureAsync('nvidia-smi', ['--query-gpu=name', '--format=csv,noheader']);
+      if (nvidiaSmi.ok && nvidiaSmi.stdout && nvidiaSmi.stdout.trim()) {
+        console.log(`[LyricsEngine] NVIDIA GPU detected: ${nvidiaSmi.stdout.trim()}`);
+        const torchCheck = await runCommandCaptureAsync(venvPython, ['-c', 'import torch; print(torch.cuda.is_available())']);
+        if (!torchCheck.ok || torchCheck.stdout.trim() !== 'True') {
+          console.log('[LyricsEngine] Installing CUDA-enabled PyTorch for GPU acceleration...');
+          const updateInfo = relativePath ? _whisperEnhancing.get(relativePath) : null;
+          if (updateInfo && updateInfo.status === 'running') {
+            updateInfo.step = 'installing_cuda';
+            updateInfo.stepLabel = 'Installing CUDA PyTorch for GPU acceleration (one-time, ~2GB)…';
+          }
+          await runCommandCaptureAsync(pipBin, ['install', 'torch', 'torchaudio', '--index-url', 'https://download.pytorch.org/whl/cu121']);
+        }
+      }
+    } catch (_) {}
+  }
+
+  const install = await runCommandCaptureAsync(pipBin, ['install', '--upgrade', ...deps]);
+  if (!install.ok) {
+    console.warn(`[LyricsEngine] Failed to ensure whisper deps (${normalized}): ${install.error || install.stderr || install.stdout}`);
+    return false;
+  }
+
+  if (process.platform === 'win32' && normalized === 'faster') {
+    try {
+      const ct2Dir = path.join(LYRICS_VENV_DIR, 'Lib', 'site-packages', 'ctranslate2');
+      if (fs.existsSync(ct2Dir)) {
+        const entries = fs.readdirSync(ct2Dir);
+        const cudaDlls = entries.filter(f => /cudnn|cublas|cufft|curand|cusolver|cusparse|nvinfer|nvrtc/i.test(f) && f.endsWith('.dll'));
+        for (const dll of cudaDlls) {
+          try { fs.unlinkSync(path.join(ct2Dir, dll)); } catch (_) {}
+        }
+        if (cudaDlls.length) console.log(`[LyricsEngine] Removed ${cudaDlls.length} CUDA DLLs from ctranslate2 (CPU-only mode)`);
       }
     } catch (e) {
       console.warn(`[LyricsEngine] Failed to clean CUDA DLLs: ${e.message}`);
@@ -3496,7 +3621,7 @@ async function fetchFromAligner(audioPath, artist, title, language, retryCount =
 
   // Prefer managed venv in packaged mode; create it lazily if needed.
   if (process.env.CHROMIC_LYRICS_ROOT) {
-    ensureLyricsVenvExists();
+    await ensureLyricsVenvExistsAsync();
   }
   const pythonCommand = fs.existsSync(LYRICS_PYTHON)
     ? LYRICS_PYTHON
@@ -3507,16 +3632,18 @@ async function fetchFromAligner(audioPath, artist, title, language, retryCount =
     if (stat.size > 500 * 1024 * 1024) return null;
   } catch (e) { return null; }
 
+  // Ensure deps are installed (async — won't freeze the app)
+  const aiCfg = loadAiConfig();
+  const whisperModel = aiCfg.whisperModel || 'medium';
+  const runtimeEngine = resolveWhisperEngineForPlatform(aiCfg.whisperEngine);
+  if (retryCount === 0) {
+    await ensureWhisperEngineDepsAsync(runtimeEngine, relativePath);
+  }
+
   return new Promise((resolve) => {
     console.log(`[LyricsEngine] 🎯 Aligner: processing "${title}"...`);
     console.log(`[LyricsEngine] 🎯 Aligner: cmd="${pythonCommand}" script="${alignerScript}" scriptsRoot="${SCRIPTS_ROOT}"`);
-    const aiCfg = loadAiConfig();
-    const whisperModel = aiCfg.whisperModel || 'medium';
     const args = [alignerScript, audioPath, '--artist', artist || '', '--title', title || '', '--model', whisperModel];
-    const runtimeEngine = resolveWhisperEngineForPlatform(aiCfg.whisperEngine);
-    if (retryCount === 0) {
-      ensureWhisperEngineDeps(runtimeEngine, relativePath);
-    }
     if (runtimeEngine) {
       args.push('--engine', runtimeEngine);
       if (runtimeEngine !== aiCfg.whisperEngine) {
@@ -3699,7 +3826,15 @@ async function fetchFromAligner(audioPath, artist, title, language, retryCount =
           const entry = { time: l.time, text: l.text || '' };
           if (l.type === 'vocal_cue') { entry.type = 'vocal_cue'; entry.end = l.end; }
           if (l.words?.length > 0) {
-            entry.words = l.words.map(w => ({ word: w.word, start: w.start, end: w.end }));
+            entry.words = l.words.map(w => {
+              const wo = { word: w.word, start: w.start, end: w.end };
+              if (w.adlib) wo.adlib = true;
+              if (w.whisper) wo.whisper = true;
+              if (w.spoken) wo.spoken = true;
+              if (w.sung) wo.sung = true;
+              if (w.stretch) wo.stretch = true;
+              return wo;
+            });
             entry.end = l.words[l.words.length - 1].end;
           }
           return entry;
@@ -3833,9 +3968,12 @@ async function fetchAndStoreLyrics(relativePath, artist, title, album) {
       if (fs.existsSync(sidecarPath)) {
         try {
           const ts = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '_').slice(0, 23);
-          const backupPath = sidecarPath.replace(/\.lyrics\.json$/, `.lyrics.backup_${ts}.json`);
+          const backupDir = path.join(path.dirname(sidecarPath), '.chromic-backups');
+          if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir, { recursive: true });
+          const backupName = path.basename(sidecarPath).replace(/\.lyrics\.json$/, `.lyrics.backup_${ts}.json`);
+          const backupPath = path.join(backupDir, backupName);
           fs.copyFileSync(sidecarPath, backupPath);
-          console.log(`[LyricsEngine] 💾 Backed up existing sidecar: ${path.basename(backupPath)}`);
+          console.log(`[LyricsEngine] 💾 Backed up existing sidecar: ${backupName}`);
         } catch (be) {
           console.warn(`[LyricsEngine] Failed to backup sidecar: ${be.message}`);
         }
@@ -4422,6 +4560,28 @@ function runCommandCapture(cmd, args, opts = {}) {
   };
 }
 
+/** Async version of runCommandCapture — does NOT block the event loop */
+function runCommandCaptureAsync(cmd, args, opts = {}) {
+  return new Promise((resolve) => {
+    let stdout = '', stderr = '';
+    let proc;
+    try {
+      proc = spawn(cmd, args, { stdio: ['ignore', 'pipe', 'pipe'], ...opts });
+    } catch (e) {
+      resolve({ ok: false, status: -1, stdout: '', stderr: '', error: e.message });
+      return;
+    }
+    proc.stdout.on('data', (d) => { stdout += d.toString(); });
+    proc.stderr.on('data', (d) => { stderr += d.toString(); });
+    proc.on('error', (e) => {
+      resolve({ ok: false, status: -1, stdout, stderr, error: e.message });
+    });
+    proc.on('close', (code) => {
+      resolve({ ok: code === 0, status: code, stdout, stderr, error: null });
+    });
+  });
+}
+
 const _whisperWarmupState = {
   status: 'idle', // idle | skipped | running | ready | failed
   engine: null,
@@ -4569,7 +4729,7 @@ function startWhisperWarmupIfNeeded({ force = false } = {}) {
 
   _whisperWarmupPromise = (async () => {
     try {
-      if (!ensureLyricsVenvExists()) {
+      if (!(await ensureLyricsVenvExistsAsync())) {
         throw new Error('lyrics venv missing and bootstrap failed');
       }
       const pythonBin = fs.existsSync(LYRICS_PYTHON)
@@ -4577,14 +4737,14 @@ function startWhisperWarmupIfNeeded({ force = false } = {}) {
         : getPythonBootstrapBin();
 
       const warmupScript = buildWhisperWarmupScript(engine, model);
-      let warmup = runCommandCapture(pythonBin, ['-c', warmupScript], {
+      let warmup = await runCommandCaptureAsync(pythonBin, ['-c', warmupScript], {
         cwd: LYRICS_ENGINE_ROOT,
         env: { ...process.env },
       });
       if (!warmup.ok) {
         const warmupErr = warmup.error || warmup.stderr || warmup.stdout || '';
-        if (installMissingAlignerDepsIfNeeded(warmupErr) || ensureWhisperEngineDeps(engine)) {
-          warmup = runCommandCapture(pythonBin, ['-c', warmupScript], {
+        if (installMissingAlignerDepsIfNeeded(warmupErr) || (await ensureWhisperEngineDepsAsync(engine))) {
+          warmup = await runCommandCaptureAsync(pythonBin, ['-c', warmupScript], {
             cwd: LYRICS_ENGINE_ROOT,
             env: { ...process.env },
           });
@@ -5234,9 +5394,12 @@ app.post('/api/lyrics/enrich-track', express.json(), requireWhisperReady, async 
       if (fs.existsSync(sidecarPath)) {
         try {
           const ts = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '_').slice(0, 23);
-          const backupPath = sidecarPath.replace(/\.lyrics\.json$/, `.lyrics.backup_${ts}.json`);
+          const backupDir = path.join(path.dirname(sidecarPath), '.chromic-backups');
+          if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir, { recursive: true });
+          const backupName = path.basename(sidecarPath).replace(/\.lyrics\.json$/, `.lyrics.backup_${ts}.json`);
+          const backupPath = path.join(backupDir, backupName);
           fs.copyFileSync(sidecarPath, backupPath);
-          console.log(`[LyricsEngine] 💾 Force-regenerate: backed up sidecar → ${path.basename(backupPath)}`);
+          console.log(`[LyricsEngine] 💾 Force-regenerate: backed up sidecar → ${backupName}`);
         } catch (be) {
           console.warn(`[LyricsEngine] Failed to backup sidecar before regenerate: ${be.message}`);
         }
@@ -6438,19 +6601,21 @@ app.post('/api/lyrics/lrc-save', express.json({ limit: '1mb' }), (req, res) => {
     // Backup existing .lrc before overwriting
     if (fs.existsSync(lrcPath)) {
       const dir = path.dirname(lrcPath);
+      const backupDir = path.join(dir, '.chromic-backups');
+      if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir, { recursive: true });
       const base = path.basename(lrcPath);
       const ts = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '_').slice(0, 19);
       const backupName = `${base}.backup_${ts}`;
-      const backupPath = path.join(dir, backupName);
+      const backupPath = path.join(backupDir, backupName);
       fs.copyFileSync(lrcPath, backupPath);
       // Prune old .lrc backups (keep max 10)
       try {
-        const allBackups = fs.readdirSync(dir)
+        const allBackups = fs.readdirSync(backupDir)
           .filter(f => f.startsWith(base + '.backup_'))
           .sort();
         if (allBackups.length > 10) {
           for (const old of allBackups.slice(0, allBackups.length - 10)) {
-            fs.unlinkSync(path.join(dir, old));
+            fs.unlinkSync(path.join(backupDir, old));
           }
         }
       } catch (_) {}
@@ -6458,6 +6623,20 @@ app.post('/api/lyrics/lrc-save', express.json({ limit: '1mb' }), (req, res) => {
 
     fs.writeFileSync(lrcPath, content, 'utf-8');
     console.log(`[LRC-Save] ✅ Saved ${lrcPath} (${content.split('\n').length} lines)`);
+
+    // Also regenerate .lyrics.json from the saved LRC so the app doesn't show stale data
+    // (lyrics.json has higher priority than .lrc when loading tracks)
+    try {
+      const parsed = parseLrc(content);
+      if (parsed && parsed.length > 0) {
+        const sidecarPath = fullPath.replace(/\.[^/.]+$/, '.lyrics.json');
+        fs.writeFileSync(sidecarPath, JSON.stringify(parsed, null, 2), 'utf-8');
+        console.log(`[LRC-Save] ✅ Regenerated .lyrics.json (${parsed.length} lines) from saved LRC`);
+      }
+    } catch (lrcErr) {
+      console.warn(`[LRC-Save] Could not regenerate .lyrics.json: ${lrcErr.message}`);
+    }
+
     res.json({ ok: true, path: lrcPath });
   } catch (err) {
     console.error('[LRC-Save] Error:', err);
@@ -6477,23 +6656,30 @@ app.post('/api/lyrics/lrc-backups', express.json(), (req, res) => {
 
     if (!fs.existsSync(dir)) return res.json({ backups: [] });
 
-    const files = fs.readdirSync(dir);
+    // Look in both old location (alongside music) and new location (.chromic-backups)
+    const backupDir = path.join(dir, '.chromic-backups');
+    const dirsToCheck = [dir];
+    if (fs.existsSync(backupDir)) dirsToCheck.push(backupDir);
+
     const backups = [];
     const backupRegex = new RegExp(`^${lrcBase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\.backup_(\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2}[^.]*)$`);
 
-    for (const f of files) {
-      const m = f.match(backupRegex);
-      if (m) {
-        const filePath2 = path.join(dir, f);
-        const stat = fs.statSync(filePath2);
-        const content = fs.readFileSync(filePath2, 'utf-8');
-        const lines = content.split('\n').filter(l => l.trim()).length;
-        backups.push({
-          fileName: f,
-          timestamp: stat.mtime.toISOString(),
-          size: stat.size,
-          lines,
-        });
+    for (const searchDir of dirsToCheck) {
+      const files = fs.readdirSync(searchDir);
+      for (const f of files) {
+        const m = f.match(backupRegex);
+        if (m) {
+          const filePath2 = path.join(searchDir, f);
+          const stat = fs.statSync(filePath2);
+          const content = fs.readFileSync(filePath2, 'utf-8');
+          const lines = content.split('\n').filter(l => l.trim()).length;
+          backups.push({
+            fileName: f,
+            timestamp: stat.mtime.toISOString(),
+            size: stat.size,
+            lines,
+          });
+        }
       }
     }
     backups.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -6511,14 +6697,18 @@ app.post('/api/lyrics/lrc-restore-backup', express.json(), (req, res) => {
     const fullPath = resolveTrackFullPath(trackPath);
     const lrcPath = fullPath.replace(/\.[^/.]+$/, '.lrc');
     const dir = path.dirname(lrcPath);
-    const backupPath = path.join(dir, backupFileName);
+    const backupDir = path.join(dir, '.chromic-backups');
+    // Look in both old and new backup locations
+    let backupPath = path.join(backupDir, backupFileName);
+    if (!fs.existsSync(backupPath)) backupPath = path.join(dir, backupFileName);
 
     if (!fs.existsSync(backupPath)) return res.status(404).json({ error: 'Backup not found' });
 
-    // Backup current before restoring
+    // Backup current before restoring (into new location)
     if (fs.existsSync(lrcPath)) {
+      if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir, { recursive: true });
       const ts = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '_').slice(0, 19);
-      const preRestoreBackup = path.join(dir, `${path.basename(lrcPath)}.backup_${ts}`);
+      const preRestoreBackup = path.join(backupDir, `${path.basename(lrcPath)}.backup_${ts}`);
       fs.copyFileSync(lrcPath, preRestoreBackup);
     }
 
@@ -7026,6 +7216,12 @@ app.use(express.static(STATIC_DIR, {
     }
   },
 }));
+
+// Fallback: serve from app.asar.unpacked for patched fonts (post-install)
+const UNPACKED_STATIC = path.join(__dirname.replace('app.asar', 'app.asar.unpacked'), 'public');
+if (UNPACKED_STATIC !== STATIC_DIR && fs.existsSync(UNPACKED_STATIC)) {
+  app.use(express.static(UNPACKED_STATIC, { index: false, maxAge: '30d' }));
+}
 
 // Image proxy: resize and convert to WebP on-the-fly for optimised delivery
 app.get('/proxy/image', async (req, res) => {

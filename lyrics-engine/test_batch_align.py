@@ -9,27 +9,27 @@ from datetime import datetime
 
 # Test tracks
 EN_API_TRACKS = [
-    '/Users/illiaromaniv/Music/Music/GATOR (2023)/01. Death gotta be easy (cause life is hard).flac',
-    '/Users/illiaromaniv/Music/Music/Five Five (2018)/05. Five Five.flac',
-    '/Users/illiaromaniv/Music/Music/(2022) Princess Chelsea - Everything Is Going To Be Alright [FLAC]/01. Everything Is Going To Be Alright.flac',
-    '/Users/illiaromaniv/Music/Music/(2022) Princess Chelsea - Everything Is Going To Be Alright [FLAC]/06. Forever Is A Charm.flac',
-    '/Users/illiaromaniv/Music/Music/Heathens (2016) [CD-FLAC] {7567866235}/01 - Heathens.flac',
-    '/Users/illiaromaniv/Music/Music/Tame Impala - 2025 - Deadbeat 24-96 FLAC/03. Tame Impala - Dracula.flac',
+    '/path/to/music/GATOR (2023)/01. Death gotta be easy (cause life is hard).flac',
+    '/path/to/music/Five Five (2018)/05. Five Five.flac',
+    '/path/to/music/(2022) Princess Chelsea - Everything Is Going To Be Alright [FLAC]/01. Everything Is Going To Be Alright.flac',
+    '/path/to/music/(2022) Princess Chelsea - Everything Is Going To Be Alright [FLAC]/06. Forever Is A Charm.flac',
+    '/path/to/music/Heathens (2016) [CD-FLAC] {7567866235}/01 - Heathens.flac',
+    '/path/to/music/Tame Impala - 2025 - Deadbeat 24-96 FLAC/03. Tame Impala - Dracula.flac',
 ]
 
 RU_API_TRACKS = [
-    '/Users/illiaromaniv/Music/Music/2018-11-20 - flac/10 Подсказки на битах.flac',
-    '/Users/illiaromaniv/Music/Music/2018-11-20 - flac/11 Fibonacci.flac',
-    '/Users/illiaromaniv/Music/Music/2018-11-20 - flac/08 Меломанов плейлисты.flac',
-    '/Users/illiaromaniv/Music/Music/2018-11-20 - flac/06 Сине-красные огни.flac',
-    '/Users/illiaromaniv/Music/Music/2018-11-20 - flac/04 Узурпаторов план.flac',
-    '/Users/illiaromaniv/Music/Music/Kizaru/Kizaru - Nikto Ne Nuzhen (feat. Pearly Pride).flac',
+    '/path/to/music/2018-11-20 - flac/10 Подсказки на битах.flac',
+    '/path/to/music/2018-11-20 - flac/11 Fibonacci.flac',
+    '/path/to/music/2018-11-20 - flac/08 Меломанов плейлисты.flac',
+    '/path/to/music/2018-11-20 - flac/06 Сине-красные огни.flac',
+    '/path/to/music/2018-11-20 - flac/04 Узурпаторов план.flac',
+    '/path/to/music/Kizaru/Kizaru - Nikto Ne Nuzhen (feat. Pearly Pride).flac',
 ]
 
 EN_LRC_TRACKS = [
-    '/Users/illiaromaniv/Music/Music/Melanie Martinez - K-12/Disc 1/11 - Melanie Martinez - Teacher\'s Pet.flac',
-    '/Users/illiaromaniv/Music/Music/Melanie Martinez - K-12/Disc 1/12 - Melanie Martinez - High School Sweethearts.flac',
-    '/Users/illiaromaniv/Music/Music/Melanie Martinez - K-12/Disc 1/13 - Melanie Martinez - Recess.flac',
+    '/path/to/music/Melanie Martinez - K-12/Disc 1/11 - Melanie Martinez - Teacher\'s Pet.flac',
+    '/path/to/music/Melanie Martinez - K-12/Disc 1/12 - Melanie Martinez - High School Sweethearts.flac',
+    '/path/to/music/Melanie Martinez - K-12/Disc 1/13 - Melanie Martinez - Recess.flac',
 ]
 
 def parse_track_info(path):
