@@ -1984,7 +1984,6 @@ body[data-nav-direction='backward'] .library-view.view-active .player-area {
   width: 100%;
   max-width: 340px;
   box-sizing: border-box;
-  contain: layout style;
 }
 
 /* Old copy-panel no longer used — keep rule for backwards compat */
@@ -2063,7 +2062,6 @@ body[data-nav-direction='backward'] .library-view.view-active .player-area {
   margin-bottom: 2rem;
   animation: trackPulse 3.2s ease-in-out infinite;
   will-change: transform;
-  contain: layout style;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   box-sizing: border-box;
@@ -2082,6 +2080,7 @@ body[data-nav-direction='backward'] .library-view.view-active .player-area {
   object-fit: cover;
   border-radius: 0;
   position: relative;
+  cursor: pointer;
 }
 
 .music-track-art-wrap::after {
@@ -5828,6 +5827,35 @@ body.reading-focus .player-area {
     flex: 0 0 auto;
   }
 }
+
+/* Artwork morph animation when toggling text on/off */
+/* Desktop (horizontal): GSAP FLIP handles the transform */
+@media (min-width: 901px) {
+  .text-off .music-track-art-wrap {
+    max-width: 380px;
+  }
+  .text-off .art-sticky-container {
+    max-width: 380px;
+  }
+}
+/* Mobile/tablet (vertical): art morphs smoothly via GSAP FLIP */
+@media (max-width: 900px) {
+  .text-off .music-immersive-art-panel,
+  .text-off .art-sticky-container {
+    max-width: 280px !important;
+    width: 70% !important;
+    margin: 0 auto;
+  }
+  .text-off .music-track-art-wrap {
+    max-width: 280px;
+    margin: 0 auto;
+  }
+  .text-off .music-immersive-art-panel {
+    align-items: center;
+    justify-content: center;
+  }
+}
+
 .text-off .track-metadata-left {
   display: block;
   text-align: center;
@@ -5837,11 +5865,20 @@ body.reading-focus .player-area {
 .gpu-lyrics-active {
   justify-content: flex-start !important;
   padding-left: 8% !important;
+  padding-right: 0 !important;
+}
+/* When text is hidden in GPU mode, center the art panel (same as no-lyrics layout) */
+.text-off .gpu-lyrics-active {
+  justify-content: center !important;
+  padding-left: 0 !important;
 }
 @media (min-width: 901px) {
   .gpu-lyrics-active .music-immersive-art-panel {
     max-width: 340px;
     flex: 0 0 auto;
+  }
+  .text-off .gpu-lyrics-active .music-immersive-art-panel {
+    max-width: 600px;
   }
 }
 .gpu-lyrics-active .music-immersive-lyrics-panel {
@@ -6747,7 +6784,13 @@ body.player-open {
   text-align: center;
   container-type: inline-size;
   overflow: visible;
-  transition: text-align 0s 0.4s;
+  transition: text-align 0s 0.4s, max-width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.track-metadata-left .track-title-main,
+.track-metadata-left .track-artist-sub {
+  transition: max-width 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+              font-size 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .has-lyrics .track-metadata-left {
@@ -8116,6 +8159,15 @@ body.theme-Chromic .show-card {
 
   .track-metadata-left {
     text-align: center;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .track-metadata-left .track-title-main,
+  .track-metadata-left .track-artist-sub {
+    max-width: 100%;
+    -webkit-line-clamp: unset;
+    white-space: normal;
   }
 
   .music-immersive-lyrics-panel {
@@ -8573,7 +8625,9 @@ body.theme-books {
 }
 
 .music-track-page .music-track-art-wrap {
-  transition: filter 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: filter 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+              max-width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* === LYRICS: No longer hide first lines (real lyrics now shown) === */

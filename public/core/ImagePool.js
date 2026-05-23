@@ -161,9 +161,10 @@ export class ImagePool {
         const img = entry.target;
         const src = img.dataset.src;
         // If src is already set correctly (kept in cache), just re-mark as loaded
-        // Don't require naturalWidth > 0 — the browser HTTP cache will serve it without re-fetch
         if (src && img.src && img.src.includes(src.split('?')[0])) {
           img._ipLoaded = true;
+          // Ensure it's in decode cache so unload won't trigger visible reload
+          if (!_decodeCache.has(src)) _decodeCache.set(src, img);
           const card = img.closest('.music-album-grid-item') || img.parentElement;
           if (card && !card.classList.contains('img-loaded-instant') && !card.classList.contains('img-loaded')) {
             card.classList.add('img-loaded-instant');
@@ -196,6 +197,7 @@ export class ImagePool {
     // Already displaying this image correctly — just re-mark as loaded, no re-fetch
     if (img.src && img.src.includes(src.split('?')[0])) {
       img._ipLoaded = true;
+      if (!_decodeCache.has(src)) _decodeCache.set(src, img);
       const card = img.closest('.music-album-grid-item') || img.parentElement;
       if (card && !card.classList.contains('img-loaded-instant') && !card.classList.contains('img-loaded')) {
         card.classList.add('img-loaded-instant');
@@ -287,13 +289,9 @@ export class ImagePool {
 
   _unloadImage(img) {
     const src = img.dataset.src;
-    // Keep src intact to avoid visible reload flicker — just mark as needing re-observe
-    // Only truly unload (set placeholder) for images very far from viewport
     img._ipLoaded = false;
-    // If image is in decode cache, it will re-show instantly anyway
+    // If image is in decode cache, it will re-show instantly — no flicker
     if (src && _decodeCache.has(src)) return;
-    // Keep the current src to leverage browser cache — no placeholder swap
-    // The browser will handle memory pressure via its own cache eviction
   }
 }
 

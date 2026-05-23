@@ -19,6 +19,7 @@ export class GpuTypography {
   private artistText: any;
   private opacity = 0;
   private targetOpacity = 0;
+  private _centered = false;
 
   constructor(_camera: THREE.Camera) {
     this.group = new THREE.Group();
@@ -31,9 +32,9 @@ export class GpuTypography {
     this.titleText.unicodeFontsURL = UNICODE_FONTS_URL;
     this.titleText.fontWeight = 800;
     this.titleText.color = 0xffffff;
-    this.titleText.anchorX = 'center';
+    this.titleText.anchorX = 'left';
     this.titleText.anchorY = 'middle';
-    this.titleText.position.set(0, 0.06, -1);
+    this.titleText.position.set(-0.85, -0.65, -1);
     this.titleText.fillOpacity = 0;
     this.titleText.sdfGlyphSize = 64;
     this.titleText.gpuAccelerateSDF = true;
@@ -50,9 +51,9 @@ export class GpuTypography {
     this.artistText.unicodeFontsURL = UNICODE_FONTS_URL;
     this.artistText.fontWeight = 800;
     this.artistText.color = 0x7eb8ff;
-    this.artistText.anchorX = 'center';
+    this.artistText.anchorX = 'left';
     this.artistText.anchorY = 'middle';
-    this.artistText.position.set(0, -0.05, -1);
+    this.artistText.position.set(-0.85, -0.78, -1);
     this.artistText.fillOpacity = 0;
     this.artistText.sdfGlyphSize = 64;
     this.artistText.gpuAccelerateSDF = true;
@@ -69,7 +70,30 @@ export class GpuTypography {
     this.artistText.sync();
   }
 
+  /** When centered=true, text moves to center (visual/zen mode).
+   *  When centered=false, text stays bottom-left (idle/info mode). */
+  setCentered(centered: boolean) {
+    if (centered === this._centered) return;
+    this._centered = centered;
+    console.log(`[GpuTypography] setCentered(${centered}) — moving text to ${centered ? 'CENTER' : 'BOTTOM-LEFT'}`);
+    console.trace('[GpuTypography] setCentered caller');
+    if (centered) {
+      this.titleText.anchorX = 'left';
+      this.artistText.anchorX = 'left';
+      this.titleText.position.set(-0.45, 0.06, -1);
+      this.artistText.position.set(-0.45, -0.05, -1);
+    } else {
+      this.titleText.anchorX = 'left';
+      this.artistText.anchorX = 'left';
+      this.titleText.position.set(-0.85, -0.65, -1);
+      this.artistText.position.set(-0.85, -0.78, -1);
+    }
+    this.titleText.sync();
+    this.artistText.sync();
+  }
+
   setVisible(visible: boolean) {
+    console.log(`[GpuTypography] setVisible(${visible})`);
     this.targetOpacity = visible ? 1 : 0;
   }
 

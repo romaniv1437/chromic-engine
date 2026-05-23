@@ -28,6 +28,9 @@ import { ChromicGlitchVortexScene } from '../scenes/ChromicGlitchVortexScene';
 import { ObsidianVoidTunnelScene } from '../scenes/ObsidianVoidTunnelScene';
 import { CrystallineDriftScene } from '../scenes/CrystallineDriftScene';
 import { BiomeWarpScene } from '../scenes/BiomeWarpScene';
+import { UnrealCinematographyScene } from '../scenes/UnrealCinematographyScene';
+import { CoralineTunnelScene } from '../scenes/CoralineTunnelScene';
+import { CinematographyEngine } from './CinematographyEngine';
 import { KineticRibbonSystem } from './KineticRibbonSystem';
 export class ThreeOrchestrator {
     constructor(options) {
@@ -42,6 +45,7 @@ export class ThreeOrchestrator {
         this.gpuTextEnabled = true;
         this.uiVisible = false;
         this._currentPalette = null;
+        this.cinematographyActive = false;
         this.maxFps = 0; // 0 = unlimited
         this.lastFrameTime = 0;
         this._scrollPaused = false;
@@ -52,6 +56,7 @@ export class ThreeOrchestrator {
         this.timeScaleLerpSpeed = 0.005; // per-ms lerp rate
         this.dilatedTime = 0;
         this.lastRealTime = 0;
+        this._lastAlbumArt = null;
         this.loop = () => {
             if (!this.running)
                 return;
@@ -95,6 +100,13 @@ export class ThreeOrchestrator {
             if (audioEl2)
                 this.lyricsRenderer.setCurrentTime(audioEl2.currentTime);
             this.lyricsRenderer.update(audio.rms);
+            // Feed lyrics state to Unreal Cinematography scene
+            if (this.currentIdx === 25 && this.current instanceof UnrealCinematographyScene) {
+                const ls = this.lyricsRenderer.getShaderState();
+                this.current.setLyricsState(ls.active, ls.progress, ls.adlib, ls.wordIntensity);
+                if (ls.lineChanged)
+                    this.current.triggerLineBreak();
+            }
             this.kineticRibbons.update(audio, this.dilatedTime);
             this.postProcessing.update(audio);
             this.postProcessing.composer.render();
@@ -137,6 +149,8 @@ export class ThreeOrchestrator {
         });
         this.renderer.debug.checkShaderErrors = true;
         this.renderer.setClearColor(0x000000, 0);
+        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        this.renderer.toneMappingExposure = 1.0;
         this.renderer.setPixelRatio(window.devicePixelRatio * this.resolutionScale);
         // DOM placement: canvas fills the container via CSS
         const canvas = this.renderer.domElement;
@@ -180,6 +194,8 @@ export class ThreeOrchestrator {
             () => new ObsidianVoidTunnelScene(),
             () => new CrystallineDriftScene(),
             () => new BiomeWarpScene(),
+            () => new UnrealCinematographyScene(),
+            () => new CoralineTunnelScene(),
         ];
         this.scenes = new Array(this.sceneFactories.length).fill(null);
         // Only instantiate the initial scene
@@ -195,6 +211,7 @@ export class ThreeOrchestrator {
         this.lyricsRenderer.addToScene(this.current.scene);
         this.lyricsRenderer.setVisible(true); // GPU lyrics enabled — gpu-panel styles
         this.lyricsRenderer.setAspect(initW, initH);
+        this.lyricsRenderer.setViewportSize(initW, initH);
         // Wire lyrics scroll (wheel) and click-to-seek
         this.container.addEventListener('wheel', (e) => {
             // Only handle if click is on right half (text area)
@@ -234,6 +251,8 @@ export class ThreeOrchestrator {
         // Kinetic Ribbon System (200 flowing instanced ribbons)
         this.kineticRibbons = new KineticRibbonSystem();
         this.kineticRibbons.addToScene(this.current.scene);
+        // Cinematography Engine (randomized post-processing per track)
+        this.cinematographyEngine = new CinematographyEngine();
         // Enable layer 1 on current scene camera
         this.current.camera.layers.enable(1);
         if (globalThis.__DEBUG__)
@@ -245,7 +264,13 @@ export class ThreeOrchestrator {
         globalThis.__lyricsRenderer = this.lyricsRenderer;
         // Listen for uiToggle custom event
         document.addEventListener('uiToggle', ((e) => {
+            console.log(`[Orchestrator] uiToggle event: visible=${e.detail?.visible} centered=${e.detail?.centered}`);
             this.setUiVisible(e.detail?.visible ?? false);
+            // Only center text/lyrics when explicitly in visualizer-only mode (not idle timeout)
+            if (e.detail?.centered !== undefined) {
+                this.gpuTypography.setCentered(e.detail.centered);
+                this.lyricsRenderer.setCentered(e.detail.centered);
+            }
         }));
         // Resize handling
         const ro = new ResizeObserver(() => this.handleResize());
@@ -300,6 +325,10 @@ export class ThreeOrchestrator {
         if (this._currentPalette && typeof scene.setPalette === 'function') {
             scene.setPalette(this._currentPalette);
         }
+        // Apply album art to scenes that support it
+        if (this._lastAlbumArt && typeof scene.setAlbumArt === 'function') {
+            scene.setAlbumArt(this._lastAlbumArt);
+        }
         return scene;
     }
     setScene(idx) {
@@ -312,6 +341,10 @@ export class ThreeOrchestrator {
         this.gpuTypography.removeFromScene(this.current.scene);
         this.lyricsRenderer.removeFromScene(this.current.scene);
         this.kineticRibbons.removeFromScene(this.current.scene);
+        // Deactivate cinematography passes when leaving scene 25
+        if (this.cinematographyActive) {
+            this._removeCinematographyPasses();
+        }
         this.currentIdx = idx;
         this.current = this.getOrCreateScene(idx);
         // Re-apply stored palette to the newly active scene
@@ -319,14 +352,42 @@ export class ThreeOrchestrator {
             this.current.setPalette(this._currentPalette);
         }
         this.postProcessing.updateScene(this.current.scene, this.current.camera);
+        // Coraline tunnel uses stronger UnrealBloom profile; others use default.
+        this.postProcessing.setBloomProfile(idx === 26 ? 'coraline' : 'default');
         this.gpuTypography.addToScene(this.current.scene);
         this.lyricsRenderer.addToScene(this.current.scene);
         // Only add ribbons to fullscreen shader scenes (ortho camera), not 3D geometry scenes
-        if (this.current.camera instanceof THREE.OrthographicCamera) {
+        // Exclude scene 25 (Unreal Cinematography) — ribbons look wrong on top of raymarched content
+        if (this.current.camera instanceof THREE.OrthographicCamera && idx !== 25) {
             this.kineticRibbons.addToScene(this.current.scene);
+        }
+        // Activate cinematography engine for scene 25 (Unreal Cinematography)
+        if (idx === 25) {
+            this._activateCinematography();
         }
         // Trigger resize for the new scene to get correct resolution
         this.handleResize();
+    }
+    _activateCinematography() {
+        const audioEl = window.musicRuntime?.audioEngine?.audioElement;
+        const duration = audioEl?.duration || 200;
+        const recipe = this.cinematographyEngine.generateRecipe(duration, undefined, ['mirror']);
+        // Insert passes into composer (after bloom, before final output)
+        const passes = this.cinematographyEngine.getPasses();
+        for (const pass of passes) {
+            this.postProcessing.composer.addPass(pass);
+        }
+        this.cinematographyActive = true;
+    }
+    _removeCinematographyPasses() {
+        const passes = this.cinematographyEngine.getPasses();
+        for (const pass of passes) {
+            const idx = this.postProcessing.composer.passes.indexOf(pass);
+            if (idx !== -1)
+                this.postProcessing.composer.passes.splice(idx, 1);
+        }
+        this.cinematographyEngine.dispose();
+        this.cinematographyActive = false;
     }
     setResolutionScale(scale) {
         this.resolutionScale = Math.max(0.1, Math.min(2, scale));
@@ -364,9 +425,18 @@ export class ThreeOrchestrator {
     setUiVisible(visible) {
         this.uiVisible = visible;
         this.gpuTypography.setVisible(visible);
-        this.lyricsRenderer.setVisible(visible);
+        // Only center text when explicitly in visualizer-only mode, NOT on idle timeout
+        // Centering is controlled separately via setCentered() from the visualModeBtn
+        // Lyrics always visible when loaded, controls follow UI visibility
+        this.lyricsRenderer.setVisible(true);
         this.lyricsRenderer.setControlsVisible(visible);
+        // Note: lyrics centering is now controlled by the uiToggle event's centered field,
+        // NOT by idle state. See the event listener above.
         // Note: blur/dim controlled separately via setBlurDim()
+    }
+    /** Explicitly set text centering (called by visualizer-only mode toggle) */
+    setTextCentered(centered) {
+        this.gpuTypography.setCentered(centered);
     }
     /** Control blur on the shader scene (called by blur button in GPU mode) */
     setBlur(enabled) {
@@ -386,6 +456,11 @@ export class ThreeOrchestrator {
         if (globalThis.__DEBUG__)
             console.log(`[Visualizer] setTrack: "${title}" - "${artist}"`);
         this.gpuTypography.setTrack(title, artist);
+        // Regenerate Unreal Cinematography seed for unique visuals per track
+        const unreal = this.scenes[25];
+        if (unreal instanceof UnrealCinematographyScene) {
+            unreal.regenerateSeed();
+        }
         // Auto-reset to Lava scene (blurred info view) on track change
         this.setScene(0);
         this.setUiVisible(true);
@@ -404,7 +479,7 @@ export class ThreeOrchestrator {
         // Update lyrics renderer accent color for artist name
         this.lyricsRenderer.setAccentColor(threeColors[0]);
     }
-    /** Set album art for Living Canvas scene */
+    /** Set album art for Living Canvas + Unreal Cinematography scenes */
     setAlbumArt(imageUrl) {
         if (globalThis.__DEBUG__)
             console.log(`[Visualizer] setAlbumArt:`, imageUrl);
@@ -412,6 +487,11 @@ export class ThreeOrchestrator {
         if (canvas instanceof LivingCanvasScene) {
             canvas.setAlbumArt(imageUrl);
         }
+        const unreal = this.scenes[25];
+        if (unreal instanceof UnrealCinematographyScene) {
+            unreal.setAlbumArt(imageUrl);
+        }
+        this._lastAlbumArt = imageUrl;
     }
     /** Set lyrics timeline for GPU karaoke rendering */
     setLyricsTimeline(timeline, artist, album) {
@@ -457,6 +537,8 @@ export class ThreeOrchestrator {
             this.lyricsRenderer.setCurrentTime(audioEl.currentTime);
         this.lyricsRenderer.update(audio.rms);
         this.kineticRibbons.update(audio, this.dilatedTime);
+        if (this.cinematographyActive)
+            this.cinematographyEngine.update(audio);
         this.postProcessing.update(audio);
         this.postProcessing.composer.render();
         this.postProcessing.renderText();
@@ -479,6 +561,7 @@ export class ThreeOrchestrator {
         this.renderer.setSize(w, h, false);
         this.postProcessing.setSize(w, h);
         this.lyricsRenderer.setAspect(w, h);
+        this.lyricsRenderer.setViewportSize(w, h);
         const effectiveDpr = window.devicePixelRatio * this.resolutionScale;
         this.current.resize(w, h, effectiveDpr);
         if (this.running)

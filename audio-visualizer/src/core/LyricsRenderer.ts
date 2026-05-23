@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Text } from 'troika-three-text';
+import gsap from 'gsap';
 
 /**
  * Lyrics word data from timeline.
@@ -81,7 +82,7 @@ const S = {
   // Paired () echo lines — from gpu-panel golden code (Y scaled to NDC)
   pairAct:  { op: 1.0,  sc: 0.97, oy: 0 },
   pairPast: { op: 0.0,  sc: 0.96, oy: -0.083 },
-  pairFut:  { op: 0.0,  sc: 0.90, oy: 0.067 },
+  pairFut:  { op: 0.45, sc: 0.94, oy: -0.03 },
 };
 
 function wordType(w: LyricsWord): string {
@@ -188,6 +189,11 @@ interface RenderedLine {
   _tOp: number;
   _tSc: number;
   _tOy: number;
+  // ── Spring velocities for physics-based animation ──
+  _vOp: number;
+  _vSc: number;
+  _vOy: number;
+  _scrollLag: number; // per-line scroll offset lag for fluid parallax
   // ── Paired () echo lines ──
   _pairWith?: number;
   _pairRole?: 'first' | 'second';
@@ -223,7 +229,11 @@ export class LyricsRenderer {
   // ── Scroll state (from gpu-panel) ──
   private manualScrollOffset = 0;
   private scrollDecayTimer = 0;
-  private scrollY = ACTIVE_LINE_Y_CONTROLS;  // actual interpolated scroll position (like gpu-panel cameraY)
+  private scrollY = ACTIVE_LINE_Y_CONTROLS;  // actual interpolated scroll position
+  private _scrollVel = 0; // scroll velocity for per-line parallax
+  private _prevScrollY = ACTIVE_LINE_Y_CONTROLS;
+  private _activeChangeTime = 0;
+  private _prevActiveIdx = -1;
   // ── Seek callback ──
   private _onSeek: ((time: number) => void) | null = null;
   // ── Track metadata display (artist + album) ──
@@ -242,12 +252,35 @@ export class LyricsRenderer {
   // ── Translations ──
   private _translations: string[] = [];
   private _translationVisible = false;
+  private _translationFactor = 0; // 0=hidden, 1=fully shown — lerps smoothly
   private _translationMeshes: (any | null)[] = []; // sparse, same length as this.lines
 
   constructor() {
     this.group = new THREE.Group();
     this.group.layers.enable(0);
     this.group.layers.enable(1);
+  }
+
+  /** Expose lyrics state for shader scenes (UnrealCinematography) */
+  getShaderState(): { active: boolean; progress: number; adlib: boolean; wordIntensity: number; lineChanged: boolean } {
+    const ai = this.activeLineIdx;
+    const line = ai >= 0 && ai < this.timeline.length ? this.timeline[ai] : null;
+    const active = !!line && this.interpolatedTime >= (line.start || 0) && this.interpolatedTime <= (line.end || 0);
+    let progress = 0;
+    let adlib = false;
+    let wordIntensity = 0.5;
+    if (line && active) {
+      const dur = (line.end || 0) - (line.start || 0);
+      progress = dur > 0 ? Math.max(0, Math.min(1, (this.interpolatedTime - (line.start || 0)) / dur)) : 0;
+      adlib = !!line.adlib || (line.words || []).some(w => w.adlib && this.interpolatedTime >= w.start && this.interpolatedTime <= w.end);
+      // Word intensity: stretch/sung > spoken > whisper
+      const activeWord = (line.words || []).find(w => this.interpolatedTime >= w.start && this.interpolatedTime <= w.end);
+      if (activeWord) {
+        wordIntensity = (activeWord.sung || activeWord.isVocalStretch || activeWord.stretch) ? 1.0 : activeWord.whisper ? 0.2 : activeWord.spoken ? 0.6 : 0.5;
+      }
+    }
+    const lineChanged = ai !== this._prevActiveIdx;
+    return { active, progress, adlib, wordIntensity, lineChanged };
   }
 
   setTimeline(timeline: LyricsLine[], artist?: string, album?: string) {
@@ -294,6 +327,8 @@ export class LyricsRenderer {
       this._metaVisible = false;
     }
     for (const L of this.lines) {
+      // Kill any active GSAP tweens on this line
+      gsap.killTweensOf(L);
       for (const e of L.entries) {
         if (e._isCueDot) {
           (e.base as THREE.Mesh).geometry?.dispose();
@@ -322,7 +357,7 @@ export class LyricsRenderer {
     const withCues: any[] = [];
     const firstEntry = allLines[0];
     const firstStart = firstEntry ? (firstEntry.start || firstEntry.time || 0) : 0;
-    if (firstEntry?.type !== 'vocal_cue' && firstStart > 2.0) {
+    if (firstEntry?.type !== 'vocal_cue' && firstStart > 6.0) {
       withCues.push({ type: 'vocal_cue', start: 0, end: firstStart, text: '' });
     }
     for (let i = 0; i < allLines.length; i++) {
@@ -432,6 +467,7 @@ export class LyricsRenderer {
           _tOp: isFirstLine ? S.active.op : S.future.op,
           _tSc: isFirstLine ? S.active.sc : S.future.sc,
           _tOy: isFirstLine ? S.active.oy : S.future.oy,
+          _vOp: 0, _vSc: 0, _vOy: 0, _scrollLag: 0,
           _cueCollapse: 0, _cueCollapseTarget: 0, _cueExitPhase: 0, _cueExitTimer: 0,
         });
         yPos -= LINE_HEIGHT;
@@ -539,6 +575,7 @@ export class LyricsRenderer {
         _tOp: isFirstLine ? S.active.op : S.future.op,
         _tSc: isFirstLine ? S.active.sc : S.future.sc,
         _tOy: isFirstLine ? S.active.oy : S.future.oy,
+        _vOp: 0, _vSc: 0, _vOy: 0, _scrollLag: 0,
         _adPhrases: adPhrases,
         _adLastEnd: adPhrases.length ? Math.max(...adPhrases.map(p => p.end)) : 0,
         _adPhraseReveal: 0,
@@ -736,7 +773,11 @@ export class LyricsRenderer {
         L.group.position.set(0, yAccum, 0);
         L._baseY = yAccum;
         const totalHeight = Math.abs(rowY) + rowHeight;
-        yAccum -= totalHeight + LINE_HEIGHT;
+        // Account for translation text height below inline adlib lines
+        const TRANS_FS_AD = FONT_SIZE * 0.55;
+        const hasTransAd = this._translationMeshes[idx] != null;
+        const transExtraAd = hasTransAd ? (TRANS_FS_AD * 1.4) * this._translationFactor : 0;
+        yAccum -= totalHeight + transExtraAd + LINE_HEIGHT;
       } else {
         // ── Standard layout with wrapping ──
         let x = leftEdge;
@@ -755,9 +796,35 @@ export class LyricsRenderer {
 
         L.group.position.set(0, yAccum, 0);
         L._baseY = yAccum;
+        // totalHeight = distance from top of line (y=0) to bottom of last word row
         const totalHeight = Math.abs(rowY) + rowHeight;
 
-        // Paired line margins (from gpu-panel)
+        // Calculate full extent including translation text (which may wrap to multiple rows)
+        let fullExtent = totalHeight;
+        if (this._translationFactor > 0) {
+          const transMesh = this._translationMeshes[idx];
+          if (transMesh) {
+            const TRANS_FS = FONT_SIZE * 0.55;
+            const transY = Math.abs(transMesh.position.y); // distance below group origin
+            // Use actual rendered bounds if available, otherwise estimate generously
+            const bounds = transMesh.textRenderInfo?.blockBounds;
+            let transHeight: number;
+            if (bounds) {
+              transHeight = Math.abs(bounds[3] - bounds[1]); // actual rendered height
+            } else {
+              // Generous estimate: assume ~0.5 chars per unit width at this font size
+              const transText = transMesh.text || '';
+              const charsPerRow = Math.floor(TEXT_MAX_WIDTH / (TRANS_FS * 0.55));
+              const transRows = Math.max(1, Math.ceil(transText.length / Math.max(1, charsPerRow)));
+              transHeight = transRows * TRANS_FS * 1.4;
+            }
+            const transBottom = transY + transHeight;
+            // Only add the extra that extends beyond totalHeight
+            fullExtent = totalHeight + Math.max(0, transBottom - totalHeight) * this._translationFactor;
+          }
+        }
+
+        // Margin = fixed gap — same for all normal lines regardless of row count
         let margin: number;
         if (L._pairRole === 'first') {
           margin = LINE_HEIGHT * 0.3;
@@ -766,7 +833,7 @@ export class LyricsRenderer {
         } else {
           margin = (L.ad && !L._standaloneAdlib) ? LINE_HEIGHT * 0.15 : L._standaloneAdlib ? LINE_HEIGHT * 0.5 : LINE_HEIGHT;
         }
-        yAccum -= totalHeight + margin;
+        yAccum -= fullExtent + margin;
       }
     }
   }
@@ -775,10 +842,37 @@ export class LyricsRenderer {
     this.targetOpacity = visible && this.timeline.length > 0 ? 1 : 0;
   }
 
+  /** Set centered/zen mode — lyrics move to center of viewport with larger text */
+  private _zenMode = false;
+  private _zenScale = 1.0;
+  private _zenOffsetX = 0;
+  setCentered(centered: boolean) {
+    this._zenMode = centered;
+    // In zen mode: scale up 20% and shift left to center text in viewport
+    this._zenScale = centered ? 1.2 : 1.0;
+    this._zenOffsetX = centered ? -0.45 : 0;
+  }
+
   /** Set UI controls visibility — shifts text position when controls are shown vs idle */
   setControlsVisible(visible: boolean) {
     this._uiVisible = visible;
     this._activeLineY = visible ? ACTIVE_LINE_Y_CONTROLS : ACTIVE_LINE_Y_IDLE;
+  }
+
+  /** Adapt layout for viewport size — on small screens, shift text lower */
+  setViewportSize(width: number, height: number) {
+    const isSmall = width < 900;
+    const isTiny = width < 600;
+    if (isTiny) {
+      // Very small: text below artwork, full width, shifted down
+      this._activeLineY = 0.0; // center vertically
+    } else if (isSmall) {
+      // Small tablet: text area shifted down slightly
+      this._activeLineY = 0.1;
+    } else {
+      // Desktop: normal position
+      this._activeLineY = this._uiVisible ? ACTIVE_LINE_Y_CONTROLS : ACTIVE_LINE_Y_IDLE;
+    }
   }
 
   /** Set accent color from palette — used for artist name bloom */
@@ -953,7 +1047,8 @@ export class LyricsRenderer {
   /** Handle mouse wheel for manual scroll (from gpu-panel) */
   handleWheel(deltaY: number) {
     // deltaY > 0 = scroll down = show later content = positive offset
-    this.manualScrollOffset += deltaY * 0.002;
+    // Dampen trackpad input to prevent flashy over-scrolling
+    this.manualScrollOffset += deltaY * 0.0009;
 
     // Clamp using actual line positions — 15% viewport margin top/bottom
     if (this.lines.length > 1) {
@@ -1002,7 +1097,7 @@ export class LyricsRenderer {
       }
     }
 
-    if (bestEntry && bestEntry.start != null && this._onSeek) {
+    if (bestEntry && bestEntry.start != null && this._onSeek && bestDist < (bestLine?.fs || 0.05) * 1.5) {
       console.log(`[LR-SEEK] word="${bestEntry.text}" → t=${bestEntry.start.toFixed(3)}`);
       this.manualScrollOffset = 0;
       this.scrollDecayTimer = 0;
@@ -1012,21 +1107,7 @@ export class LyricsRenderer {
       return;
     }
 
-    // Fallback: find closest line by Y position
-    let closest = 0, minDist = Infinity;
-    for (let i = 0; i < this.lines.length; i++) {
-      if (this.lines[i]._cOp < 0.05) continue;
-      const dist = Math.abs(this.lines[i].group.position.y - ndcY);
-      if (dist < minDist) { minDist = dist; closest = i; }
-    }
-    if (this._onSeek && this.lines[closest]) {
-      console.log(`[LR-SEEK] line #${closest} → t=${this.lines[closest].ld.start.toFixed(3)}`);
-      this.manualScrollOffset = 0;
-      this.scrollDecayTimer = 0;
-      this._pendingSeekTime = this.lines[closest].ld.start;
-      this._onSeek(this.lines[closest].ld.start);
-      for (const e of this.lines[closest].entries) e._clickFlash = 1.0;
-    }
+    // No exact word hit — do nothing (don't seek to nearest line)
   }
 
   private _dbgCount = 0;
@@ -1077,8 +1158,18 @@ export class LyricsRenderer {
     const opLerp = this.opacity < 0.5 ? 0.15 : 0.05;
     this.opacity += (this.targetOpacity - this.opacity) * opLerp;
 
-    // Apply aspect ratio correction to group
-    this.group.scale.x = this._aspectX;
+    // Translation spacing factor — smooth 0↔1 transition for line spacing animation
+    const transTgt = this._translationVisible ? 1 : 0;
+    const transDelta = transTgt - this._translationFactor;
+    if (Math.abs(transDelta) > 0.001) {
+      this._translationFactor += transDelta * 0.08; // smooth ease
+      this.doLayout(); // re-layout with animated factor
+    }
+
+    // Apply aspect ratio correction to group + zen mode centering
+    this.group.scale.x = this._aspectX * this._zenScale;
+    this.group.scale.y = this._zenScale;
+    this.group.position.x = this._zenOffsetX;
 
     // ── Seek detection: explicit from handleClick OR heuristic from time jump ──
     const timeDelta = ct - this.lastCt;
@@ -1158,51 +1249,45 @@ export class LyricsRenderer {
       this.activeLineIdx = seekAi;
     }
 
-    // ── Find active line + paired () line handling (from gpu-panel) ──
+    // ── Find active line: always advance to the latest line whose start has been reached ──
+    // If next line has started, it becomes active immediately (previous becomes past)
+    // Unless lines are explicitly paired via pairWith field
     let ai = -1;
-    for (let i = 0; i < this.lines.length; i++) {
+    for (let i = this.lines.length - 1; i >= 0; i--) {
       const ld = this.lines[i].ld;
-      if (ct >= ld.start && ct <= ld.end) { ai = i; break; }
+      if (ct >= ld.start) { ai = i; break; }
     }
-    if (ai === -1) {
-      for (let i = 0; i < this.lines.length; i++) {
-        const ld = this.lines[i].ld;
-        if (ct >= ld.start - 0.15 && ct <= ld.end + 0.15) { ai = i; break; }
+    // If we're past the last line's end by a lot, stay on last
+    if (ai === -1 && this.lines.length > 0) {
+      if (ct < this.lines[0].ld.start - 0.5) {
+        ai = 0;
       }
     }
-    if (ai === -1 && this.lines.length > 0) {
-      if (ct > this.lines[this.lines.length - 1].ld.end + 0.5) {
-        ai = this.lines.length - 1;
-      } else if (ct < this.lines[0].ld.start - 0.5) {
-        ai = 0;
-      } else {
-        for (let i = 0; i < this.lines.length - 1; i++) {
-          if (ct > this.lines[i].ld.end && ct < this.lines[i + 1].ld.start) {
-            const gap = this.lines[i + 1].ld.start - this.lines[i].ld.end;
-            const elap = ct - this.lines[i].ld.end;
-            ai = elap < gap * 0.6 ? i : i + 1;
-            break;
-          }
+    // In gaps between lines (ct > line[i].end but ct < line[i+1].start), hold on current until next starts
+    if (ai >= 0 && ai < this.lines.length - 1) {
+      const currentEnd = this.lines[ai].ld.end;
+      const nextStart = this.lines[ai + 1].ld.start;
+      // If we're in a gap and next line hasn't started, check if we should show next (cue) or hold
+      if (ct > currentEnd && ct < nextStart) {
+        // For cues, advance immediately
+        if (this.lines[ai + 1].isCue) {
+          ai = ai + 1;
         }
+        // Otherwise stay on current line (it will be "past" state since ct > its end)
       }
     }
     if (ai === -1) ai = this.activeLineIdx >= 0 ? this.activeLineIdx : 0;
 
-    // Build active set with paired lines + time overlaps (from gpu-panel)
+    // Build active set — ONLY use explicit pairing from lyrics.json (pairWith field)
+    // NO automatic overlap detection — pairing is determined by aligner.py and editable in pro mode
     let activeSet = new Set([ai]);
     if (ai >= 0 && ai < this.lines.length) {
-      const aLd = this.lines[ai].ld;
       const pairIdx = this.lines[ai]._pairWith;
       if (pairIdx != null && pairIdx >= 0 && pairIdx < this.lines.length) {
         activeSet.add(pairIdx);
+        const aLd = this.lines[ai].ld;
         const pairEnd = Math.max(aLd.end, this.lines[pairIdx].ld.end);
         if (ct <= pairEnd + 0.1) ai = Math.min(ai, pairIdx);
-      }
-      for (let i = 0; i < this.lines.length; i++) {
-        if (activeSet.has(i)) continue;
-        const bLd = this.lines[i].ld;
-        const overlapDur = Math.min(aLd.end, bLd.end) - Math.max(aLd.start, bLd.start);
-        if (overlapDur > 0.05) activeSet.add(i);
       }
       if (activeSet.size > 1) {
         let maxEnd = 0;
@@ -1215,6 +1300,12 @@ export class LyricsRenderer {
       }
     }
     this.activeLineIdx = ai;
+
+    // Track when the active line changes for stagger timing
+    if (ai !== this._prevActiveIdx) {
+      this._activeChangeTime = performance.now();
+      this._prevActiveIdx = ai;
+    }
 
     // dt for lerp
     const dt = 1 / 60;
@@ -1230,14 +1321,12 @@ export class LyricsRenderer {
       if (Math.abs(this.manualScrollOffset) < 0.005) this.manualScrollOffset = 0;
     }
 
-    // Scroll: smooth camera-style lerp — faster for big jumps, gentle for small movements
+    // Camera: smooth lerp for scroll
     const baseTargetY = ai >= 0 && ai < this.lines.length ? -this.lines[ai]._baseY + this._activeLineY : this._activeLineY;
     const targetY = baseTargetY + this.manualScrollOffset;
-    const scrollDist = Math.abs(targetY - this.scrollY);
-    // Big jumps (>0.5 scene units ≈ several lines): speed up to 8x, small movements: normal 3.5x
-    const scrollSpeed = scrollDist > 0.5 ? 3.5 + Math.min(12, scrollDist * 6) : 3.5;
-    const scrollLerp = 1 - Math.exp(-scrollSpeed * dt);
-    this.scrollY += (targetY - this.scrollY) * scrollLerp;
+    this._prevScrollY = this.scrollY;
+    this.scrollY += (targetY - this.scrollY) * 0.08;
+    this._scrollVel = this.scrollY - this._prevScrollY;
 
     // Update track metadata position
     this.updateMeta();
@@ -1255,38 +1344,106 @@ export class LyricsRenderer {
       const isPast = (!isInActiveSet && li < ai);
       const isActive = isInActiveSet;
 
-      // ── Line-level lerps with staggered scroll (from gpu-panel) ──
-      L._tOp = st.op; L._tSc = st.sc; L._tOy = st.oy;
-      // Past lines: dedicated fast lerp — they should vanish quickly, not linger
-      if (isPast) {
-        const pastF = 1 - Math.exp(-20 * dt); // very fast ~20x speed
-        L._cOp += (L._tOp - L._cOp) * pastF;
-        L._cSc += (L._tSc - L._cSc) * pastF;
-        L._cOy += (L._tOy - L._cOy) * pastF;
-      } else {
-        L._cOp += (L._tOp - L._cOp) * f;
-        L._cSc += (L._tSc - L._cSc) * f;
-        // Staggered Y lerp — future lines lag behind creating cascade
+      // ── GSAP-driven line animation — viscous cascade ──
+      // Only re-tween when target changes (avoid stacking)
+      const newTOp = st.op, newTSc = st.sc, newTOy = st.oy;
+      if (L._tOp !== newTOp || L._tSc !== newTSc || L._tOy !== newTOy) {
+        L._tOp = newTOp; L._tSc = newTSc; L._tOy = newTOy;
+
         const delta = li - ai;
-        let staggerF: number;
-        if (delta === 1) { staggerF = f * 0.8; }       // future-1: fairly responsive
-        else if (delta === 2) { staggerF = f * 0.5; }       // future-2: moderate lag
-        else { staggerF = f * Math.max(0.2, 0.4 - delta * 0.04); } // distant = slow cascade
-        L._cOy += (L._tOy - L._cOy) * staggerF;
+
+        // Kill any existing tweens on this line's animated props
+        gsap.killTweensOf(L, '_cOy,_cSc,_cOp');
+
+        if (isPast) {
+          // Past: fast exit, no overshoot — but keep visible during scroll
+          if (isScrolling) {
+            gsap.to(L, { _cSc: 1.0, _cOy: newTOy, duration: 0.25, ease: 'power3.out', overwrite: true });
+          } else {
+            gsap.to(L, { _cOp: newTOp, _cSc: 1.0, _cOy: newTOy, duration: 0.25, ease: 'power3.out', overwrite: true });
+          }
+        } else if (isActive) {
+          // Active line: smooth settle, NO scale animation
+          gsap.to(L, { _cOy: newTOy, duration: 0.4, ease: 'power2.out' });
+          gsap.to(L, { _cOp: newTOp, duration: 0.25, ease: 'power2.out' });
+          gsap.to(L, { _cSc: newTSc, duration: 0.3, ease: 'power2.out' });
+        } else {
+          // ── Future lines: independent fluid cascade ──
+          // Each line has dramatically different timing — truly independent motion
+          const delay = delta * 0.12 + Math.sin(li * 123.456) * 0.03;
+
+          // Duration: future-1 is quick, each next line takes noticeably longer
+          const dur = 0.35 + delta * 0.18;
+
+          // Each line gets its own ease character
+          let ease: string;
+          if (delta === 1) ease = 'power3.out';       // snappy follow
+          else if (delta === 2) ease = 'power2.out';  // smooth
+          else if (delta === 3) ease = 'power1.out';  // gentle
+          else ease = 'sine.out';                      // floaty/liquid
+
+          // Movement — each line arrives independently
+          gsap.to(L, { _cOy: newTOy, duration: dur, ease, delay, overwrite: 'auto' });
+          // Opacity: starts later, finishes after movement — line slides in translucent then solidifies
+          gsap.to(L, { _cOp: newTOp, duration: dur * 1.4, ease: 'power1.out', delay: delay + delta * 0.04 });
+          // Scale: locked
+          L._cSc = 1.0;
+        }
       }
+
+      // Apply current animated values to Three.js objects
+      L._cOp = Math.max(0, Math.min(1, L._cOp));
 
       L.group.scale.set(L._cSc, L._cSc, 1);
       L.group.position.x = this._leftEdge * (1 - L._cSc);
-      L.group.position.y = L._baseY + L._cOy + this.scrollY;
 
-      // Viewport margin fade: 15% top/bottom — lines near edges fade out
-      // NOTE: uses a separate effectiveOp instead of mutating _cOp (which would corrupt lerp state)
+      // Per-line scroll lag: CHAINED parallax — each line follows the previous one
+      // This creates a cascade where line3 waits for line2 to move first
+      const absDelta = Math.abs(li - ai);
+      let lagTarget: number;
+      let lagSpeed: number;
+      if (isScrolling) {
+        // Manual scroll: parallax based on screen position (visibility order, not active index)
+        const screenPos = L._baseY + L._cOy + this.scrollY;
+        // Map screen position to 0=top, 1=center, 2=bottom of viewport
+        const distFromCenter = Math.abs(screenPos - this._activeLineY);
+        const slot = Math.min(3, Math.floor(distFromCenter / LINE_HEIGHT));
+        lagTarget = this.scrollY;
+        lagSpeed = slot === 0 ? 0.4 : slot === 1 ? 0.34 : slot === 2 ? 0.28 : 0.23;
+      } else {
+        // Auto-scroll: SAME chained parallax — new lines appearing from bottom trail behind
+        if (absDelta === 0) {
+          lagTarget = this.scrollY;
+          lagSpeed = 0.5;
+        } else {
+          const prevIdx = li > ai ? li - 1 : li + 1;
+          const prevLine = (prevIdx >= 0 && prevIdx < this.lines.length) ? this.lines[prevIdx] : null;
+          lagTarget = prevLine ? prevLine._scrollLag : this.scrollY;
+          lagSpeed = 0.3;
+        }
+      }
+      L._scrollLag += (lagTarget - L._scrollLag) * Math.min(1.0, lagSpeed);
+      L.group.position.y = L._baseY + L._cOy + L._scrollLag;
+
       const screenY = L.group.position.y;
-      const MARGIN = 0.3; // 15% of NDC range (2.0) = 0.3
+
+      // ── VISIBILITY CULLING: hide lines far off-screen to save GPU draw calls ──
+      const isOnScreen = screenY > -1.5 && screenY < 1.5;
+      if (!isOnScreen) {
+        L.group.visible = false;
+        continue; // skip all per-word processing for off-screen lines
+      }
+      L.group.visible = true;
+
+      // Viewport margin fade
+      const MARGIN = 0.3;
       let viewportFade = 1.0;
-      if (screenY > 1.0 - MARGIN) viewportFade = Math.max(0, (1.0 - screenY) / MARGIN);
-      else if (screenY < -1.0 + MARGIN) viewportFade = Math.max(0, (screenY + 1.0) / MARGIN);
-      const effectiveOp = L._cOp * viewportFade;
+      if (!isScrolling) {
+        if (screenY > 1.0 - MARGIN) viewportFade = Math.max(0, (1.0 - screenY) / MARGIN);
+        else if (screenY < -1.0 + MARGIN) viewportFade = Math.max(0, (screenY + 1.0) / MARGIN);
+      }
+      // During scroll: override opacity to full for all lines
+      const effectiveOp = isScrolling ? Math.max(L._cOp, 0.85) * viewportFade : L._cOp * viewportFade;
 
       // ── Paired () lines: line-level fill progress for smooth sweep ──
       let _lineP = 0;
@@ -1792,21 +1949,25 @@ export class LyricsRenderer {
 
 
     // ── Translation mesh opacity (matches DOM .show-translations opacity rules) ──
-    if (this._translationVisible && this._translationMeshes.length) {
+    if (this._translationMeshes.length) {
       for (let li = 0; li < this.lines.length; li++) {
         const mesh = this._translationMeshes[li];
         if (!mesh?.material) continue;
         const L = this.lines[li];
-        const isActive = activeSet.has(li);
+        const isAct = activeSet.has(li);
         const d = li - ai;
         let transOp: number;
-        if (isActive) transOp = 0.4;
+        if (isScrolling) {
+          // During scroll: all translations visible
+          transOp = 0.5;
+        } else if (isAct) transOp = 0.4;
         else if (li < ai || d === 1) transOp = 0.5;
         else if (d === 2) transOp = 0.4;
         else if (d === 3 || d === 4) transOp = 0.3;
         else transOp = 0.2;
-        // Modulate by line opacity and global opacity
-        mesh.material.opacity = transOp * L._cOp * this.opacity;
+        // During scroll: don't modulate by L._cOp (past lines would disappear)
+        const lineOp = isScrolling ? Math.max(L._cOp, 0.85) : L._cOp;
+        mesh.material.opacity = transOp * this._translationFactor * lineOp * this.opacity;
       }
     }
 
@@ -2041,19 +2202,32 @@ export class LyricsRenderer {
       mesh.gpuAccelerateSDF = true;
       mesh.layers.set(1); // sharp layer only, no bloom
 
-      // Position below the main line — if adlibs exist, push below them too
+      // Position below the main line — account for paired lines and adlibs
       let mainLowestY = 0;
       for (const e of L.entries) {
-        if (!e.ad && (e._baseY || 0) < mainLowestY) mainLowestY = e._baseY || 0;
+        const ey = e._baseY || 0;
+        const eAdY = e._adBaseY || 0;
+        if (!e.ad && ey < mainLowestY) mainLowestY = ey;
+        if (e.ad && eAdY < mainLowestY) mainLowestY = eAdY;
       }
       // If line has inline adlibs, find their lowest point and position below that
-      let adlibLowestY = mainLowestY;
+      let lowestY = mainLowestY;
       if (L.hasInlineAdlibs) {
         for (const e of L.entries) {
-          if (e.ad && (e._adBaseY || 0) < adlibLowestY) adlibLowestY = e._adBaseY || 0;
+          if (e.ad && (e._adBaseY || 0) < lowestY) lowestY = e._adBaseY || 0;
         }
       }
-      mesh.position.set(TEXT_LEFT, adlibLowestY - L.fs * 0.6, Z_DEPTH);
+      // For paired lines: position below the paired content
+      if (L._pairWith != null && L._pairRole === 'first') {
+        const pairLine = this.lines[L._pairWith];
+        if (pairLine) {
+          for (const e of pairLine.entries) {
+            const ey = e._baseY || 0;
+            if (ey < lowestY) lowestY = ey;
+          }
+        }
+      }
+      mesh.position.set(TEXT_LEFT, lowestY - L.fs * 0.6, Z_DEPTH);
 
       L.group.add(mesh);
       mesh.sync(() => {
@@ -2072,11 +2246,7 @@ export class LyricsRenderer {
   /** Show/hide translations */
   setTranslationsVisible(visible: boolean) {
     this._translationVisible = visible;
-    // If hiding, immediately set opacity to 0
-    if (!visible) {
-      for (const mesh of this._translationMeshes) {
-        if (mesh?.material) mesh.material.opacity = 0;
-      }
-    }
+    // The _translationFactor lerp in update() will smoothly animate spacing
+    // and translation mesh opacity is handled in the update loop
   }
 }

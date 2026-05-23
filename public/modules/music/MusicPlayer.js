@@ -913,6 +913,17 @@ export class MusicPlayer {
     }
 
     const button = event.target?.closest?.('button');
+
+    // Click on artwork image → toggle text
+    if (!button && event.target?.id === 'musicTrackArtwork') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.settings.textEnabled = !this.settings.textEnabled;
+      this.applyPageFlags();
+      this.persistPlayerState({ immediate: true });
+      return;
+    }
+
     if (!button) {
       return;
     }
@@ -6233,8 +6244,8 @@ export class MusicPlayer {
     const origSetUiVisible = this.mathVisualizer.setUiVisible.bind(this.mathVisualizer);
     this.mathVisualizer.setUiVisible = (visible) => {
       origSetUiVisible(visible);
-      // If lyrics timeline is loaded, always keep lyrics renderer visible & gpuTypography hidden
-      if (this.mathVisualizer.lyricsRenderer?.timeline?.length > 0) {
+      // If lyrics timeline is loaded AND text is enabled, keep lyrics renderer visible & gpuTypography hidden
+      if (this.mathVisualizer.lyricsRenderer?.timeline?.length > 0 && this.settings.textEnabled) {
         this.mathVisualizer.lyricsRenderer.setVisible(true);
         this.mathVisualizer.gpuTypography.setVisible(false);
       }
@@ -6554,7 +6565,7 @@ export class MusicPlayer {
       if (domPanel) {
         domPanel.style.display = 'none';
         const shell = domPanel?.closest('.music-immersive-shell');
-        if (shell) shell.classList.add('gpu-lyrics-active');
+        if (shell && this.settings.textEnabled) shell.classList.add('gpu-lyrics-active');
       }
     }
 
@@ -7239,20 +7250,20 @@ export class MusicPlayer {
           <div class="music-track-hud-leading"><button id="playerCollapseBtn" type="button" class="hud-btn hud-btn-chevron" aria-label="Collapse player"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 5 8 11 14 5"/></svg></button></div>
           <div class="music-track-hud-actions">
             <div class="hud-actions-row hud-row-primary">
-              <button id="trackQueueBtn" type="button" class="hud-btn" aria-label="Open queue sheet">${ICONS.menu}</button>
-              <button id="trackSettingsBtn" type="button" class="hud-btn" aria-label="Open track settings">${ICONS.gear}</button>
+              <button id="trackQueueBtn" type="button" class="hud-btn" aria-label="Open queue sheet" title="Queue">${ICONS.menu}</button>
+              <button id="trackSettingsBtn" type="button" class="hud-btn" aria-label="Open track settings" title="Settings">${ICONS.gear}</button>
             </div>
-            <button id="hudActionsToggle" type="button" class="hud-btn hud-btn-expand${this.settings.hudActionsExpanded ? ' is-expanded' : ''}" aria-label="${this.settings.hudActionsExpanded ? 'Hide actions' : 'Show more actions'}" aria-expanded="${this.settings.hudActionsExpanded ? 'true' : 'false'}"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 6 8 10 12 6"/></svg></button>
+            <button id="hudActionsToggle" type="button" class="hud-btn hud-btn-expand${this.settings.hudActionsExpanded ? ' is-expanded' : ''}" aria-label="${this.settings.hudActionsExpanded ? 'Hide actions' : 'Show more actions'}" aria-expanded="${this.settings.hudActionsExpanded ? 'true' : 'false'}" title="More actions"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 6 8 10 12 6"/></svg></button>
             <div class="hud-actions-collapsible${this.settings.hudActionsExpanded ? ' is-expanded' : ''}" id="hudActionsCollapsible">
               <div class="hud-actions-row hud-row-visual">
-                <button id="visualModeBtn" type="button" class="hud-btn focusable" aria-label="Toggle visualizer-only mode">${ICONS.diamond}</button>
-                <button id="vizBlurBtn" type="button" class="hud-btn focusable" aria-label="Toggle visualizer blur" aria-pressed="false">${ICONS.contrast}</button>
-                <button id="vizDimBtn" type="button" class="hud-btn focusable${this.settings.vizDimEnabled ? ' active' : ''}" aria-label="Toggle dark overlay" aria-pressed="${this.settings.vizDimEnabled ? 'true' : 'false'}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg><div id="vizDimSliderWrap" class="hud-dim-slider-wrap" style="display:${this.settings.vizDimEnabled ? 'flex' : 'none'}"><input id="vizDimSlider" type="range" min="0" max="90" step="5" value="${Math.round(this.settings.vizDimOpacity * 100)}" class="hud-dim-slider" /><span id="vizDimLabel" class="hud-dim-label">${Math.round(this.settings.vizDimOpacity * 100)}%</span></div></button>
-                <button id="vizToggleBtn" type="button" class="hud-btn focusable" aria-label="Toggle visualizer on/off" aria-pressed="true" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+                <button id="visualModeBtn" type="button" class="hud-btn focusable" aria-label="Toggle visualizer-only mode" title="Visual mode">${ICONS.diamond}</button>
+                <button id="vizBlurBtn" type="button" class="hud-btn focusable" aria-label="Toggle visualizer blur" aria-pressed="false" title="Blur">${ICONS.contrast}</button>
+                <button id="vizDimBtn" type="button" class="hud-btn focusable${this.settings.vizDimEnabled ? ' active' : ''}" aria-label="Toggle dark overlay" aria-pressed="${this.settings.vizDimEnabled ? 'true' : 'false'}" title="Dim overlay"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg><div id="vizDimSliderWrap" class="hud-dim-slider-wrap" style="display:${this.settings.vizDimEnabled ? 'flex' : 'none'}"><input id="vizDimSlider" type="range" min="0" max="90" step="5" value="${Math.round(this.settings.vizDimOpacity * 100)}" class="hud-dim-slider" /><span id="vizDimLabel" class="hud-dim-label">${Math.round(this.settings.vizDimOpacity * 100)}%</span></div></button>
+                <button id="vizToggleBtn" type="button" class="hud-btn focusable" aria-label="Toggle visualizer on/off" aria-pressed="true" title="Visualizer on/off" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
               </div>
               <div class="hud-actions-row hud-row-text">
                 <button id="textToggleBtn" type="button" class="hud-btn focusable${this.settings.textEnabled ? '' : ' text-is-hidden'}" aria-label="Toggle text & lyrics" aria-pressed="${this.settings.textEnabled ? 'true' : 'false'}" title="${this.settings.textEnabled ? 'Hide text & lyrics' : 'Show text & lyrics'}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="9" y1="20" x2="15" y2="20"/></svg></button>
-                <button id="translationToggleBtn" type="button" class="hud-btn focusable${this.settings.showTranslation ? ' active' : ''}" aria-label="Toggle translation" aria-pressed="${this.settings.showTranslation ? 'true' : 'false'}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z"/></svg></button>
+                <button id="translationToggleBtn" type="button" class="hud-btn focusable${this.settings.showTranslation ? ' active' : ''}" aria-label="Toggle translation" aria-pressed="${this.settings.showTranslation ? 'true' : 'false'}" title="Translation"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z"/></svg></button>
               </div>
             </div>
           </div>
@@ -7336,6 +7347,7 @@ export class MusicPlayer {
                   <div class="premium-only-setting">${uiSegmented({ id: 'inlineFpsMax', active: String(this.settings.fpsMax || 30), options: [{ value: '0', label: 'Unlimited' }, { value: '120', label: '120 FPS' }, { value: '60', label: '60 FPS' }, { value: '30', label: '30 FPS' }] })}</div>
                   <div id="inlineGpuScenePicker" class="preset-picker gpu-scene-picker">
                     <div class="gpu-scene-section gpu-scene-core">
+                       <button type="button" class="preset-picker-option focusable ${(this.settings.gpuScene || 0) == 25 ? 'active' : ''}" data-gpu-scene="25" aria-pressed="${(this.settings.gpuScene || 0) == 25 ? 'true' : 'false'}"><span>${ICONS.sparkles} Unreal Cinematography</span><span class="preset-picker-check">${(this.settings.gpuScene || 0) == 25 ? '✓' : ''}</span></button>
                        <button type="button" class="preset-picker-option ${(this.settings.gpuScene || 0) == 0 ? 'active' : ''}" data-gpu-scene="0" aria-pressed="${(this.settings.gpuScene || 0) == 0 ? 'true' : 'false'}"><span>Lava Flow</span><span class="preset-picker-check">${(this.settings.gpuScene || 0) == 0 ? '✓' : ''}</span></button>
                        <button type="button" class="preset-picker-option ${(this.settings.gpuScene || 0) == 7 ? 'active' : ''}" data-gpu-scene="7" aria-pressed="${(this.settings.gpuScene || 0) == 7 ? 'true' : 'false'}"><span>Fractal Infinity</span><span class="preset-picker-check">${(this.settings.gpuScene || 0) == 7 ? '✓' : ''}</span></button>
                        <button type="button" class="preset-picker-option ${(this.settings.gpuScene || 0) == 18 ? 'active' : ''}" data-gpu-scene="18" aria-pressed="${(this.settings.gpuScene || 0) == 18 ? 'true' : 'false'}"><span>Aethelgard</span><span class="preset-picker-check">${(this.settings.gpuScene || 0) == 18 ? '✓' : ''}</span></button>
@@ -7343,6 +7355,7 @@ export class MusicPlayer {
                        <button type="button" class="preset-picker-option ${(this.settings.gpuScene || 0) == 14 ? 'active' : ''}" data-gpu-scene="14" aria-pressed="${(this.settings.gpuScene || 0) == 14 ? 'true' : 'false'}"><span>Infinite Cavern</span><span class="preset-picker-check">${(this.settings.gpuScene || 0) == 14 ? '✓' : ''}</span></button>
                        <button type="button" class="preset-picker-option ${(this.settings.gpuScene || 0) == 22 ? 'active' : ''}" data-gpu-scene="22" aria-pressed="${(this.settings.gpuScene || 0) == 22 ? 'true' : 'false'}"><span>Obsidian Void Tunnel</span><span class="preset-picker-check">${(this.settings.gpuScene || 0) == 22 ? '✓' : ''}</span></button>
                        <button type="button" class="preset-picker-option ${(this.settings.gpuScene || 0) == 23 ? 'active' : ''}" data-gpu-scene="23" aria-pressed="${(this.settings.gpuScene || 0) == 23 ? 'true' : 'false'}"><span>Crystalline Drift</span><span class="preset-picker-check">${(this.settings.gpuScene || 0) == 23 ? '✓' : ''}</span></button>
+                       <button type="button" class="preset-picker-option ${(this.settings.gpuScene || 0) == 26 ? 'active' : ''}" data-gpu-scene="26" aria-pressed="${(this.settings.gpuScene || 0) == 26 ? 'true' : 'false'}"><span>Coraline Tunnel</span><span class="preset-picker-check">${(this.settings.gpuScene || 0) == 26 ? '✓' : ''}</span></button>
                      </div>
                     <div class="gpu-scene-section gpu-scene-labs">
                        <div class="gpu-labs-header">${ICONS.flask} More Scenes</div>
@@ -8448,13 +8461,45 @@ export class MusicPlayer {
     page.classList.toggle('is-collapsed', !showOverlay && !this._isCloseAnimating);
     page.classList.toggle('show-settings', this.isSettingsView);
     page.classList.toggle('visuals-off', !this.settings.visualEnabled);
+    // ── FLIP animation for artwork when toggling text (same technique as overlay open) ──
+    const artSticky = page.querySelector('.art-sticky-container');
+    const artWrap = page.querySelector('.music-track-art-wrap');
+    const flipTarget = artSticky || artWrap;
+    const artFirstRect = flipTarget?.getBoundingClientRect();
+
     page.classList.toggle('text-off', !this.settings.textEnabled);
+
+    // FLIP: animate artwork container from old position to new
+    if (flipTarget && artFirstRect && window.gsap) {
+      window.gsap.killTweensOf(flipTarget);
+      if (artWrap && artWrap !== flipTarget) window.gsap.killTweensOf(artWrap);
+      // Force layout so we can measure final position
+      flipTarget.offsetHeight;
+      const artLastRect = flipTarget.getBoundingClientRect();
+      const dx = artFirstRect.left - artLastRect.left;
+      const dy = artFirstRect.top - artLastRect.top;
+      const ds = artFirstRect.width / (artLastRect.width || artFirstRect.width);
+      if (Math.abs(dx) > 1 || Math.abs(dy) > 1 || Math.abs(ds - 1) > 0.01) {
+        // Invert: place element at old position
+        window.gsap.set(flipTarget, {
+          x: dx, y: dy, scaleX: ds, scaleY: ds, transformOrigin: '0 0'
+        });
+        // Play: animate to final position
+        window.gsap.to(flipTarget, {
+          x: 0, y: 0, scaleX: 1, scaleY: 1,
+          duration: 0.55,
+          ease: 'power3.out',
+          clearProps: 'transform,transformOrigin'
+        });
+      }
+    }
     page.classList.toggle('retro-filter', this.settings.retroFilterEnabled);
     page.classList.toggle('mode-visualizer-only', this.settings.uiMode === 'visualizer-only');
     // Notify GPU visualizer of UI visibility state
     const isZen = this.settings.uiMode === 'visualizer-only' || this.isScreenSaverIdle;
     const isInfoMode = this.settings.contentMode === 'info';
-    document.dispatchEvent(new CustomEvent('uiToggle', { detail: { visible: !isZen || isInfoMode } }));
+    const isExplicitVisualMode = this.settings.uiMode === 'visualizer-only';
+    document.dispatchEvent(new CustomEvent('uiToggle', { detail: { visible: !isZen || isInfoMode, centered: isExplicitVisualMode } }));
     page.classList.toggle('is-idle', this.isScreenSaverIdle);
     page.classList.toggle('show-queue', this.isQueueSheetOpen);
     page.classList.toggle('queue-active', this.isQueueSheetOpen);
@@ -8496,6 +8541,16 @@ export class MusicPlayer {
       syncOverlayHostState(this.overlayHost, showOverlay);
     }
     this.visualizer?.setEnabled(this.settings.visualEnabled && showOverlay);
+    // Hide GPU lyrics when text is disabled (matches CSS .text-off hiding DOM lyrics)
+    if (this.mathVisualizer?.lyricsRenderer) {
+      this.mathVisualizer.lyricsRenderer.setVisible(this.settings.textEnabled);
+      this.mathVisualizer.lyricsRenderer.setControlsVisible(this.settings.textEnabled);
+      // Toggle gpu-lyrics-active layout class based on text visibility
+      const shell = this.getOverlayRoot()?.querySelector('.music-immersive-shell');
+      if (shell) {
+        shell.classList.toggle('gpu-lyrics-active', this.settings.textEnabled && this.mathVisualizer.lyricsRenderer.timeline?.length > 0);
+      }
+    }
     if (this.pageUi?.progressContainer) {
       this.pageUi.progressContainer.style.display = '';
     }

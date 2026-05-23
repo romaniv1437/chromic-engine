@@ -5,6 +5,7 @@ uniform vec2 u_resolution;
 uniform vec3 u_colors[3];
 uniform bool u_debug;
 uniform float u_smoothing;
+uniform float u_dim;
 
 varying vec2 vUv;
 
@@ -104,6 +105,9 @@ void main() {
 
     // Final correction: saturation + gamma
     finalCol = pow(clamp(finalCol, 0.0, 1.0), vec3(0.9));
+
+    // Dim (fade to black on pause/transition)
+    finalCol *= (1.0 - u_dim);
 
     gl_FragColor = vec4(finalCol, 1.0);
 }

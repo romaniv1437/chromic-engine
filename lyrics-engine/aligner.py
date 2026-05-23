@@ -2313,6 +2313,47 @@ def map_anchor_to_timings(anchor_text, segments, audio_duration=None, lrc_timing
     # Build output lines — merge CJK chars back into original Genius word groups
     # word_to_group tracks which original anchor word each split char belongs to.
     # Adjacent chars with the same group ID get merged into one word with combined timing.
+
+    # ── Safety net: ensure ALL anchor words have timings (no None remaining) ──
+    # If any words are still None after gap-filling, interpolate from nearest neighbors
+    none_count = sum(1 for t in final_timings if t is None)
+    if none_count > 0:
+        print(f"[aligner] ⚠️ {none_count}/{total_anchor} words still have no timing — interpolating from neighbors", file=sys.stderr)
+        for ai in range(total_anchor):
+            if final_timings[ai] is not None:
+                continue
+            # Find nearest previous timed word
+            prev_end = 0.0
+            for j in range(ai - 1, -1, -1):
+                if final_timings[j] is not None:
+                    prev_end = final_timings[j]["end"]
+                    break
+            # Find nearest next timed word
+            next_start = prev_end + 1.0
+            for j in range(ai + 1, total_anchor):
+                if final_timings[j] is not None:
+                    next_start = final_timings[j]["start"]
+                    break
+            # Count consecutive None words to spread evenly
+            consecutive = 1
+            for j in range(ai + 1, total_anchor):
+                if final_timings[j] is None:
+                    consecutive += 1
+                else:
+                    break
+            # Find position of this word within the consecutive None block
+            pos_in_block = 0
+            for j in range(ai - 1, -1, -1):
+                if final_timings[j] is None:
+                    pos_in_block += 1
+                else:
+                    break
+            total_in_block = pos_in_block + consecutive
+            slot_dur = (next_start - prev_end) / max(1, total_in_block)
+            word_start = prev_end + pos_in_block * slot_dur
+            word_end = word_start + slot_dur
+            final_timings[ai] = {"start": round(word_start, 3), "end": round(word_end, 3), "interpolated": True}
+
     lines_output = []
     current_line_idx = -1
     current_line_words = []
@@ -2947,8 +2988,14 @@ def map_genius_lrc_whisper(anchor_text, lrc_timings, whisper_segments, audio_dur
             median_offset = sorted(offsets)[len(offsets) // 2]
             consistent = sum(1 for o in offsets if abs(o - median_offset) < 3.0)
             if consistent >= 2 and abs(median_offset) > 3.0:
-                print(f"[aligner] ⚠️ LRC global offset detected: {median_offset:.1f}s (LRC is {median_offset:.1f}s late). Correcting.", file=sys.stderr)
-                non_empty_lrc = [(t - median_offset, txt) for t, txt in non_empty_lrc]
+                # Safety: if LRC starts near 0 and offset is negative (would push times forward),
+                # it likely means Whisper matched a later repetition — don't shift
+                first_lrc_time = non_empty_lrc[0][0] if non_empty_lrc else 0
+                if median_offset < 0 and first_lrc_time < 5.0:
+                    print(f"[aligner] ⚠️ LRC global offset detected: {median_offset:.1f}s but LRC starts near 0 — skipping correction (likely repeated lyrics)", file=sys.stderr)
+                else:
+                    print(f"[aligner] ⚠️ LRC global offset detected: {median_offset:.1f}s (LRC is {median_offset:.1f}s late). Correcting.", file=sys.stderr)
+                    non_empty_lrc = [(t - median_offset, txt) for t, txt in non_empty_lrc]
 
     # Step 1: Group Genius lines by LRC line (handles Genius splitting one LRC line into multiple)
     # For each Genius line, find which LRC line it belongs to
@@ -3999,25 +4046,10 @@ def main():
                 wt = w.get("word", "").strip().rstrip('.,!?;:()').lower()
                 if wt and wt in adlib_words_list:
                     w["adlib"] = True
-        # 2) Trailing interjection detection: last word(s) after a comma
-        #    e.g. "начале, мэ" or "кварталы, бейби" or "кварталы, yeah, man"
-        if len(words) >= 2:
-            # Try each comma position from earliest to latest; use the first one
-            # where ALL subsequent words (stripped of punctuation) are known adlibs
-            for ci in range(len(words) - 1):
-                if not words[ci].get("word", "").rstrip().endswith(","):
-                    continue
-                trailing = words[ci + 1:]
-                if len(trailing) > 3:
-                    continue
-                all_adlib = all(
-                    w.get("word", "").strip().rstrip('.,!?;:').lower() in _TRAILING_ADLIB_WORDS
-                    for w in trailing
-                )
-                if all_adlib:
-                    for w in trailing:
-                        w["adlib"] = True
-                    break
+        # 2) Trailing interjection detection DISABLED —
+        #    adlib marking is ONLY for words inside () parentheses.
+        #    Trailing interjections should be manually marked in editor mode.
+        pass
 
     # ── Acoustic Feature Analysis: whisper/spoken/sung detection ──
     # Uses librosa for pitch and energy analysis per word segment
