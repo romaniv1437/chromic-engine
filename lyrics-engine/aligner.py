@@ -1183,6 +1183,9 @@ def sanitize_overlaps(lines):
                 # If trimming made it negative duration, just set minimal
                 if prev_words[-1]["end"] <= prev_words[-1]["start"]:
                     prev_words[-1]["end"] = round(prev_words[-1]["start"] + 0.1, 3)
+                # Remove stretch flag if we trimmed significantly
+                if prev_words[-1].get("stretch") and (prev_words[-1]["end"] - prev_words[-1]["start"]) < 0.5:
+                    prev_words[-1].pop("stretch", None)
 
     for line in lines:
         if line.get("type") == "vocal_cue" or not line.get("words"):
@@ -2503,8 +2506,8 @@ def map_anchor_to_timings(anchor_text, segments, audio_duration=None, lrc_timing
                     line["time"] = words[0]["start"]
 
     # ── Enforce line monotonicity after LRC correction ──
-    # LRC time correction can shift lines out of order. Fix by ensuring each line
-    # starts at or after the previous line's last word end.
+    # LRC time correction can shift lines out of order. Fix by trimming the PREVIOUS
+    # line's last word instead of shifting current line forward (which would break LRC timing).
     for i in range(1, len(lines_output)):
         prev_words = lines_output[i - 1].get("words", [])
         curr_words = lines_output[i].get("words", [])
@@ -2513,12 +2516,15 @@ def map_anchor_to_timings(anchor_text, segments, audio_duration=None, lrc_timing
         prev_end = prev_words[-1]["end"]
         curr_start = curr_words[0]["start"]
         if curr_start < prev_end - 0.1:
-            # Current line starts before previous line ends — shift it forward
-            shift = prev_end + 0.1 - curr_start
-            for w in curr_words:
-                w["start"] = round(w["start"] + shift, 3)
-                w["end"] = round(w["end"] + shift, 3)
-            lines_output[i]["time"] = curr_words[0]["start"]
+            # Trim previous line's last word to end just before current line starts
+            # This preserves LRC line start times as ground truth
+            prev_words[-1]["end"] = round(curr_start - 0.02, 3)
+            # If trimming makes duration negative/tiny, set a minimal duration
+            if prev_words[-1]["end"] <= prev_words[-1]["start"]:
+                prev_words[-1]["end"] = round(prev_words[-1]["start"] + 0.1, 3)
+            # Remove stretch flag if we trimmed significantly
+            if prev_words[-1].get("stretch") and (prev_words[-1]["end"] - prev_words[-1]["start"]) < 0.5:
+                prev_words[-1].pop("stretch", None)
 
     # Line coherence repair
     max_internal_gap = 2.0
@@ -3045,189 +3051,283 @@ def map_genius_lrc_whisper(anchor_text, lrc_timings, whisper_segments, audio_dur
     if merged_count:
         print(f"[aligner] 🔗 Merged {merged_count} LRC lines (Genius had them split)", file=sys.stderr)
 
-    # Step 3: Build output — one entry per LRC line, with merged Genius text
-    lines_output = []
-    matched_count = 0
+    # ══════════════════════════════════════════════════════════════════════════
+    # GLOBAL SEQUENTIAL WORD MAPPING
+    # ══════════════════════════════════════════════════════════════════════════
+    # Whisper word timestamps are accurate, but Whisper may group multiple LRC lines
+    # into one segment. Instead of matching per-line, we:
+    # 1. Flatten ALL whisper words into a single sequence with timestamps
+    # 2. Flatten ALL LRC words into a single sequence (preserving line boundaries)
+    # 3. Map whisper timestamps to LRC words based on time windows
+    # 4. Filter out hallucinated Whisper segments
 
+    # ══════════════════════════════════════════════════════════════════════════
+    # HALLUCINATION FILTERING
+    # ══════════════════════════════════════════════════════════════════════════
+    # Whisper sometimes hallucinates (repeating same word, e.g., "supernatural" 200x)
+    # Detect and filter out hallucinated words before mapping.
+    # Hallucination patterns:
+    # 1. Same word repeated many times in sequence
+    # 2. Very low unique word ratio (< 30%)
+    # 3. Many words with zero duration (start == end)
+
+    def is_hallucinated_sequence(words):
+        """Check if a sequence of words is likely hallucinated."""
+        if len(words) < 5:
+            return False
+        unique = len(set(w["word"].lower() for w in words))
+        ratio = unique / len(words)
+        if ratio < 0.3:  # Less than 30% unique words
+            return True
+        # Check for consecutive repeats
+        repeats = 0
+        for i in range(1, len(words)):
+            if words[i]["word"].lower() == words[i-1]["word"].lower():
+                repeats += 1
+        if repeats > len(words) * 0.5:  # More than 50% consecutive repeats
+            return True
+        return False
+
+    # Filter whisper words - remove hallucinations
+    # Group by detecting when a new "real" segment starts (capital letter after gap)
+    filtered_whisper_words = []
+    current_segment = []
+
+    for w in whisper_words:
+        if not w["word"].strip() or w["start"] <= 0:
+            continue
+
+        # Check if this starts a new segment (gap > 1s or ends current segment)
+        if current_segment:
+            gap = w["start"] - current_segment[-1]["end"]
+            if gap > 1.0 or (w["word"][0].isupper() and gap > 0.3):
+                # End of segment - check if it's hallucinated
+                if not is_hallucinated_sequence(current_segment):
+                    filtered_whisper_words.extend(current_segment)
+                current_segment = []
+
+        current_segment.append(w)
+
+    # Don't forget the last segment
+    if current_segment and not is_hallucinated_sequence(current_segment):
+        filtered_whisper_words.extend(current_segment)
+
+    # Also filter individual words with zero duration at same timestamp
+    seen_timestamps = {}
+    final_whisper_words = []
+    for w in filtered_whisper_words:
+        ts_key = (round(w["start"], 2), round(w["end"], 2))
+        if ts_key not in seen_timestamps:
+            seen_timestamps[ts_key] = 0
+        seen_timestamps[ts_key] += 1
+        # Allow max 3 words at same timestamp
+        if seen_timestamps[ts_key] <= 3:
+            final_whisper_words.append(w)
+
+    valid_whisper_words = final_whisper_words
+    valid_whisper_words.sort(key=lambda x: x["start"])
+
+    hallucinated_count = len(whisper_words) - len(valid_whisper_words)
+    if hallucinated_count > 10:
+        print(f"[aligner] 🚫 Filtered {hallucinated_count} hallucinated whisper words", file=sys.stderr)
+
+    n_whisper_words = len(valid_whisper_words)
+    print(f"[aligner] 📊 Valid Whisper words after filtering: {n_whisper_words}", file=sys.stderr)
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # CONTENT-BASED GLOBAL WORD ALIGNMENT
+    # ══════════════════════════════════════════════════════════════════════════
+    # Core principles:
+    #   • Whisper word TIMESTAMPS are accurate and smooth — but Whisper mishears
+    #     words and groups several LRC lines into one segment.
+    #   • LRC LINE start times are ground truth for *where a line begins*.
+    #   • Genius/LRC text is ground truth for *what words are sung*.
+    #
+    # The old approach mapped LRC words → Whisper words by POSITION within a ±1.5s
+    # time window. Any missed/extra/misheard Whisper word (or words bleeding in
+    # from an adjacent line) shifted every following index, smearing the timing.
+    #
+    # Instead we align the full LRC word stream to the full Whisper word stream by
+    # CONTENT (difflib), borrow Whisper's exact timestamps for matched words, and
+    # interpolate the gaps — all bounded inside each line's LRC window. Each match
+    # is verified against the line's LRC window (trust Whisper, check the LRC cue),
+    # so a chorus repetition matched far away is rejected.
+    from difflib import SequenceMatcher
+
+    def _interp_starts(starts, lo, hi, t_left, t_right, words):
+        """Spread start times for words[lo:hi] across (t_left, t_right) by char length."""
+        seg = words[lo:hi]
+        if not seg:
+            return
+        total = max(1, sum(len(w) for w in seg))
+        span = max(0.0, t_right - t_left)
+        cursor = t_left
+        for idx, w in enumerate(seg):
+            starts[lo + idx] = cursor
+            cursor += span * (max(len(w), 1) / total)
+
+    def _proportional(words, start, end):
+        """Even, char-weighted timing fallback within an LRC window."""
+        total_chars = max(1, sum(len(w) for w in words))
+        dur = min(total_chars * 0.15, max(0.5, end - start), 8.0)
+        dur = max(dur, 0.5)
+        cursor = start
+        out = []
+        for w in words:
+            wd = max(0.1, dur * (max(len(w), 1) / total_chars))
+            out.append({"word": w, "start": round(cursor, 3), "end": round(cursor + wd, 3)})
+            cursor += wd
+        return out
+
+    # Build per-line specs (text + word list + LRC window), preserving LRC order
+    specs = []
     for lrc_i, (lrc_t, lrc_txt) in enumerate(non_empty_lrc):
         if lrc_i not in lrc_groups:
             continue
-
         genius_indices = lrc_groups[lrc_i]
         merged_text = ' '.join(anchor_lines[gi] for gi in genius_indices)
-        # For LRC output: use space-delimited groups (natural word boundaries from lyrics)
-        # Only fall back to per-character if no spaces exist at all
         if ' ' in merged_text.strip() and _CJK_RE.search(merged_text):
             merged_words = merged_text.split()
         else:
             merged_words = _split_words_cjk(merged_text)
-        matched_count += 1
-
         lrc_start = lrc_t
-        lrc_end = non_empty_lrc[lrc_i + 1][0] if lrc_i + 1 < len(non_empty_lrc) else (audio_duration or lrc_start + 10)
+        lrc_end = non_empty_lrc[lrc_i + 1][0] if lrc_i + 1 < len(non_empty_lrc) else (audio_duration or lrc_start + 8)
+        specs.append({
+            "text": merged_text,
+            "words": merged_words,
+            "start": lrc_start,
+            "end": lrc_end,
+            "is_cjk": bool(merged_words and _CJK_RE.search(merged_text) and ' ' in merged_text.strip()),
+            "anchor": {},  # word_index -> {"start","end"} from Whisper
+        })
 
-        # Find Whisper words within this LRC time window
-        words_in_window = []
-        for w in whisper_words:
-            if w["start"] >= lrc_start - 0.5 and w["start"] < lrc_end + 0.5:
-                words_in_window.append(w)
+    # Flatten LRC stream with back-references (spec_index, word_index)
+    lrc_tokens = []
+    for si, sp in enumerate(specs):
+        for wi, w in enumerate(sp["words"]):
+            lrc_tokens.append((si, wi))
+    lrc_norm_seq = [norm(specs[si]["words"][wi]) for (si, wi) in lrc_tokens]
+    whisper_norm_seq = [norm(w["word"]) for w in valid_whisper_words]
 
-        # Build word timing
-        word_data = []
-        n_genius = len(merged_words)
-        n_whisper = len(words_in_window)
+    # Global content alignment → anchor map: lrc_token_index -> whisper word
+    ANCHOR_TOL = 2.5  # seconds of slack vs LRC window before a match is rejected
+    if lrc_norm_seq and whisper_norm_seq:
+        sm = SequenceMatcher(None, lrc_norm_seq, whisper_norm_seq, autojunk=False)
+        for i, j, n in sm.get_matching_blocks():
+            for k in range(n):
+                lt = i + k
+                if not lrc_norm_seq[lt]:
+                    continue  # skip punctuation-only tokens
+                ww = valid_whisper_words[j + k]
+                si, wi = lrc_tokens[lt]
+                sp = specs[si]
+                # Verify Whisper placed this word inside the line's LRC window
+                if sp["start"] - ANCHOR_TOL <= ww["start"] < sp["end"] + ANCHOR_TOL:
+                    sp["anchor"][wi] = {"start": ww["start"], "end": ww["end"]}
 
-        # For CJK lines with space-delimited groups, use proportional char-based timing
-        # because Whisper word boundaries are unreliable for Japanese/Chinese
-        if n_genius > 0 and _CJK_RE.search(merged_text) and ' ' in merged_text.strip():
-            # Distribute time proportionally by character count across LRC window
-            total_chars = max(1, sum(len(w) for w in merged_words))
-            # Use the full LRC window (capped by reasonable singing duration)
-            max_singing = min(total_chars * 0.4, lrc_end - lrc_start, 12.0)
-            # Use LRC start as the line start (most reliable for CJK)
-            actual_start = lrc_start
-            total_dur = max_singing
-            cursor = actual_start
-            for k, mw in enumerate(merged_words):
-                w_frac = len(mw) / total_chars
-                w_dur = total_dur * w_frac
+    anchored_lines = sum(1 for sp in specs if sp["anchor"])
+    print(f"[aligner] 🧩 Content alignment: {anchored_lines}/{len(specs)} lines anchored to Whisper", file=sys.stderr)
+
+    # Build output: anchored words use Whisper timing, gaps interpolated within window
+    lines_output = []
+    matched_count = 0
+
+    for sp in specs:
+        words = sp["words"]
+        n = len(words)
+        if n == 0:
+            continue
+        matched_count += 1
+        start, end = sp["start"], sp["end"]
+        anchor = sp["anchor"]
+
+        # CJK: distribute proportionally by character count (preserve space boundaries)
+        if sp["is_cjk"]:
+            total_chars = max(1, sum(len(w) for w in words))
+            total_dur = min(total_chars * 0.4, end - start, 12.0)
+            cursor = start
+            word_data = []
+            for k, mw in enumerate(words):
+                w_dur = total_dur * (len(mw) / total_chars)
                 entry = {"word": mw, "start": round(cursor, 3), "end": round(cursor + w_dur, 3)}
-                # Mark the first word of each space-separated group as a boundary
-                # (CJK grouping will respect these and never merge across them)
                 if k > 0:
                     entry["_space_boundary"] = True
                 word_data.append(entry)
                 cursor += w_dur
-        elif n_whisper > 0 and n_genius > 0:
-            if n_genius <= n_whisper:
-                for k in range(n_genius):
-                    wi = min(k, n_whisper - 1)
-                    w = words_in_window[wi]
-                    entry = {"word": merged_words[k], "start": round(w["start"], 3), "end": round(w["end"], 3)}
-                    if k == n_genius - 1 and wi < n_whisper - 1:
-                        entry["end"] = round(words_in_window[-1]["end"], 3)
-                        if entry["end"] - entry["start"] > 1.0:
-                            entry["stretch"] = True
-                    word_data.append(entry)
-            else:
-                ratio = n_whisper / n_genius
-                for k in range(n_genius):
-                    wi = min(int(k * ratio), n_whisper - 1)
-                    w = words_in_window[wi]
-                    start_t = w["start"]
-                    next_wi = min(int((k + 1) * ratio), n_whisper - 1)
-                    if next_wi > wi:
-                        end_t = words_in_window[next_wi]["start"]
-                    elif k < n_genius - 1:
-                        end_t = start_t + (w["end"] - w["start"]) / max(1, n_genius - k)
-                    else:
-                        end_t = w["end"]
-                    entry = {"word": merged_words[k], "start": round(start_t, 3), "end": round(end_t, 3)}
-                    if k == n_genius - 1 and entry["end"] - entry["start"] > 1.0:
-                        entry["stretch"] = True
-                    word_data.append(entry)
+            lines_output.append({"time": round(start, 2), "text": sp["text"], "words": word_data})
+            continue
 
-            # Ensure monotonic
-            for k in range(1, len(word_data)):
-                if word_data[k]["start"] < word_data[k-1]["end"]:
-                    word_data[k]["start"] = round(word_data[k-1]["end"] + 0.01, 3)
-                if word_data[k]["start"] >= word_data[k]["end"]:
-                    word_data[k]["end"] = round(word_data[k]["start"] + 0.1, 3)
+        # No reliable Whisper coverage — proportional fallback within LRC window.
+        # Begin filling at the actual vocal onset (first Whisper word inside the
+        # window) instead of the LRC line start, so we don't "slowly fill" the
+        # first word across the pre-vocal gap (line @30s, vocals @31s).
+        if not anchor:
+            onset = start
+            for ww in valid_whisper_words:
+                if ww["start"] >= start - 0.5 and ww["start"] < end:
+                    onset = max(start, ww["start"])
+                    break
+            word_data = _proportional(words, onset, min(end, onset + 8.0))
+            lines_output.append({"time": round(start, 2), "text": sp["text"], "words": word_data})
+            continue
 
-            # Fix absurd word gaps: if any word has >3s gap to next,
-            # Whisper placed a word way too late. Compact words together.
-            for k in range(len(word_data) - 1):
-                gap = word_data[k+1]["start"] - word_data[k]["end"]
-                if gap > 3.0:
-                    shift = gap - 0.3
-                    for j in range(k + 1, len(word_data)):
-                        word_data[j]["start"] = round(word_data[j]["start"] - shift, 3)
-                        word_data[j]["end"] = round(word_data[j]["end"] - shift, 3)
+        # Fill a start time for every word: anchors are fixed, gaps interpolated
+        starts = [None] * n
+        for k in anchor:
+            starts[k] = anchor[k]["start"]
+        anchor_idxs = sorted(anchor.keys())
+        first_a, last_a = anchor_idxs[0], anchor_idxs[-1]
 
-            # Fix absurd single-word durations using LRC-aware cap:
-            # A word's max duration = proportional to its char count relative to the line,
-            # but never more than the LRC window allows for realistic singing.
-            # Estimate: ~0.15s per char, min 0.5s, max based on LRC window.
-            line_char_count = max(1, sum(len(w["word"]) for w in word_data))
-            lrc_window = lrc_end - lrc_start
-            # Reasonable vocal duration: min of (LRC window, 0.2s * total chars, 15s)
-            max_vocal_dur = min(lrc_window, max(3.0, 0.2 * line_char_count), 15.0)
-            for k in range(len(word_data)):
-                dur = word_data[k]["end"] - word_data[k]["start"]
-                # Per-word cap: proportional to char length, min 0.5s, max 5s
-                word_chars = max(1, len(word_data[k]["word"]))
-                word_max = min(5.0, max(0.5, (word_chars / line_char_count) * max_vocal_dur * 2))
-                if dur > word_max:
-                    word_data[k]["end"] = round(word_data[k]["start"] + word_max, 3)
-                    if word_data[k].get("stretch") and dur > word_max:
-                        word_data[k]["stretch"] = True  # keep stretch flag
-                    if k + 1 < len(word_data) and word_data[k+1]["start"] > word_data[k]["end"] + 3.0:
-                        shift = word_data[k+1]["start"] - word_data[k]["end"] - 0.3
-                        for j in range(k + 1, len(word_data)):
-                            word_data[j]["start"] = round(word_data[j]["start"] - shift, 3)
-                            word_data[j]["end"] = round(word_data[j]["end"] - shift, 3)
+        # Words before first anchor: cluster them JUST BEFORE the first anchored
+        # word's onset — do NOT stretch them back to the LRC line start, which
+        # would make the first word slowly fill during the pre-vocal gap.
+        if first_a > 0:
+            a_start = anchor[first_a]["start"]
+            budget = max(0.0, min(a_start - start, 0.35 * first_a))
+            left = max(start, a_start - budget)
+            _interp_starts(starts, 0, first_a, left, a_start, words)
+        # Words between consecutive anchors
+        for ai in range(len(anchor_idxs) - 1):
+            a0, a1 = anchor_idxs[ai], anchor_idxs[ai + 1]
+            if a1 - a0 > 1:
+                _interp_starts(starts, a0 + 1, a1, anchor[a0]["end"], anchor[a1]["start"], words)
+        # Words after last anchor: spread toward line end
+        if last_a < n - 1:
+            right = min(end, anchor[last_a]["end"] + (n - 1 - last_a) * 0.4)
+            right = max(right, anchor[last_a]["end"] + 0.1)
+            _interp_starts(starts, last_a + 1, n, anchor[last_a]["end"], right, words)
 
-            # Align ALL word timings to the LRC time window.
-            # LRC timestamps are ground truth — Whisper provides relative word spacing only.
-            # Strategy: shift and scale Whisper timings to fit within [lrc_start, lrc_end].
-            if word_data and len(word_data) >= 1:
-                w_first = word_data[0]["start"]
-                w_last = word_data[-1]["end"]
-                w_span = w_last - w_first
-                lrc_span = lrc_end - lrc_start
+        # Assemble word entries (end = next word's start, or anchor/own tail)
+        word_data = []
+        for k in range(n):
+            s = starts[k]
+            if s is None:
+                s = (word_data[k - 1]["start"] + 0.1) if word_data else start
+            word_data.append({"word": words[k], "start": s, "end": s})
+        for k in range(n):
+            if k in anchor and anchor[k]["end"] > word_data[k]["start"]:
+                word_data[k]["end"] = anchor[k]["end"]
+            if k + 1 < n and word_data[k + 1]["start"] > word_data[k]["start"]:
+                word_data[k]["end"] = word_data[k + 1]["start"]
+            elif k == n - 1:
+                word_data[k]["end"] = max(word_data[k]["end"], min(end, word_data[k]["start"] + 0.6))
 
-                if w_span > 0 and lrc_span > 0:
-                    # Scale factor: map Whisper span to LRC span
-                    # But cap scaling to avoid extreme distortion (0.5x to 2.0x)
-                    scale = min(2.0, max(0.5, lrc_span / w_span))
-                    # Offset: anchor first word to lrc_start
-                    offset = lrc_start - w_first
-                    for w in word_data:
-                        # Apply offset + scale relative to first word
-                        rel = w["start"] - w_first
-                        w["start"] = round(lrc_start + rel * scale, 3)
-                        rel_e = w["end"] - w_first
-                        w["end"] = round(lrc_start + rel_e * scale, 3)
-                        # Clamp to LRC window
-                        w["start"] = round(max(lrc_start, min(w["start"], lrc_end - 0.1)), 3)
-                        w["end"] = round(max(w["start"] + 0.05, min(w["end"], lrc_end)), 3)
-                elif w_span == 0:
-                    # All Whisper words have same timestamp — distribute evenly
-                    step = lrc_span / max(len(word_data), 1)
-                    for k, w in enumerate(word_data):
-                        w["start"] = round(lrc_start + k * step, 3)
-                        w["end"] = round(lrc_start + (k + 0.9) * step, 3)
-                else:
-                    # Just shift to lrc_start
-                    shift = lrc_start - w_first
-                    for w in word_data:
-                        w["start"] = round(w["start"] + shift, 3)
-                        w["end"] = round(w["end"] + shift, 3)
+        # Monotonic cleanup, duration caps, stretch flags, rounding
+        for k in range(n):
+            if k > 0 and word_data[k]["start"] < word_data[k - 1]["end"]:
+                word_data[k]["start"] = word_data[k - 1]["end"] + 0.01
+            if word_data[k]["end"] <= word_data[k]["start"]:
+                word_data[k]["end"] = word_data[k]["start"] + 0.1
+            dur = word_data[k]["end"] - word_data[k]["start"]
+            if dur > 5.0:
+                word_data[k]["end"] = word_data[k]["start"] + 5.0
+                word_data[k]["stretch"] = True
+            elif k == n - 1 and dur > 1.0:
+                word_data[k]["stretch"] = True
+            word_data[k]["start"] = round(word_data[k]["start"], 3)
+            word_data[k]["end"] = round(word_data[k]["end"], 3)
 
-                # Ensure monotonic after scaling
-                for k in range(1, len(word_data)):
-                    if word_data[k]["start"] <= word_data[k-1]["end"]:
-                        word_data[k]["start"] = round(word_data[k-1]["end"] + 0.01, 3)
-                    if word_data[k]["end"] <= word_data[k]["start"]:
-                        word_data[k]["end"] = round(word_data[k]["start"] + 0.05, 3)
-
-        line_entry = {"time": round(lrc_start, 2), "text": merged_text}
-        if word_data:
-            line_entry["words"] = word_data
-        elif n_genius > 0:
-            # No Whisper words in this LRC window — generate interpolated timings from LRC timestamps
-            # This handles spoken intros, quiet sections, or Whisper missed speech
-            total_chars = max(1, sum(len(w) for w in merged_words))
-            line_dur = min(lrc_end - lrc_start, 10.0)  # cap at 10s
-            cursor = lrc_start
-            fallback_words = []
-            for w in merged_words:
-                w_frac = max(len(w), 1) / total_chars
-                w_dur = max(0.15, line_dur * w_frac)
-                fallback_words.append({"word": w, "start": round(cursor, 3), "end": round(cursor + w_dur, 3)})
-                cursor += w_dur
-            line_entry["words"] = fallback_words
-        lines_output.append(line_entry)
+        lines_output.append({"time": round(start, 2), "text": sp["text"], "words": word_data})
 
     # Add unmatched Genius lines (estimate timing)
     for gi in unmatched_genius:
@@ -3513,6 +3613,120 @@ def _tag_acoustic_features(audio_path, lines):
         print("[aligner] 🎤 Acoustic analysis complete — no words tagged (track may be uniform)", file=sys.stderr)
 
 
+def _split_repeated_phrase_lines(lines):
+    """Split one LRC line that contains the SAME phrase repeated back-to-back
+    (layered / doubled vocals crammed onto a single line) into separate lines.
+
+    Source LRC files sometimes place doubled vocals on one line, e.g.
+        "(Oh) I'm standing in front of you (Oh) I'm standing in front of you"
+    The renderer then wraps that into several rows that all fill at the same
+    time, which looks wrong. Per-word timings are already correct, so we simply
+    partition the words at the repetition boundary into separate line entries.
+    The renderer pairs consecutive "(...)"-prefixed lines and fills each one
+    correctly (top-left -> bottom-right) instead of all rows at once.
+
+    Only exact (normalized) N-fold repetitions of a phrase >= 3 words long are
+    split, so normal lines are never touched. CJK lines are left as-is.
+    """
+    def _norm(s):
+        return re.sub(r'[^\w]', '', s.lower(), flags=re.UNICODE) if s else ""
+
+    def _segments(words):
+        """Return repeated word-slices if `words` is a repeated phrase, else [words]."""
+        n = len(words)
+        if n < 6:
+            return [words]
+        toks = [_norm(w.get("word", "")) for w in words]
+        # Fully periodic: N copies of a base phrase of length p (p >= 3 words).
+        # Smallest valid period wins (handles doubles, triples, etc.).
+        for p in range(3, n // 2 + 1):
+            if n % p != 0:
+                continue
+            if all(toks[i] == toks[i % p] for i in range(n)):
+                return [words[i:i + p] for i in range(0, n, p)]
+        return [words]
+
+    out = []
+    for line in lines:
+        words = line.get("words")
+        if line.get("type") == "vocal_cue" or not words:
+            out.append(line)
+            continue
+        # Leave CJK lines untouched (no space-joined reconstruction).
+        if _CJK_RE.search(line.get("text", "")):
+            out.append(line)
+            continue
+        segs = _segments(words)
+        if len(segs) <= 1:
+            out.append(line)
+            continue
+        for seg in segs:
+            if not seg:
+                continue
+            new_line = {
+                "time": round(seg[0].get("start", line.get("time", 0)), 3),
+                "text": " ".join(w.get("word", "") for w in seg),
+                "words": seg,
+            }
+            if "end" in line or any("end" in w for w in seg):
+                new_line["end"] = round(seg[-1].get("end", new_line["time"]), 3)
+            out.append(new_line)
+    return out
+
+
+def _tag_adlib_words(lines):
+    """Mark words that are inside parentheses in the lyrics as ad-libs.
+
+    Position-aware: walks the line text tracking paren depth and matches words
+    to line-text tokens by normalized content in order. This ensures that for a
+    line like "Dracula (Dracula)" ONLY the parenthesized occurrence is tagged,
+    not the regular word that happens to share the same text.
+    """
+    def _norm(s):
+        return re.sub(r'[^\w]', '', s.lower(), flags=re.UNICODE) if s else ""
+
+    for line in lines:
+        if line.get("type") == "vocal_cue":
+            continue
+        words = line.get("words", [])
+        if not words:
+            continue
+        line_text = line.get("text", "")
+
+        # Tokenize line text into (normalized, is_inside_parens), tracking depth.
+        lt_tokens = []
+        depth = 0
+        for tok in re.findall(r'\(|\)|[^\s()]+', line_text):
+            if tok == '(':
+                depth += 1
+            elif tok == ')':
+                depth = max(0, depth - 1)
+            else:
+                lt_tokens.append((_norm(tok), depth > 0))
+
+        has_paren = any(inp for _, inp in lt_tokens)
+
+        # Sequentially align words to line-text tokens by content.
+        ti = 0
+        for w in words:
+            wtxt = w.get("word", "")
+            wn = _norm(wtxt)
+            # Word token that itself carries an opening paren is an ad-lib.
+            if "(" in wtxt:
+                w["adlib"] = True
+            if not has_paren or not wn:
+                continue
+            scan = ti
+            while scan < len(lt_tokens):
+                tn, tin = lt_tokens[scan]
+                if tn and tn == wn:
+                    ti = scan + 1
+                    if tin:
+                        w["adlib"] = True
+                    break
+                scan += 1
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("audio_path")
@@ -3766,6 +3980,12 @@ def main():
                 else:
                     print(f"[aligner] ℹ️ No API lyrics found — keeping CJK-merged blind output", file=sys.stderr)
 
+    # Step 3.9: Split doubled / repeated-phrase lines (layered vocals crammed onto
+    # one LRC line) into separate lines so the renderer can pair them and fill each
+    # correctly instead of filling all wrapped rows at once.
+    if lines:
+        lines = _split_repeated_phrase_lines(lines)
+
     # Step 4: Vocal cues + overlap fix
     if anchor and lrc_timings:
         # Use LRC timestamps for vocal_cue detection (much more reliable than heuristics)
@@ -3793,7 +4013,9 @@ def main():
                 line["time"] = min(line.get("time", 0), audio_duration)
 
     # Step 4.75: Final monotonicity enforcement (safety net)
-    # After sort + clamp, ensure no line starts before the previous line ends
+    # After sort + clamp, ensure no line starts before the previous line ends.
+    # KEY CHANGE: When LRC timing is authoritative, TRIM the previous line's last word
+    # instead of shifting the current line forward. This preserves LRC ground truth.
     text_lines_final = [l for l in lines if l.get("type") != "vocal_cue" and l.get("words")]
     for i in range(1, len(text_lines_final)):
         prev_words = text_lines_final[i - 1].get("words", [])
@@ -3802,11 +4024,16 @@ def main():
             prev_end = prev_words[-1]["end"]
             curr_start = curr_words[0]["start"]
             if curr_start < prev_end - 0.05:
-                shift = prev_end + 0.05 - curr_start
-                for w in curr_words:
-                    w["start"] = round(w["start"] + shift, 3)
-                    w["end"] = round(w["end"] + shift, 3)
-                text_lines_final[i]["time"] = curr_words[0]["start"]
+                # Instead of shifting current line forward (which breaks LRC timing),
+                # trim the previous line's last word to end just before current line starts.
+                # This preserves LRC line start times as ground truth.
+                prev_words[-1]["end"] = round(curr_start - 0.02, 3)
+                # If trimming makes duration negative/tiny, set a minimal duration
+                if prev_words[-1]["end"] <= prev_words[-1]["start"]:
+                    prev_words[-1]["end"] = round(prev_words[-1]["start"] + 0.1, 3)
+                # Remove stretch flag if we trimmed significantly
+                if prev_words[-1].get("stretch") and (prev_words[-1]["end"] - prev_words[-1]["start"]) < 0.5:
+                    prev_words[-1].pop("stretch", None)
 
     # Also fix overlapping words within each line
     for l in lines:
@@ -4005,51 +4232,10 @@ def main():
     if cjk_grouped > 0:
         print(f"[aligner] 🀄 CJK grouping: {cjk_grouped} lines regrouped into semantic phrases", file=sys.stderr)
 
-    # Tag adlib words: words inside parentheses in lyrics are ad-libs
-    # This allows FE to style them without guessing from text content
-    # Also detects trailing interjections after comma (e.g. "начале, мэ")
-    _TRAILING_ADLIB_WORDS = {
-        # EN
-        'yeah', 'yuh', 'yah', 'uh', 'ah', 'oh', 'ooh', 'woo', 'woo-hoo',
-        'hey', 'ayy', 'ay', 'aye', 'huh', 'hmm', 'mmm', 'ey', 'eh',
-        'skrrt', 'brr', 'grr', 'sheesh', 'woah', 'whoa', 'yo', 'ayo',
-        'man', 'baby', 'babe', 'dawg', 'bruh',
-        # RU
-        'мэ', 'да', 'а', 'э', 'е', 'эй', 'ай', 'ой', 'оу', 'у',
-        'йоу', 'бейби', 'ман', 'йо', 'вспомни',
-        # Exclamation forms
-        'да!', 'эй!', 'а!', 'е!',
-    }
-    for line in lines:
-        if line.get("type") == "vocal_cue":
-            continue
-        words = line.get("words", [])
-        # 1) Parenthesis-based detection on word text
-        in_paren = False
-        for w in words:
-            txt = w.get("word", "")
-            if "(" in txt:
-                in_paren = True
-            if in_paren:
-                w["adlib"] = True
-            if ")" in txt:
-                in_paren = False
-        # 1b) Parenthesis-based detection on LINE text (parens may be lost in words
-        #     during Whisper alignment, but preserved in the original line text)
-        line_text = line.get("text", "")
-        paren_match = re.finditer(r'\(([^)]+)\)', line_text)
-        for m in paren_match:
-            adlib_text = m.group(1).strip().lower()
-            adlib_words_list = adlib_text.split()
-            # Find matching word(s) at end of line by text
-            for w in words:
-                wt = w.get("word", "").strip().rstrip('.,!?;:()').lower()
-                if wt and wt in adlib_words_list:
-                    w["adlib"] = True
-        # 2) Trailing interjection detection DISABLED —
-        #    adlib marking is ONLY for words inside () parentheses.
-        #    Trailing interjections should be manually marked in editor mode.
-        pass
+    # Tag adlib words: words inside parentheses in lyrics are ad-libs.
+    # Only the parenthesized occurrence is marked (position-aware), so
+    # "Dracula (Dracula)" tags ONLY the second one.
+    _tag_adlib_words(lines)
 
     # ── Acoustic Feature Analysis: whisper/spoken/sung detection ──
     # Uses librosa for pitch and energy analysis per word segment
