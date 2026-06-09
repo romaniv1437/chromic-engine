@@ -29,12 +29,11 @@ export interface LyricsLine {
 }
 
 // ── Design tokens — scaled for OrthoCam(-1,1,1,-1) viewport ──
-// Default: NotoSans-Bold (bundled, open-source). SFNS-ExtraBold used locally if present (gitignored).
-const FONT_FALLBACK = '/chromic-lyrics/vendor/NotoSans-Bold.ttf';
+// Local ExtraBold-first chain (patched by scripts/patch-font.sh).
 const FONT_PRIMARY = '/chromic-lyrics/vendor/SFNS-ExtraBold.ttf';
-let FONT = FONT_FALLBACK;
-// Probe for SFNS-ExtraBold (patched locally via scripts/patch-font.sh)
-try { fetch(FONT_PRIMARY, { method: 'HEAD' }).then(r => { if (r.ok) FONT = FONT_PRIMARY; }); } catch (_) {}
+const FONT_FALLBACK = '/chromic-lyrics/vendor/SFNS.ttf';
+let FONT = FONT_PRIMARY;
+try { fetch(FONT_PRIMARY, { method: 'HEAD' }).then(r => { if (!r.ok) FONT = FONT_FALLBACK; }); } catch (_) { FONT = FONT_FALLBACK; }
 // CJK fallback: Troika's unicode-font-resolver CDN will auto-fetch bold CJK glyphs
 const UNICODE_FONTS_URL = 'https://cdn.jsdelivr.net/gh/lojjic/unicode-font-resolver@v1.0.1/packages/data';
 const UNFILLED = 0.5;
@@ -100,7 +99,7 @@ function configureTextMesh(mesh: any, text: string, fontSize: number) {
   mesh.fontSize = fontSize;
   mesh.maxWidth = TEXT_MAX_WIDTH;
   mesh.unicodeFontsURL = UNICODE_FONTS_URL;
-  mesh.fontWeight = 800;  // extra bold — fallback fonts will also use heavy weight
+  mesh.fontWeight = 800;  // keep translations extra-bold too
   mesh.anchorX = 'left';
   mesh.anchorY = 'middle';
   mesh.color = 0xffffff;
@@ -210,6 +209,19 @@ interface RenderedLine {
   _cueExitTimer?: number;     // time since cue ended
 }
 
+export interface AntiStrobeConfig {
+  shortWordSec: number;
+  gapCloseSec: number;
+  trailMinSec: number;
+  trailMaxSec: number;
+  trailWordScale: number;
+  decayLerp: number;
+  rmsEmaLerp: number;
+  rmsFloorRiseLerp: number;
+  rmsGateMul: number;
+  rmsGateBias: number;
+}
+
 export class LyricsRenderer {
   group: THREE.Group;
   private lines: RenderedLine[] = [];
@@ -254,11 +266,41 @@ export class LyricsRenderer {
   private _translationVisible = false;
   private _translationFactor = 0; // 0=hidden, 1=fully shown — lerps smoothly
   private _translationMeshes: (any | null)[] = []; // sparse, same length as this.lines
+  // Anti-strobe state for shader-facing progress smoothing.
+  private _shaderProgressCarry = 0;
+  private _shaderTrailUntil = 0;
+  // Running RMS stats (fed by update(rms)) for sequence-vs-breath micro-gap gating.
+  private _rmsEma = 0;
+  private _rmsFloor = 0;
+  private _antiStrobe: AntiStrobeConfig = {
+    shortWordSec: 0.2,
+    gapCloseSec: 0.08,
+    trailMinSec: 0.06,
+    trailMaxSec: 0.1,
+    trailWordScale: 0.6,
+    decayLerp: 0.32,
+    rmsEmaLerp: 0.08,
+    rmsFloorRiseLerp: 0.002,
+    rmsGateMul: 1.35,
+    rmsGateBias: 0.004,
+  };
 
   constructor() {
     this.group = new THREE.Group();
     this.group.layers.enable(0);
     this.group.layers.enable(1);
+  }
+
+  /** Runtime tweak point for anti-strobe behavior (debug panel / presets / user tuning). */
+  setAntiStrobeConfig(partial: Partial<AntiStrobeConfig>) {
+    this._antiStrobe = {
+      ...this._antiStrobe,
+      ...partial,
+    };
+  }
+
+  getAntiStrobeConfig(): AntiStrobeConfig {
+    return { ...this._antiStrobe };
   }
 
   /** Expose lyrics state for shader scenes (UnrealCinematography) */
@@ -271,13 +313,79 @@ export class LyricsRenderer {
     let wordIntensity = 0.5;
     if (line && active) {
       const dur = (line.end || 0) - (line.start || 0);
-      progress = dur > 0 ? Math.max(0, Math.min(1, (this.interpolatedTime - (line.start || 0)) / dur)) : 0;
+      const lineStart = (line.start || 0);
+      const lineEnd = (line.end || 0);
+      const ct = this.interpolatedTime;
+      const words = line.words || [];
+      const baseProgress = dur > 0 ? Math.max(0, Math.min(1, (ct - lineStart) / dur)) : 0;
+      let smoothProgress = baseProgress;
+
+      const cfg = this._antiStrobe;
+
+      let activeWordIdx = -1;
+      for (let i = 0; i < words.length; i++) {
+        const w = words[i];
+        if (ct >= w.start && ct <= w.end) {
+          activeWordIdx = i;
+          break;
+        }
+      }
+
+      // Short-word easing: avoid visual strobe for 80-150ms words.
+      if (activeWordIdx >= 0) {
+        const w = words[activeWordIdx];
+        const wDur = Math.max(0.001, w.end - w.start);
+        let wp = Math.max(0, Math.min(1, (ct - w.start) / wDur));
+        if (wDur <= cfg.shortWordSec) {
+          // easeOutQuad: fast attack + soft settle
+          wp = 1 - (1 - wp) * (1 - wp);
+        }
+        const wordLineProgress = dur > 0
+          ? Math.max(0, Math.min(1, ((w.start - lineStart) + wp * wDur) / dur))
+          : baseProgress;
+        smoothProgress = Math.max(baseProgress, wordLineProgress);
+
+        const trailMs = Math.max(cfg.trailMinSec, Math.min(cfg.trailMaxSec, wDur * cfg.trailWordScale));
+        this._shaderTrailUntil = Math.max(this._shaderTrailUntil, w.end + trailMs);
+        this._shaderProgressCarry = Math.max(this._shaderProgressCarry, smoothProgress);
+      } else {
+        // Gap-closing: treat tiny inter-word gaps as continuous only when energy stays "vocal".
+        const rmsGate = this._rmsEma > (this._rmsFloor * cfg.rmsGateMul + cfg.rmsGateBias);
+        for (let i = 0; i < words.length - 1; i++) {
+          const cur = words[i];
+          const next = words[i + 1];
+          const gap = next.start - cur.end;
+          if (rmsGate && gap > 0 && gap <= cfg.gapCloseSec && ct > cur.end && ct < next.start) {
+            const glued = dur > 0 ? Math.max(0, Math.min(1, (cur.end - lineStart) / dur)) : baseProgress;
+            smoothProgress = Math.max(smoothProgress, glued);
+            this._shaderTrailUntil = Math.max(this._shaderTrailUntil, next.start);
+            this._shaderProgressCarry = Math.max(this._shaderProgressCarry, smoothProgress);
+            break;
+          }
+        }
+      }
+
+      // Trail/decay: prevent instant drop between fast word transitions.
+      if (ct <= this._shaderTrailUntil) {
+        progress = Math.max(smoothProgress, this._shaderProgressCarry);
+      } else {
+        this._shaderProgressCarry += (smoothProgress - this._shaderProgressCarry) * this._antiStrobe.decayLerp;
+        if (Math.abs(this._shaderProgressCarry - smoothProgress) < 0.002) {
+          this._shaderProgressCarry = smoothProgress;
+        }
+        progress = this._shaderProgressCarry;
+      }
+      progress = Math.max(0, Math.min(1, progress));
       adlib = !!line.adlib || (line.words || []).some(w => w.adlib && this.interpolatedTime >= w.start && this.interpolatedTime <= w.end);
       // Word intensity: stretch/sung > spoken > whisper
       const activeWord = (line.words || []).find(w => this.interpolatedTime >= w.start && this.interpolatedTime <= w.end);
       if (activeWord) {
         wordIntensity = (activeWord.sung || activeWord.isVocalStretch || activeWord.stretch) ? 1.0 : activeWord.whisper ? 0.2 : activeWord.spoken ? 0.6 : 0.5;
       }
+    } else {
+      // Reset carry when no active line to avoid leaking progress across lines.
+      this._shaderProgressCarry = 0;
+      this._shaderTrailUntil = 0;
     }
     const lineChanged = ai !== this._prevActiveIdx;
     return { active, progress, adlib, wordIntensity, lineChanged };
@@ -1079,8 +1187,7 @@ export class LyricsRenderer {
     for (const L of this.lines) {
       const groupY = L.group.position.y;
       const groupScale = L._cSc || 1;
-      // Skip nearly invisible lines
-      if (L._cOp < 0.05) continue;
+      // Keep faded past lines clickable for backward seek.
 
       for (const e of L.entries) {
         if (e._isCueDot) continue;
@@ -1113,6 +1220,17 @@ export class LyricsRenderer {
   private _dbgCount = 0;
 
   update(rms: number) {
+    // Keep lightweight RMS envelope + floor for micro-gap sequence/breath classification.
+    if (Number.isFinite(rms) && rms >= 0) {
+      const cfg = this._antiStrobe;
+      this._rmsEma += (rms - this._rmsEma) * cfg.rmsEmaLerp;
+      if (this._rmsFloor <= 0 || this._rmsEma < this._rmsFloor) {
+        this._rmsFloor = this._rmsEma;
+      } else {
+        this._rmsFloor += (this._rmsEma - this._rmsFloor) * cfg.rmsFloorRiseLerp;
+      }
+    }
+
     this._dbgCount++;
     if (this._dbgCount % 300 === 1 && false) { // DEBUG: set to true to enable verbose frame logging
       const ai = this.activeLineIdx;
@@ -2192,7 +2310,7 @@ export class LyricsRenderer {
       mesh.fontSize = TRANS_FS;
       mesh.maxWidth = TEXT_MAX_WIDTH;
       mesh.unicodeFontsURL = UNICODE_FONTS_URL;
-      mesh.fontWeight = 400; // normal weight for translation
+      mesh.fontWeight = 800; // keep translations extra-bold too
       mesh.fontStyle = 'italic';
       mesh.anchorX = 'left';
       mesh.anchorY = 'top';

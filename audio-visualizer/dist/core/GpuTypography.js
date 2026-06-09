@@ -1,13 +1,15 @@
 import * as THREE from 'three';
 import { Text } from 'troika-three-text';
-const FONT_FALLBACK = '/chromic-lyrics/vendor/NotoSans-Bold.ttf';
 const FONT_PRIMARY = '/chromic-lyrics/vendor/SFNS-ExtraBold.ttf';
-let FONT = FONT_FALLBACK;
+const FONT_FALLBACK = '/chromic-lyrics/vendor/SFNS.ttf';
+let FONT = FONT_PRIMARY;
 try {
-    fetch(FONT_PRIMARY, { method: 'HEAD' }).then(r => { if (r.ok)
-        FONT = FONT_PRIMARY; });
+    fetch(FONT_PRIMARY, { method: 'HEAD' }).then(r => { if (!r.ok)
+        FONT = FONT_FALLBACK; });
 }
-catch (_) { }
+catch (_) {
+    FONT = FONT_FALLBACK;
+}
 const UNICODE_FONTS_URL = 'https://cdn.jsdelivr.net/gh/lojjic/unicode-font-resolver@v1.0.1/packages/data';
 /**
  * GpuTypography — track title + artist display using Troika Text SDF.

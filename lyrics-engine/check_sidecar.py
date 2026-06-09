@@ -2,8 +2,8 @@
 import json, os, time
 
 paths = [
-    '/path/to/project/media/music/2018-11-20 - flac/01 Сигналы.lyrics.json',
-    '/path/to/music/2018-11-20 - flac/01 Сигналы.lyrics.json',
+    '/Users/illiaromaniv/WebstormProjects/claudecode/media/music/2018-11-20 - flac/01 Сигналы.lyrics.json',
+    '/Users/illiaromaniv/Music/Music/2018-11-20 - flac/01 Сигналы.lyrics.json',
 ]
 for p in paths:
     if os.path.exists(p):

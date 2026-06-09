@@ -1,0 +1,10 @@
+{
+  "name": "soundcloud-extension-tools",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build:lyrics-db": "node ./scripts/build-local-lyrics-db.mjs"
+  }
+}
+

@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import { Text } from 'troika-three-text';
 
-const FONT_FALLBACK = '/chromic-lyrics/vendor/NotoSans-Bold.ttf';
 const FONT_PRIMARY = '/chromic-lyrics/vendor/SFNS-ExtraBold.ttf';
-let FONT = FONT_FALLBACK;
-try { fetch(FONT_PRIMARY, { method: 'HEAD' }).then(r => { if (r.ok) FONT = FONT_PRIMARY; }); } catch (_) {}
+const FONT_FALLBACK = '/chromic-lyrics/vendor/SFNS.ttf';
+let FONT = FONT_PRIMARY;
+try { fetch(FONT_PRIMARY, { method: 'HEAD' }).then(r => { if (!r.ok) FONT = FONT_FALLBACK; }); } catch (_) { FONT = FONT_FALLBACK; }
 const UNICODE_FONTS_URL = 'https://cdn.jsdelivr.net/gh/lojjic/unicode-font-resolver@v1.0.1/packages/data';
 
 /**

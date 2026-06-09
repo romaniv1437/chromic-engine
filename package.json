@@ -1,6 +1,6 @@
 {
   "name": "chromic-engine",
-  "version": "1.0.58",
+  "version": "1.0.5",
   "description": "Chromic Engine — High-Fidelity Music Player",
   "main": "electron/main.js",
   "repository": {

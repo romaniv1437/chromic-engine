@@ -8,13 +8,13 @@ ALIGNER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'aligner.py')
 
 TRACKS = [
     # Has .lrc sidecar (Melanie Martinez K-12)
-    ("/path/to/music/Melanie Martinez - K-12/Disc 1/09 - Melanie Martinez - Orange Juice.flac", "Melanie Martinez", "Orange Juice"),
-    ("/path/to/music/Melanie Martinez - K-12/Disc 1/05 - Melanie Martinez - Nurse's Office.flac", "Melanie Martinez", "Nurse's Office"),
+    ("/Users/illiaromaniv/Music/Music/Melanie Martinez - K-12/Disc 1/09 - Melanie Martinez - Orange Juice.flac", "Melanie Martinez", "Orange Juice"),
+    ("/Users/illiaromaniv/Music/Music/Melanie Martinez - K-12/Disc 1/05 - Melanie Martinez - Nurse's Office.flac", "Melanie Martinez", "Nurse's Office"),
     # Detsl - Fibonacci (embedded LRC / RU)
-    ("/path/to/music/2018-11-20 - flac/11 Fibonacci.flac", "Detsl aka Le Truk", "Fibonacci"),
+    ("/Users/illiaromaniv/Music/Music/2018-11-20 - flac/11 Fibonacci.flac", "Detsl aka Le Truk", "Fibonacci"),
     # API-only (no LRC)
-    ("/path/to/music/GATOR (2023)/01. Death gotta be easy (cause life is hard).flac", "Kevin Gates", "Death gotta be easy"),
-    ("/path/to/music/Blood Was Never Thick As Water (2021)/03. Why Do We Get High.flac", "Kevin Gates", "Why Do We Get High"),
+    ("/Users/illiaromaniv/Music/Music/GATOR (2023)/01. Death gotta be easy (cause life is hard).flac", "Kevin Gates", "Death gotta be easy"),
+    ("/Users/illiaromaniv/Music/Music/Blood Was Never Thick As Water (2021)/03. Why Do We Get High.flac", "Kevin Gates", "Why Do We Get High"),
 ]
 
 for audio_path, artist, title in TRACKS:

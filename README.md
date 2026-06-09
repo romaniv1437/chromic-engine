@@ -26,8 +26,7 @@ https://github.com/user-attachments/assets/cd1dce07-e9bf-4f2e-b296-d4d66cb296cc
 
 > Word-level timeline editing with hotkey calibration, seek-to-line, and LRC/JSON export.
 
-
-### Troika Three.js — Bloom effect (unrealbloompass)
+### Troika Three.js - Bloom effect (unrealbloompass)
 
 https://github.com/user-attachments/assets/93406b27-b946-494a-99fa-d98e3a1bd0bd
 
@@ -79,23 +78,5 @@ Requirements: Node.js 18+, FFmpeg, Python 3.10+ (for AI lyrics). See [AI Setup](
 
 ---
 
-## ⚖️ Licensing & Commercial Use
-
-Chromic Engine is **free and open-source for personal, private, and educational use**.
-
-| Use Case | Allowed? |
-|----------|----------|
-| 🏠 Personal listening at home | ✅ Free |
-| 🎓 Academic research & coursework | ✅ Free |
-| 🛠️ Learning, forking, tinkering | ✅ Free |
-| 🍸 Bars, lounges, karaoke venues | ❌ Commercial license required |
-| 🏪 Retail, restaurants, gyms, hotels | ❌ Commercial license required |
-| 📦 Bundling in a paid product or SaaS | ❌ Commercial license required |
-
-> **For businesses:** If you'd like to use Chromic Engine in a commercial setting, I offer flexible licensing arrangements. Reach out via [GitHub](https://github.com/romaniv1437) or email **romaniv1437@icloud.com** to discuss terms.
-
-See the full [LICENSE](LICENSE) file for legal details.
-
----
 
 *Chromic Engine — engineered for visual fidelity and precision at every frame.*

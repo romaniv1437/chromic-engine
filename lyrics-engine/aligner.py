@@ -20,6 +20,7 @@ import argparse
 import re
 import os
 import ctypes
+import copy
 from dotenv import load_dotenv
 
 # Load .env from lyrics-engine directory
@@ -1661,13 +1662,18 @@ def map_anchor_to_timings(anchor_text, segments, audio_duration=None, lrc_timing
         best_wi = -1
         best_score = 0
         best_wi_end = -1
+        best_effective = -999
+        expected_wi = int((ai / max(1, total_anchor - 1)) * max(0, total_whisper - 1))
 
         for wi in range(search_start, search_end):
             score = match_score(anchor_n, norm(whisper_words[wi]["text"]), anchor_word_raw)
-            if score >= HARD_THRESHOLD and score > best_score:
+            penalty = min(30.0, abs(wi - expected_wi) * 0.6)
+            effective = score - penalty
+            if score >= HARD_THRESHOLD and effective > best_effective:
                 best_wi = wi
                 best_wi_end = wi
                 best_score = score
+                best_effective = effective
             if score == 100:
                 break
 
@@ -1677,10 +1683,13 @@ def map_anchor_to_timings(anchor_text, segments, audio_duration=None, lrc_timing
                 if wi + 1 >= total_whisper:
                     break
                 cs, ck = match_concat_score(anchor_n, whisper_words[wi:wi+6])
-                if cs >= HARD_THRESHOLD and cs > best_score:
+                penalty = min(30.0, abs(wi - expected_wi) * 0.6)
+                effective = cs - penalty
+                if cs >= HARD_THRESHOLD and effective > best_effective:
                     best_wi = wi
                     best_wi_end = wi + ck
                     best_score = cs
+                    best_effective = effective
                 if cs == 100:
                     break
 
@@ -1724,15 +1733,20 @@ def map_anchor_to_timings(anchor_text, segments, audio_duration=None, lrc_timing
         best_wi = -1
         best_score = 0
         best_wi_end = -1
+        best_effective = -999
+        expected_wi = int((ai / max(1, total_anchor - 1)) * max(0, total_whisper - 1))
 
         for wi in range(search_start, search_end_bounded):
             if wi in matched_wis:
                 continue
             score = match_score(anchor_n, norm(whisper_words[wi]["text"]), anchor_word_raw)
-            if score >= SOFT_THRESHOLD and score > best_score:
+            penalty = min(26.0, abs(wi - expected_wi) * 0.5)
+            effective = score - penalty
+            if score >= SOFT_THRESHOLD and effective > best_effective:
                 best_wi = wi
                 best_wi_end = wi
                 best_score = score
+                best_effective = effective
             if score == 100:
                 break
 
@@ -1745,7 +1759,9 @@ def map_anchor_to_timings(anchor_text, segments, audio_duration=None, lrc_timing
                 if len(remaining) < 2:
                     continue
                 cs, ck = match_concat_score(anchor_n, remaining)
-                if cs >= SOFT_THRESHOLD and cs > best_score:
+                penalty = min(26.0, abs(wi - expected_wi) * 0.5)
+                effective = cs - penalty
+                if cs >= SOFT_THRESHOLD and effective > best_effective:
                     best_wi = wi
                     # Find actual end index
                     actual_end = wi
@@ -1758,6 +1774,7 @@ def map_anchor_to_timings(anchor_text, segments, audio_duration=None, lrc_timing
                             count += 1
                     best_wi_end = actual_end
                     best_score = cs
+                    best_effective = effective
                 if cs >= 90:
                     break
 
@@ -2410,6 +2427,30 @@ def map_anchor_to_timings(anchor_text, segments, audio_duration=None, lrc_timing
         i = j
 
     # Third pass: build line output from merged words
+    _VOWELS = set("aeiouyAEIOUYаеёиоуыэюяАЕЁИОУЫЭЮЯіїєґІЇЄҐ")
+
+    def _smart_char_starts(word_text, chars, stretch_hint=False):
+        if not chars or len(chars) < 2:
+            return None, bool(stretch_hint)
+        starts = [round(float(c.get("start", 0.0)), 3) for c in chars]
+        durs = [max(0.01, float(c.get("end", s + 0.05)) - s) for c, s in zip(chars, starts)]
+        sorted_d = sorted(durs)
+        median = sorted_d[len(sorted_d) // 2] if sorted_d else 0.05
+        median = max(0.02, median)
+        long_idx = [i for i, d in enumerate(durs) if d > median * 1.6]
+        long_ratio = len(long_idx) / max(1, len(durs))
+        tail_heavy = len(durs) >= 2 and durs[-1] > median * 1.8
+        vowel_long = sum(1 for i in long_idx if i < len(word_text) and word_text[i] in _VOWELS)
+        should_stretch = bool(stretch_hint or long_ratio >= 0.5 or tail_heavy or vowel_long >= 1)
+        # Tail-heavy words like "too": keep onset grouped and give tail room to stretch.
+        if tail_heavy and long_ratio < 0.5 and len(starts) >= 3:
+            head_end = starts[0] + max(0.03, (starts[-1] - starts[0]) * 0.2)
+            step = max(0.01, (head_end - starts[0]) / max(1, len(starts) - 2))
+            for idx in range(1, len(starts) - 1):
+                starts[idx] = round(starts[0] + step * idx, 3)
+        emit = should_stretch or long_ratio >= 0.35
+        return (starts if emit else None), should_stretch
+
     for mw in merged_word_objs:
         line_idx = mw["_line"]
         start = mw["start"]
@@ -2429,9 +2470,14 @@ def map_anchor_to_timings(anchor_text, segments, audio_duration=None, lrc_timing
         }
         if mw.get("_interpolated"):
             word_obj["_interpolated"] = True
+        stretch_hint = duration > 1.2 or (word_len > 2 and duration / max(word_len, 1) > 0.25)
         if mw.get("_chars"):
-            word_obj["_chars"] = mw["_chars"]
-        if duration > 1.2 or (word_len > 2 and duration / word_len > 0.25):
+            char_starts, char_stretch = _smart_char_starts(mw["word"], mw["_chars"], stretch_hint=stretch_hint)
+            if char_starts:
+                word_obj["char_starts"] = char_starts
+            if char_stretch:
+                word_obj["stretch"] = True
+        elif stretch_hint:
             word_obj["stretch"] = True
 
         # Clean up internal fields
@@ -2503,7 +2549,14 @@ def map_anchor_to_timings(anchor_text, segments, audio_duration=None, lrc_timing
                     for w in words:
                         w["start"] = round(w["start"] + time_diff, 3)
                         w["end"] = round(w["end"] + time_diff, 3)
-                    line["time"] = words[0]["start"]
+                # Keep line anchor at LRC start; optionally delay first fill a touch to avoid scroll/fill clash.
+                line["time"] = round(best_lrc_time, 3)
+                if len(words) >= 2 and words[0]["start"] <= best_lrc_time + 0.02 and (words[1]["start"] - best_lrc_time) > 0.18:
+                    delayed = min(best_lrc_time + 0.06, words[0]["end"] - 0.04, words[1]["start"] - 0.04)
+                    if delayed > words[0]["start"] + 0.02:
+                        words[0]["start"] = round(delayed, 3)
+                        if "char_starts" in words[0] and words[0]["char_starts"]:
+                            words[0]["char_starts"][0] = words[0]["start"]
 
     # ── Enforce line monotonicity after LRC correction ──
     # LRC time correction can shift lines out of order. Fix by trimming the PREVIOUS
@@ -3213,17 +3266,34 @@ def map_genius_lrc_whisper(anchor_text, lrc_timings, whisper_segments, audio_dur
     ANCHOR_TOL = 2.5  # seconds of slack vs LRC window before a match is rejected
     if lrc_norm_seq and whisper_norm_seq:
         sm = SequenceMatcher(None, lrc_norm_seq, whisper_norm_seq, autojunk=False)
+        prev_lt = -1
+        prev_wi = -1
         for i, j, n in sm.get_matching_blocks():
             for k in range(n):
                 lt = i + k
                 if not lrc_norm_seq[lt]:
                     continue  # skip punctuation-only tokens
-                ww = valid_whisper_words[j + k]
+                ww_idx = j + k
+                if ww_idx >= len(valid_whisper_words):
+                    continue
+                # Locality guard for repeated tokens (e.g. da-da-da lines).
+                expected_wi = int((lt / max(1, len(lrc_norm_seq) - 1)) * max(0, len(whisper_norm_seq) - 1))
+                if abs(ww_idx - expected_wi) > max(40, int(len(whisper_norm_seq) * 0.18)):
+                    continue
+                if prev_lt >= 0 and lt > prev_lt:
+                    delta_l = lt - prev_lt
+                    delta_w = ww_idx - prev_wi
+                    if delta_w > max(6, delta_l * 4 + 2):
+                        continue
+
+                ww = valid_whisper_words[ww_idx]
                 si, wi = lrc_tokens[lt]
                 sp = specs[si]
                 # Verify Whisper placed this word inside the line's LRC window
                 if sp["start"] - ANCHOR_TOL <= ww["start"] < sp["end"] + ANCHOR_TOL:
                     sp["anchor"][wi] = {"start": ww["start"], "end": ww["end"]}
+                    prev_lt = lt
+                    prev_wi = ww_idx
 
     anchored_lines = sum(1 for sp in specs if sp["anchor"])
     print(f"[aligner] 🧩 Content alignment: {anchored_lines}/{len(specs)} lines anchored to Whisper", file=sys.stderr)
@@ -3493,6 +3563,76 @@ def _get_local_lyrics_as_anchor(audio_path):
     return None
 
 
+def _merge_timings_preserving_metadata(existing_lines, new_lines):
+    """Update start/end (and optional char_starts) without touching existing custom tags."""
+    from difflib import SequenceMatcher
+
+    if not isinstance(existing_lines, list) or not isinstance(new_lines, list):
+        return new_lines, {"updated_words": 0, "total_existing_words": 0, "total_new_words": 0, "old_coverage": 0.0, "new_coverage": 0.0}
+
+    merged = copy.deepcopy(existing_lines)
+
+    def _norm(s):
+        return re.sub(r'[^\w]', '', (s or '').lower(), flags=re.UNICODE).replace('_', '')
+
+    old_refs, old_tokens = [], []
+    for li, line in enumerate(merged):
+        for wi, word in enumerate(line.get("words", []) or []):
+            old_refs.append((li, wi))
+            old_tokens.append(_norm(word.get("word") or word.get("text") or ""))
+
+    new_refs, new_tokens = [], []
+    for li, line in enumerate(new_lines):
+        for wi, word in enumerate(line.get("words", []) or []):
+            new_refs.append((li, wi))
+            new_tokens.append(_norm(word.get("word") or word.get("text") or ""))
+
+    if not old_tokens or not new_tokens:
+        return new_lines, {
+            "updated_words": 0,
+            "total_existing_words": len(old_tokens),
+            "total_new_words": len(new_tokens),
+            "old_coverage": 0.0,
+            "new_coverage": 0.0,
+        }
+
+    sm = SequenceMatcher(None, old_tokens, new_tokens, autojunk=False)
+    updated = 0
+    for i, j, n in sm.get_matching_blocks():
+        for k in range(n):
+            oi = i + k
+            nj = j + k
+            if oi >= len(old_refs) or nj >= len(new_refs):
+                continue
+            old_li, old_wi = old_refs[oi]
+            new_li, new_wi = new_refs[nj]
+            old_word = merged[old_li].get("words", [])[old_wi]
+            new_word = (new_lines[new_li].get("words", []) or [])[new_wi]
+            if "start" in new_word:
+                old_word["start"] = new_word["start"]
+            if "end" in new_word:
+                old_word["end"] = new_word["end"]
+            if "char_starts" in new_word and isinstance(new_word["char_starts"], list):
+                old_word["char_starts"] = list(new_word["char_starts"])
+                old_word["stretch"] = True
+            updated += 1
+
+    for line in merged:
+        words = line.get("words", []) or []
+        if words:
+            line["time"] = words[0].get("start", line.get("time", 0))
+
+    old_cov = updated / max(1, len(old_tokens))
+    new_cov = updated / max(1, len(new_tokens))
+    return merged, {
+        "updated_words": updated,
+        "total_existing_words": len(old_tokens),
+        "total_new_words": len(new_tokens),
+        "old_coverage": old_cov,
+        "new_coverage": new_cov,
+    }
+
+
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
 # ─── Acoustic Feature Analysis ─────────────────────────────────────────────────
@@ -3579,6 +3719,18 @@ def _tag_acoustic_features(audio_path, lines):
             word_rms = rms_line[frame_start:frame_end + 1]
             if len(word_rms) > 0:
                 word_rms_mean = float(np.mean(word_rms))
+                if len(word_rms) >= 4:
+                    onset_thr = max(whisper_threshold * 1.2, word_rms_mean * 1.35)
+                    onset_i = next((ix for ix, rv in enumerate(word_rms) if rv >= onset_thr), None)
+                    if onset_i is not None and onset_i > 0:
+                        onset_shift = onset_i / frames_per_sec
+                        if onset_shift > 0.04:
+                            max_shift = min(0.35, w_dur * 0.6)
+                            shifted_start = min(w_end - 0.04, w_start + min(onset_shift, max_shift))
+                            if shifted_start > w_start + 0.02:
+                                w["start"] = round(shifted_start, 3)
+                                if "char_starts" in w and isinstance(w["char_starts"], list) and w["char_starts"]:
+                                    w["char_starts"][0] = w["start"]
                 if word_rms_mean < whisper_threshold and word_rms_mean > 0:
                     w["whisper"] = True
                     tagged_count["whisper"] += 1
@@ -3737,6 +3889,7 @@ def main():
     parser.add_argument("--engine", default=None, choices=["mlx", "whisperx", "faster", "openai"])
     parser.add_argument("--use-adapter", action="store_true", help="Use LoRA adapter from HF_ADAPTER_REPO for inference")
     parser.add_argument("--no-decensor", action="store_true", help="Skip de-censoring even if censored words are detected")
+    parser.add_argument("--force-realign", action="store_true", help="Ignore local/API LRC timings and regenerate timing skeleton from Whisper")
     args = parser.parse_args()
 
     if not os.path.exists(args.audio_path):
@@ -3860,8 +4013,11 @@ def main():
         lrc_timings = None
         lrc_is_local = False
 
+        if args.force_realign:
+            print("[aligner] ♻️ Force realign mode: bypassing local/API LRC timing hints", file=sys.stderr)
+
         # Check local .lrc sidecar
-        if args.audio_path:
+        if args.audio_path and not args.force_realign:
             lrc_path = re.sub(r'\.[^.]+$', '.lrc', args.audio_path)
             if os.path.exists(lrc_path):
                 try:
@@ -3875,7 +4031,7 @@ def main():
                     print(f"[aligner] ⚠️ Failed to read local .lrc: {e}", file=sys.stderr)
 
         # Check embedded LYRICS tag in audio metadata (trusted — matches this file)
-        if not lrc_timings and args.audio_path:
+        if not lrc_timings and args.audio_path and not args.force_realign:
             embedded = _read_embedded_lyrics(args.audio_path)
             if embedded:
                 lrc_timings = embedded
@@ -3883,7 +4039,7 @@ def main():
                 print(f"[aligner] ✅ EMBEDDED synced lyrics ({len(embedded)} lines) — timestamps TRUSTED", file=sys.stderr)
 
         # If no local .lrc, get API timings — then validate against Whisper
-        if not lrc_timings:
+        if not lrc_timings and not args.force_realign:
             lrc_timings = get_lrc_timings(args.artist, args.title, audio_path=args.audio_path)
             if lrc_timings:
                 lrc_is_local = False
@@ -4244,11 +4400,38 @@ def main():
     except Exception as e:
         print(f"[aligner] ⚠️ Acoustic feature analysis failed (non-fatal): {e}", file=sys.stderr)
 
+    sidecar_path = re.sub(r'\.[^.]+$', '.lyrics.json', args.audio_path)
+    if args.force_realign and os.path.exists(sidecar_path):
+        try:
+            existing = json.loads(open(sidecar_path, 'r', encoding='utf-8').read())
+            if isinstance(existing, list) and existing:
+                merged_lines, stats = _merge_timings_preserving_metadata(existing, lines)
+                if (
+                    stats["updated_words"] >= max(8, int(stats["total_existing_words"] * 0.25))
+                    and stats.get("old_coverage", 0.0) >= 0.6
+                    and stats.get("new_coverage", 0.0) >= 0.6
+                ):
+                    lines = merged_lines
+                    print(
+                        f"[aligner] 🔀 Merge phase: refreshed {stats['updated_words']} words "
+                        f"(old_cov={stats.get('old_coverage', 0.0):.2f}, new_cov={stats.get('new_coverage', 0.0):.2f}) while preserving metadata tags",
+                        file=sys.stderr,
+                    )
+                else:
+                    print(
+                        f"[aligner] ℹ️ Merge phase skipped: weak overlap "
+                        f"(updated={stats['updated_words']}, old_cov={stats.get('old_coverage', 0.0):.2f}, new_cov={stats.get('new_coverage', 0.0):.2f})",
+                        file=sys.stderr,
+                    )
+        except Exception as e:
+            print(f"[aligner] ⚠️ Metadata-preserving merge skipped: {e}", file=sys.stderr)
+
     # Clean up internal flags before output
     for line in lines:
         for w in line.get("words", []):
             w.pop("_space_boundary", None)
             w.pop("_interpolated", None)
+            w.pop("_chars", None)
 
     # Step 5: Output
     output = {"source": source, "lines": lines}

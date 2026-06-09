@@ -8,16 +8,16 @@ VENV_PYTHON = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'venv', '
 
 TRACKS = [
     # Local .lrc tracks (Melanie Martinez)
-    "/path/to/music/Melanie Martinez - K-12/Disc 1/09 - Melanie Martinez - Orange Juice.flac",
-    "/path/to/music/Melanie Martinez - K-12/Disc 1/12 - Melanie Martinez - High School Sweethearts.flac",
-    "/path/to/music/Melanie Martinez - K-12/Disc 1/05 - Melanie Martinez - Nurse's Office.flac",
+    "/Users/illiaromaniv/Music/Music/Melanie Martinez - K-12/Disc 1/09 - Melanie Martinez - Orange Juice.flac",
+    "/Users/illiaromaniv/Music/Music/Melanie Martinez - K-12/Disc 1/12 - Melanie Martinez - High School Sweethearts.flac",
+    "/Users/illiaromaniv/Music/Music/Melanie Martinez - K-12/Disc 1/05 - Melanie Martinez - Nurse's Office.flac",
     # EN API tracks
-    "/path/to/music/Blood Was Never Thick As Water (2021)/03. Why Do We Get High.flac",
-    "/path/to/music/GATOR (2023)/01. Death gotta be easy (cause life is hard).flac",
-    "/path/to/music/Blood Was Never Thick As Water (2021)/01. Dying Slowly.flac",
+    "/Users/illiaromaniv/Music/Music/Blood Was Never Thick As Water (2021)/03. Why Do We Get High.flac",
+    "/Users/illiaromaniv/Music/Music/GATOR (2023)/01. Death gotta be easy (cause life is hard).flac",
+    "/Users/illiaromaniv/Music/Music/Blood Was Never Thick As Water (2021)/01. Dying Slowly.flac",
     # RU API tracks (Detsl aka Le Truk)
-    "/path/to/music/2018-11-20 - flac/11 Fibonacci.flac",
-    "/path/to/music/2018-11-20 - flac/04 Узурпаторов план.flac",
+    "/Users/illiaromaniv/Music/Music/2018-11-20 - flac/11 Fibonacci.flac",
+    "/Users/illiaromaniv/Music/Music/2018-11-20 - flac/04 Узурпаторов план.flac",
 ]
 
 def get_metadata(audio_path):

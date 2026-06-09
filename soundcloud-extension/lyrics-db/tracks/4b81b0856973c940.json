@@ -1,0 +1,811 @@
+[
+  {
+    "time": 13.02,
+    "text": "Me and my friends We've been friends for a long time",
+    "words": [
+      {
+        "word": "Me",
+        "start": 13.02,
+        "end": 13.82
+      },
+      {
+        "word": "and",
+        "start": 14.42,
+        "end": 15.62
+      },
+      {
+        "word": "my",
+        "start": 15.82,
+        "end": 16.62
+      },
+      {
+        "word": "friends",
+        "start": 17.28,
+        "end": 19.46
+      },
+      {
+        "word": "We've",
+        "start": 19.46,
+        "end": 20.56
+      },
+      {
+        "word": "been",
+        "start": 20.56,
+        "end": 21.7
+      },
+      {
+        "word": "friends",
+        "start": 21.7,
+        "end": 22.34
+      },
+      {
+        "word": "for",
+        "start": 22.34,
+        "end": 22.8
+      },
+      {
+        "word": "a",
+        "start": 22.8,
+        "end": 23.3
+      },
+      {
+        "word": "long",
+        "start": 23.7,
+        "end": 25.3
+      },
+      {
+        "word": "time",
+        "start": 26.48,
+        "end": 26.58
+      }
+    ]
+  },
+  {
+    "time": 26.63,
+    "text": "When we were younger, we threw parties",
+    "words": [
+      {
+        "word": "When",
+        "start": 26.63,
+        "end": 27.11
+      },
+      {
+        "word": "we",
+        "start": 27.11,
+        "end": 27.31
+      },
+      {
+        "word": "were",
+        "start": 27.31,
+        "end": 28.65
+      },
+      {
+        "word": "younger,",
+        "start": 28.95,
+        "end": 29.51
+      },
+      {
+        "word": "we",
+        "start": 29.51,
+        "end": 30.07
+      },
+      {
+        "word": "threw",
+        "start": 30.07,
+        "end": 30.13
+      },
+      {
+        "word": "parties",
+        "start": 30.13,
+        "end": 32.93
+      }
+    ]
+  },
+  {
+    "time": 33.08,
+    "text": "Now we’re older, we still do",
+    "words": [
+      {
+        "word": "Now",
+        "start": 33.08,
+        "end": 33.72
+      },
+      {
+        "word": "we’re",
+        "start": 33.72,
+        "end": 34.84
+      },
+      {
+        "word": "older,",
+        "start": 34.84,
+        "end": 35.48
+      },
+      {
+        "word": "we",
+        "start": 35.48,
+        "end": 36.28
+      },
+      {
+        "word": "still",
+        "start": 36.4,
+        "end": 37.1
+      },
+      {
+        "word": "do",
+        "start": 38.76,
+        "end": 39.1
+      }
+    ]
+  },
+  {
+    "time": 39.15,
+    "text": "Some of us are getting married",
+    "words": [
+      {
+        "word": "Some",
+        "start": 39.15,
+        "end": 39.85
+      },
+      {
+        "word": "of",
+        "start": 39.85,
+        "end": 40.41
+      },
+      {
+        "word": "us",
+        "start": 40.41,
+        "end": 41.03
+      },
+      {
+        "word": "are",
+        "start": 41.03,
+        "end": 41.91
+      },
+      {
+        "word": "getting",
+        "start": 41.91,
+        "end": 42.65
+      },
+      {
+        "word": "married",
+        "start": 42.65,
+        "end": 45.45
+      }
+    ]
+  },
+  {
+    "time": 45.5,
+    "text": "Some of us are having babies",
+    "words": [
+      {
+        "word": "Some",
+        "start": 45.5,
+        "end": 46.2
+      },
+      {
+        "word": "of",
+        "start": 46.2,
+        "end": 46.72
+      },
+      {
+        "word": "us",
+        "start": 46.72,
+        "end": 47.34
+      },
+      {
+        "word": "are",
+        "start": 47.34,
+        "end": 48.22
+      },
+      {
+        "word": "having",
+        "start": 48.22,
+        "end": 49.06
+      },
+      {
+        "word": "babies",
+        "start": 49.06,
+        "end": 51.46
+      }
+    ]
+  },
+  {
+    "time": 51.51,
+    "text": "Some of us are turning thirty",
+    "words": [
+      {
+        "word": "Some",
+        "start": 51.51,
+        "end": 52.53
+      },
+      {
+        "word": "of",
+        "start": 52.53,
+        "end": 53.11
+      },
+      {
+        "word": "us",
+        "start": 53.11,
+        "end": 53.75
+      },
+      {
+        "word": "are",
+        "start": 53.75,
+        "end": 54.55
+      },
+      {
+        "word": "turning",
+        "start": 54.55,
+        "end": 55.59
+      },
+      {
+        "word": "thirty",
+        "start": 55.59,
+        "end": 57.99
+      }
+    ]
+  },
+  {
+    "time": 58.12,
+    "text": "A lot of us are all dead",
+    "words": [
+      {
+        "word": "A",
+        "start": 58.12,
+        "end": 58.157
+      },
+      {
+        "word": "lot",
+        "start": 58.167,
+        "end": 58.38
+      },
+      {
+        "word": "of",
+        "start": 58.38,
+        "end": 59.02
+      },
+      {
+        "word": "us",
+        "start": 59.02,
+        "end": 59.6
+      },
+      {
+        "word": "are",
+        "start": 59.6,
+        "end": 60.62
+      },
+      {
+        "word": "all",
+        "start": 60.62,
+        "end": 61.82
+      },
+      {
+        "word": "dead",
+        "start": 62.12,
+        "end": 63.52
+      }
+    ]
+  },
+  {
+    "time": 77.52,
+    "text": "Growing older is not as scary",
+    "words": [
+      {
+        "word": "Growing",
+        "start": 77.52,
+        "end": 78.84
+      },
+      {
+        "word": "older",
+        "start": 78.84,
+        "end": 79.52
+      },
+      {
+        "word": "is",
+        "start": 79.52,
+        "end": 80.06
+      },
+      {
+        "word": "not",
+        "start": 80.06,
+        "end": 80.82
+      },
+      {
+        "word": "as",
+        "start": 80.82,
+        "end": 81.62
+      },
+      {
+        "word": "scary",
+        "start": 82.16,
+        "end": 83.22
+      }
+    ]
+  },
+  {
+    "time": 83.68,
+    "text": "As I always thought it would be",
+    "words": [
+      {
+        "word": "As",
+        "start": 83.68,
+        "end": 84.1
+      },
+      {
+        "word": "I",
+        "start": 84.1,
+        "end": 84.6
+      },
+      {
+        "word": "always",
+        "start": 85.5,
+        "end": 86.3
+      },
+      {
+        "word": "thought",
+        "start": 86.3,
+        "end": 86.66
+      },
+      {
+        "word": "it",
+        "start": 86.66,
+        "end": 87.14
+      },
+      {
+        "word": "would",
+        "start": 87.14,
+        "end": 89.06
+      },
+      {
+        "word": "be",
+        "start": 89.06,
+        "end": 89.72
+      }
+    ]
+  },
+  {
+    "time": 90.18,
+    "text": "Just because you're not as pretty",
+    "words": [
+      {
+        "word": "Just",
+        "start": 90.18,
+        "end": 90.98
+      },
+      {
+        "word": "because",
+        "start": 90.98,
+        "end": 92.18
+      },
+      {
+        "word": "you're",
+        "start": 92.18,
+        "end": 92.66
+      },
+      {
+        "word": "not",
+        "start": 92.66,
+        "end": 93.46
+      },
+      {
+        "word": "as",
+        "start": 93.46,
+        "end": 94.26
+      },
+      {
+        "word": "pretty",
+        "start": 95.54,
+        "end": 96.17
+      }
+    ]
+  },
+  {
+    "time": 96.64,
+    "text": "Doesn't mean you’re not happy",
+    "words": [
+      {
+        "word": "Doesn't",
+        "start": 96.64,
+        "end": 97.32
+      },
+      {
+        "word": "mean",
+        "start": 97.32,
+        "end": 98.2
+      },
+      {
+        "word": "you’re",
+        "start": 98.2,
+        "end": 98.96
+      },
+      {
+        "word": "not",
+        "start": 98.96,
+        "end": 100.16
+      },
+      {
+        "word": "happy",
+        "start": 101.82,
+        "end": 102.46
+      }
+    ]
+  },
+  {
+    "time": 102.52,
+    "text": "I was at a bar in Newton",
+    "words": [
+      {
+        "word": "I",
+        "start": 102.52,
+        "end": 103.02
+      },
+      {
+        "word": "was",
+        "start": 103.32,
+        "end": 103.82
+      },
+      {
+        "word": "at",
+        "start": 103.82,
+        "end": 104.58
+      },
+      {
+        "word": "a",
+        "start": 104.58,
+        "end": 105.08
+      },
+      {
+        "word": "bar",
+        "start": 105.38,
+        "end": 106.4
+      },
+      {
+        "word": "in",
+        "start": 106.4,
+        "end": 107.2
+      },
+      {
+        "word": "Newton",
+        "start": 107.56,
+        "end": 107.94
+      }
+    ]
+  },
+  {
+    "time": 107.99,
+    "text": "A younger girl, she shifted into me",
+    "words": [
+      {
+        "word": "A",
+        "start": 107.99,
+        "end": 108.49
+      },
+      {
+        "word": "younger",
+        "start": 109.99,
+        "end": 110.49
+      },
+      {
+        "word": "girl,",
+        "start": 110.49,
+        "end": 111.65
+      },
+      {
+        "word": "she",
+        "start": 111.65,
+        "end": 112.03
+      },
+      {
+        "word": "shifted",
+        "start": 112.03,
+        "end": 112.63
+      },
+      {
+        "word": "into",
+        "start": 112.63,
+        "end": 114.23
+      },
+      {
+        "word": "me",
+        "start": 114.65,
+        "end": 114.89
+      }
+    ]
+  },
+  {
+    "time": 114.94,
+    "text": "She had a very trendy haircut",
+    "words": [
+      {
+        "word": "She",
+        "start": 114.94,
+        "end": 115.72
+      },
+      {
+        "word": "had",
+        "start": 115.72,
+        "end": 116.14
+      },
+      {
+        "word": "a",
+        "start": 116.14,
+        "end": 116.32
+      },
+      {
+        "word": "very",
+        "start": 116.32,
+        "end": 117.78
+      },
+      {
+        "word": "trendy",
+        "start": 117.78,
+        "end": 119.1
+      },
+      {
+        "word": "haircut",
+        "start": 119.1,
+        "end": 121.5
+      }
+    ]
+  },
+  {
+    "time": 121.55,
+    "text": "Bittersweet symphony",
+    "words": [
+      {
+        "word": "Bittersweet",
+        "start": 121.55,
+        "end": 122.95
+      },
+      {
+        "word": "symphony",
+        "start": 122.95,
+        "end": 125.29
+      }
+    ]
+  },
+  {
+    "time": 127.3,
+    "text": "Growing older is not as scary",
+    "words": [
+      {
+        "word": "Growing",
+        "start": 127.3,
+        "end": 128.24
+      },
+      {
+        "word": "older",
+        "start": 128.24,
+        "end": 129.48
+      },
+      {
+        "word": "is",
+        "start": 129.48,
+        "end": 130.16
+      },
+      {
+        "word": "not",
+        "start": 130.16,
+        "end": 130.66
+      },
+      {
+        "word": "as",
+        "start": 130.66,
+        "end": 131.4
+      },
+      {
+        "word": "scary",
+        "start": 131.4,
+        "end": 133.4
+      }
+    ]
+  },
+  {
+    "time": 133.45,
+    "text": "As I always thought it would be",
+    "words": [
+      {
+        "word": "As",
+        "start": 133.45,
+        "end": 134.25
+      },
+      {
+        "word": "I",
+        "start": 134.45,
+        "end": 134.95
+      },
+      {
+        "word": "always",
+        "start": 134.99,
+        "end": 136.27
+      },
+      {
+        "word": "thought",
+        "start": 136.27,
+        "end": 137.05
+      },
+      {
+        "word": "it",
+        "start": 137.05,
+        "end": 137.41
+      },
+      {
+        "word": "would",
+        "start": 137.41,
+        "end": 137.89
+      },
+      {
+        "word": "be",
+        "start": 137.89,
+        "end": 138.69
+      }
+    ]
+  },
+  {
+    "time": 140.06,
+    "text": "Just because you're not as pretty",
+    "words": [
+      {
+        "word": "Just",
+        "start": 140.06,
+        "end": 140.76
+      },
+      {
+        "word": "because",
+        "start": 140.76,
+        "end": 141.6
+      },
+      {
+        "word": "you're",
+        "start": 141.6,
+        "end": 142.76
+      },
+      {
+        "word": "not",
+        "start": 142.76,
+        "end": 143.3
+      },
+      {
+        "word": "as",
+        "start": 143.3,
+        "end": 144.1
+      },
+      {
+        "word": "pretty",
+        "start": 144.22,
+        "end": 146.55
+      }
+    ]
+  },
+  {
+    "time": 146.6,
+    "text": "Doesn't mean you're not happy Doesn't mean you're not happy Doesn't mean you're not happy Doesn’t mean you’re not happy Doesn't mean you’re not happy",
+    "words": [
+      {
+        "word": "Doesn't",
+        "start": 146.6,
+        "end": 146.649
+      },
+      {
+        "word": "mean",
+        "start": 146.659,
+        "end": 146.759
+      },
+      {
+        "word": "you're",
+        "start": 146.769,
+        "end": 146.869
+      },
+      {
+        "word": "not",
+        "start": 146.879,
+        "end": 146.979
+      },
+      {
+        "word": "happy",
+        "start": 146.989,
+        "end": 147.499
+      },
+      {
+        "word": "Doesn't",
+        "start": 147.82,
+        "end": 147.851
+      },
+      {
+        "word": "mean",
+        "start": 147.861,
+        "end": 147.961
+      },
+      {
+        "word": "you're",
+        "start": 147.971,
+        "end": 148.071
+      },
+      {
+        "word": "not",
+        "start": 148.081,
+        "end": 148.44
+      },
+      {
+        "word": "happy",
+        "start": 148.44,
+        "end": 148.495
+      },
+      {
+        "word": "Doesn't",
+        "start": 148.505,
+        "end": 148.605
+      },
+      {
+        "word": "mean",
+        "start": 148.615,
+        "end": 148.715
+      },
+      {
+        "word": "you're",
+        "start": 148.725,
+        "end": 149.32
+      },
+      {
+        "word": "not",
+        "start": 149.32,
+        "end": 149.385
+      },
+      {
+        "word": "happy",
+        "start": 149.395,
+        "end": 149.495
+      },
+      {
+        "word": "Doesn’t",
+        "start": 149.505,
+        "end": 149.605
+      },
+      {
+        "word": "mean",
+        "start": 149.615,
+        "end": 150.1
+      },
+      {
+        "word": "you’re",
+        "start": 150.1,
+        "end": 150.435
+      },
+      {
+        "word": "not",
+        "start": 150.445,
+        "end": 150.483
+      },
+      {
+        "word": "happy",
+        "start": 150.493,
+        "end": 150.547
+      },
+      {
+        "word": "Doesn't",
+        "start": 150.557,
+        "end": 151.27
+      },
+      {
+        "word": "mean",
+        "start": 152.78,
+        "end": 153.125
+      },
+      {
+        "word": "you’re",
+        "start": 153.135,
+        "end": 153.24
+      },
+      {
+        "word": "not",
+        "start": 153.25,
+        "end": 153.47
+      },
+      {
+        "word": "happy",
+        "start": 153.48,
+        "end": 153.99
+      }
+    ]
+  }
+]
