@@ -5,7 +5,7 @@ from pathlib import Path
 
 VENV_PYTHON = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'venv', 'bin', 'python3')
 ALIGNER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'aligner.py')
-MEDIA = '/path/to/project/media/music'
+MEDIA = '/Users/illiaromaniv/WebstormProjects/claudecode/media/music'
 
 ALBUMS = {
     'Detsl': '2018-11-20 - flac',

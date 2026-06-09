@@ -1,0 +1,2083 @@
+[
+  {
+    "time": 2.41,
+    "text": "Sneaky, creepy",
+    "words": [
+      {
+        "word": "Sneaky,",
+        "start": 2.41,
+        "end": 3.024,
+        "spoken": true
+      },
+      {
+        "word": "creepy",
+        "start": 3.024,
+        "end": 3.55
+      }
+    ]
+  },
+  {
+    "time": 3.55,
+    "text": "Money seeking",
+    "words": [
+      {
+        "word": "Money",
+        "start": 3.55,
+        "end": 4.05
+      },
+      {
+        "word": "seeking",
+        "start": 4.05,
+        "end": 4.75,
+        "sung": true
+      }
+    ]
+  },
+  {
+    "time": 4.75,
+    "text": "Always peeping",
+    "words": [
+      {
+        "word": "Always",
+        "start": 4.75,
+        "end": 5.387,
+        "spoken": true
+      },
+      {
+        "word": "peeping",
+        "start": 5.387,
+        "end": 6.13
+      }
+    ]
+  },
+  {
+    "time": 6.13,
+    "text": "Fucking creeping",
+    "words": [
+      {
+        "word": "Fucking",
+        "start": 6.13,
+        "end": 6.667,
+        "spoken": true
+      },
+      {
+        "word": "creeping",
+        "start": 6.667,
+        "end": 7.28,
+        "sung": true
+      }
+    ]
+  },
+  {
+    "time": 7.28,
+    "text": "Got it on the down low",
+    "words": [
+      {
+        "word": "Got",
+        "start": 7.28,
+        "end": 7.73
+      },
+      {
+        "word": "it",
+        "start": 7.73,
+        "end": 8.03,
+        "spoken": true
+      },
+      {
+        "word": "on",
+        "start": 8.03,
+        "end": 8.33,
+        "spoken": true
+      },
+      {
+        "word": "the",
+        "start": 8.33,
+        "end": 8.78
+      },
+      {
+        "word": "down",
+        "start": 8.78,
+        "end": 9.38
+      },
+      {
+        "word": "low",
+        "start": 9.38,
+        "end": 9.83
+      }
+    ]
+  },
+  {
+    "time": 9.84,
+    "text": "So you think you're always sneaky",
+    "words": [
+      {
+        "word": "So",
+        "start": 9.84,
+        "end": 10.022
+      },
+      {
+        "word": "you",
+        "start": 10.022,
+        "end": 10.295
+      },
+      {
+        "word": "think",
+        "start": 10.295,
+        "end": 10.751,
+        "spoken": true
+      },
+      {
+        "word": "you're",
+        "start": 10.751,
+        "end": 11.297
+      },
+      {
+        "word": "always",
+        "start": 11.297,
+        "end": 11.844,
+        "sung": true
+      },
+      {
+        "word": "sneaky",
+        "start": 11.844,
+        "end": 12.39,
+        "sung": true
+      }
+    ]
+  },
+  {
+    "time": 12.39,
+    "text": "What if I had told your mother",
+    "words": [
+      {
+        "word": "What",
+        "start": 12.39,
+        "end": 12.99,
+        "sung": true
+      },
+      {
+        "word": "if",
+        "start": 12.99,
+        "end": 13.29,
+        "spoken": true
+      },
+      {
+        "word": "I",
+        "start": 13.29,
+        "end": 13.44,
+        "spoken": true
+      },
+      {
+        "word": "had",
+        "start": 13.44,
+        "end": 13.89,
+        "spoken": true
+      },
+      {
+        "word": "told",
+        "start": 13.89,
+        "end": 14.49,
+        "spoken": true
+      },
+      {
+        "word": "your",
+        "start": 14.49,
+        "end": 15.09,
+        "spoken": true
+      },
+      {
+        "word": "mother",
+        "start": 15.09,
+        "end": 15.99,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 16.82,
+    "text": "Her son was a cruel motherfucker? Oh",
+    "words": [
+      {
+        "word": "Her",
+        "start": 16.82,
+        "end": 17.27
+      },
+      {
+        "word": "son",
+        "start": 17.27,
+        "end": 17.72
+      },
+      {
+        "word": "was",
+        "start": 17.72,
+        "end": 18.17
+      },
+      {
+        "word": "a",
+        "start": 18.17,
+        "end": 18.32,
+        "whisper": true
+      },
+      {
+        "word": "cruel",
+        "start": 18.32,
+        "end": 19.07,
+        "spoken": true
+      },
+      {
+        "word": "motherfucker?",
+        "start": 19.07,
+        "end": 21.02,
+        "sung": true
+      },
+      {
+        "word": "Oh",
+        "start": 21.02,
+        "end": 21.32,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 21.84,
+    "text": "It's not just me, it's everybody",
+    "words": [
+      {
+        "word": "It's",
+        "start": 21.84,
+        "end": 22.261,
+        "spoken": true
+      },
+      {
+        "word": "not",
+        "start": 22.261,
+        "end": 22.576
+      },
+      {
+        "word": "just",
+        "start": 22.576,
+        "end": 22.997,
+        "spoken": true
+      },
+      {
+        "word": "me,",
+        "start": 22.997,
+        "end": 23.313,
+        "spoken": true
+      },
+      {
+        "word": "it's",
+        "start": 23.313,
+        "end": 23.733,
+        "spoken": true
+      },
+      {
+        "word": "everybody",
+        "start": 23.733,
+        "end": 24.68,
+        "sung": true
+      }
+    ]
+  },
+  {
+    "time": 24.68,
+    "text": "Who thinks that you're fucking ugly",
+    "words": [
+      {
+        "word": "Who",
+        "start": 24.68,
+        "end": 24.897
+      },
+      {
+        "word": "thinks",
+        "start": 24.897,
+        "end": 25.331,
+        "spoken": true
+      },
+      {
+        "word": "that",
+        "start": 25.331,
+        "end": 25.62,
+        "spoken": true
+      },
+      {
+        "word": "you're",
+        "start": 25.62,
+        "end": 26.054,
+        "spoken": true
+      },
+      {
+        "word": "fucking",
+        "start": 26.054,
+        "end": 26.561,
+        "spoken": true
+      },
+      {
+        "word": "ugly",
+        "start": 26.561,
+        "end": 26.85,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 28.58,
+    "text": "When you come and hurt us",
+    "words": [
+      {
+        "word": "When",
+        "start": 28.58,
+        "end": 28.71
+      },
+      {
+        "word": "you",
+        "start": 28.71,
+        "end": 28.81
+      },
+      {
+        "word": "come",
+        "start": 28.81,
+        "end": 28.94
+      },
+      {
+        "word": "and",
+        "start": 28.94,
+        "end": 29.04
+      },
+      {
+        "word": "hurt",
+        "start": 29.04,
+        "end": 29.17
+      },
+      {
+        "word": "us",
+        "start": 29.17,
+        "end": 29.22
+      }
+    ]
+  },
+  {
+    "time": 29.98,
+    "text": "Just so you can get your money",
+    "words": [
+      {
+        "word": "Just",
+        "start": 29.98,
+        "end": 30.255,
+        "spoken": true
+      },
+      {
+        "word": "so",
+        "start": 30.255,
+        "end": 30.392
+      },
+      {
+        "word": "you",
+        "start": 30.392,
+        "end": 30.599,
+        "spoken": true
+      },
+      {
+        "word": "can",
+        "start": 30.599,
+        "end": 30.805
+      },
+      {
+        "word": "get",
+        "start": 30.805,
+        "end": 31.011,
+        "spoken": true
+      },
+      {
+        "word": "your",
+        "start": 31.011,
+        "end": 31.286,
+        "spoken": true
+      },
+      {
+        "word": "money",
+        "start": 31.286,
+        "end": 31.63,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 31.63,
+    "text": "Forced to follow the leader",
+    "words": [
+      {
+        "word": "Forced",
+        "start": 31.63,
+        "end": 32.53,
+        "spoken": true
+      },
+      {
+        "word": "to",
+        "start": 32.53,
+        "end": 32.83,
+        "spoken": true
+      },
+      {
+        "word": "follow",
+        "start": 32.83,
+        "end": 33.73,
+        "spoken": true
+      },
+      {
+        "word": "the",
+        "start": 33.73,
+        "end": 34.18
+      },
+      {
+        "word": "leader",
+        "start": 34.18,
+        "end": 35.08,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 36.82,
+    "text": "Who's being possessed by demons",
+    "words": [
+      {
+        "word": "Who's",
+        "start": 36.82,
+        "end": 37.57,
+        "spoken": true
+      },
+      {
+        "word": "being",
+        "start": 37.57,
+        "end": 38.32,
+        "sung": true
+      },
+      {
+        "word": "possessed",
+        "start": 38.32,
+        "end": 39.67,
+        "spoken": true
+      },
+      {
+        "word": "by",
+        "start": 39.67,
+        "end": 39.97,
+        "spoken": true
+      },
+      {
+        "word": "demons",
+        "start": 39.97,
+        "end": 40.87,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 40.95,
+    "text": "I've tried to make you listen",
+    "words": [
+      {
+        "word": "I've",
+        "start": 40.95,
+        "end": 41.383,
+        "spoken": true
+      },
+      {
+        "word": "tried",
+        "start": 41.383,
+        "end": 41.925,
+        "spoken": true
+      },
+      {
+        "word": "to",
+        "start": 41.925,
+        "end": 42.142
+      },
+      {
+        "word": "make",
+        "start": 42.142,
+        "end": 42.575,
+        "spoken": true
+      },
+      {
+        "word": "you",
+        "start": 42.575,
+        "end": 42.9
+      },
+      {
+        "word": "listen",
+        "start": 42.9,
+        "end": 43.55,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 43.55,
+    "text": "But you won't, it's your way, right?",
+    "words": [
+      {
+        "word": "But",
+        "start": 43.55,
+        "end": 43.852
+      },
+      {
+        "word": "you",
+        "start": 43.852,
+        "end": 44.154
+      },
+      {
+        "word": "won't,",
+        "start": 44.154,
+        "end": 44.758,
+        "spoken": true
+      },
+      {
+        "word": "it's",
+        "start": 44.758,
+        "end": 45.161,
+        "spoken": true
+      },
+      {
+        "word": "your",
+        "start": 45.161,
+        "end": 45.563,
+        "sung": true
+      },
+      {
+        "word": "way,",
+        "start": 45.563,
+        "end": 45.966,
+        "spoken": true
+      },
+      {
+        "word": "right?",
+        "start": 45.966,
+        "end": 46.57
+      }
+    ]
+  },
+  {
+    "time": 46.68,
+    "text": "Killing kids all day and night",
+    "words": [
+      {
+        "word": "Killing",
+        "start": 46.68,
+        "end": 47.251,
+        "sung": true
+      },
+      {
+        "word": "kids",
+        "start": 47.251,
+        "end": 47.578,
+        "spoken": true
+      },
+      {
+        "word": "all",
+        "start": 47.578,
+        "end": 47.822,
+        "spoken": true
+      },
+      {
+        "word": "day",
+        "start": 47.822,
+        "end": 48.067,
+        "spoken": true
+      },
+      {
+        "word": "and",
+        "start": 48.067,
+        "end": 48.312,
+        "spoken": true
+      },
+      {
+        "word": "night",
+        "start": 48.312,
+        "end": 48.72,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 48.72,
+    "text": "Prescription pills and on-line fights",
+    "words": [
+      {
+        "word": "Prescription",
+        "start": 48.72,
+        "end": 49.625,
+        "spoken": true
+      },
+      {
+        "word": "pills",
+        "start": 49.625,
+        "end": 50.003,
+        "spoken": true
+      },
+      {
+        "word": "and",
+        "start": 50.003,
+        "end": 50.229
+      },
+      {
+        "word": "on-line",
+        "start": 50.229,
+        "end": 50.757,
+        "spoken": true
+      },
+      {
+        "word": "fights",
+        "start": 50.757,
+        "end": 51.21
+      }
+    ]
+  },
+  {
+    "time": 51.21,
+    "text": "Shooting at the angels while claiming you're the good guy",
+    "words": [
+      {
+        "word": "Shooting",
+        "start": 51.21,
+        "end": 52.027,
+        "spoken": true
+      },
+      {
+        "word": "at",
+        "start": 52.027,
+        "end": 52.231,
+        "spoken": true
+      },
+      {
+        "word": "the",
+        "start": 52.231,
+        "end": 52.537,
+        "spoken": true
+      },
+      {
+        "word": "angels",
+        "start": 52.537,
+        "end": 53.15
+      },
+      {
+        "word": "while",
+        "start": 53.15,
+        "end": 53.66,
+        "sung": true
+      },
+      {
+        "word": "claiming",
+        "start": 53.66,
+        "end": 54.477,
+        "spoken": true
+      },
+      {
+        "word": "you're",
+        "start": 54.477,
+        "end": 55.089
+      },
+      {
+        "word": "the",
+        "start": 55.089,
+        "end": 55.395,
+        "spoken": true
+      },
+      {
+        "word": "good",
+        "start": 55.395,
+        "end": 55.804
+      },
+      {
+        "word": "guy",
+        "start": 55.804,
+        "end": 56.11,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 56.46,
+    "text": "All you want is cash and hype",
+    "words": [
+      {
+        "word": "All",
+        "start": 56.46,
+        "end": 56.757
+      },
+      {
+        "word": "you",
+        "start": 56.757,
+        "end": 57.055,
+        "spoken": true
+      },
+      {
+        "word": "want",
+        "start": 57.055,
+        "end": 57.451,
+        "spoken": true
+      },
+      {
+        "word": "is",
+        "start": 57.451,
+        "end": 57.65,
+        "spoken": true
+      },
+      {
+        "word": "cash",
+        "start": 57.65,
+        "end": 58.046,
+        "spoken": true
+      },
+      {
+        "word": "and",
+        "start": 58.046,
+        "end": 58.343,
+        "spoken": true
+      },
+      {
+        "word": "hype",
+        "start": 58.343,
+        "end": 58.74
+      }
+    ]
+  },
+  {
+    "time": 59.06,
+    "text": "\"Fuck our dreams\" and that's not right",
+    "words": [
+      {
+        "word": "\"Fuck",
+        "start": 59.06,
+        "end": 59.497,
+        "spoken": true
+      },
+      {
+        "word": "our",
+        "start": 59.497,
+        "end": 59.76,
+        "spoken": true
+      },
+      {
+        "word": "dreams\"",
+        "start": 59.76,
+        "end": 59.86
+      },
+      {
+        "word": "and",
+        "start": 59.87,
+        "end": 60.0,
+        "spoken": true
+      },
+      {
+        "word": "that's",
+        "start": 60.0,
+        "end": 60.5,
+        "spoken": true
+      },
+      {
+        "word": "not",
+        "start": 60.5,
+        "end": 60.71,
+        "spoken": true
+      },
+      {
+        "word": "right",
+        "start": 60.71,
+        "end": 61.06,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 61.2,
+    "text": "The principal, ты, oh",
+    "words": [
+      {
+        "word": "The",
+        "start": 61.2,
+        "end": 61.65
+      },
+      {
+        "word": "principal,",
+        "start": 61.65,
+        "end": 63.15,
+        "spoken": true
+      },
+      {
+        "word": "ты,",
+        "start": 63.15,
+        "end": 63.6,
+        "spoken": true
+      },
+      {
+        "word": "oh",
+        "start": 63.6,
+        "end": 63.9
+      }
+    ]
+  },
+  {
+    "time": 65.02,
+    "text": "Where's the principle?",
+    "words": [
+      {
+        "word": "Where's",
+        "start": 65.02,
+        "end": 65.93,
+        "spoken": true
+      },
+      {
+        "word": "the",
+        "start": 65.93,
+        "end": 66.32,
+        "spoken": true
+      },
+      {
+        "word": "principle?",
+        "start": 66.32,
+        "end": 67.62,
+        "sung": true
+      }
+    ]
+  },
+  {
+    "time": 67.62,
+    "text": "Oh, where's the principle? Oh, where's the principle? Ты, oh Oh, where's the principle? Oh, where's the principle?",
+    "words": [
+      {
+        "word": "Oh,",
+        "start": 67.62,
+        "end": 67.72
+      },
+      {
+        "word": "where's",
+        "start": 67.73,
+        "end": 67.83,
+        "spoken": true
+      },
+      {
+        "word": "the",
+        "start": 67.84,
+        "end": 67.94,
+        "spoken": true
+      },
+      {
+        "word": "principle?",
+        "start": 67.95,
+        "end": 68.05,
+        "spoken": true
+      },
+      {
+        "word": "Oh,",
+        "start": 68.06,
+        "end": 68.16,
+        "spoken": true
+      },
+      {
+        "word": "where's",
+        "start": 68.17,
+        "end": 68.46,
+        "spoken": true
+      },
+      {
+        "word": "the",
+        "start": 68.46,
+        "end": 68.72,
+        "spoken": true
+      },
+      {
+        "word": "principle?",
+        "start": 68.72,
+        "end": 69.82,
+        "sung": true
+      },
+      {
+        "word": "Ты,",
+        "start": 69.82,
+        "end": 70.048
+      },
+      {
+        "word": "oh",
+        "start": 70.058,
+        "end": 70.2,
+        "spoken": true
+      },
+      {
+        "word": "Oh,",
+        "start": 70.21,
+        "end": 70.428,
+        "spoken": true
+      },
+      {
+        "word": "where's",
+        "start": 70.438,
+        "end": 70.96
+      },
+      {
+        "word": "the",
+        "start": 70.96,
+        "end": 71.2
+      },
+      {
+        "word": "principle?",
+        "start": 71.2,
+        "end": 72.16,
+        "spoken": true
+      },
+      {
+        "word": "Oh,",
+        "start": 72.16,
+        "end": 72.173
+      },
+      {
+        "word": "where's",
+        "start": 72.173,
+        "end": 72.203
+      },
+      {
+        "word": "the",
+        "start": 72.203,
+        "end": 72.217
+      },
+      {
+        "word": "principle?",
+        "start": 72.227,
+        "end": 72.327
+      }
+    ]
+  },
+  {
+    "time": 81.2,
+    "text": "Complicated, overrated",
+    "words": [
+      {
+        "word": "Complicated,",
+        "start": 81.2,
+        "end": 82.78
+      },
+      {
+        "word": "overrated",
+        "start": 82.78,
+        "end": 83.12,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 83.13,
+    "text": "You're fixated and elated",
+    "words": [
+      {
+        "word": "You're",
+        "start": 83.13,
+        "end": 83.839
+      },
+      {
+        "word": "fixated",
+        "start": 83.839,
+        "end": 84.666,
+        "sung": true
+      },
+      {
+        "word": "and",
+        "start": 84.666,
+        "end": 85.021,
+        "sung": true
+      },
+      {
+        "word": "elated",
+        "start": 85.021,
+        "end": 85.73
+      }
+    ]
+  },
+  {
+    "time": 85.73,
+    "text": "By the separation",
+    "words": [
+      {
+        "word": "By",
+        "start": 85.73,
+        "end": 86.03
+      },
+      {
+        "word": "the",
+        "start": 86.03,
+        "end": 86.48,
+        "spoken": true
+      },
+      {
+        "word": "separation",
+        "start": 86.48,
+        "end": 87.98,
+        "sung": true
+      }
+    ]
+  },
+  {
+    "time": 88.08,
+    "text": "In this place that you've created",
+    "words": [
+      {
+        "word": "In",
+        "start": 88.08,
+        "end": 88.256,
+        "spoken": true
+      },
+      {
+        "word": "this",
+        "start": 88.256,
+        "end": 88.609,
+        "spoken": true
+      },
+      {
+        "word": "place",
+        "start": 88.609,
+        "end": 89.05,
+        "spoken": true
+      },
+      {
+        "word": "that",
+        "start": 89.05,
+        "end": 89.403,
+        "spoken": true
+      },
+      {
+        "word": "you've",
+        "start": 89.403,
+        "end": 89.933
+      },
+      {
+        "word": "created",
+        "start": 89.933,
+        "end": 90.55,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 90.58,
+    "text": "Fuck all of your rules and guidelines",
+    "words": [
+      {
+        "word": "Fuck",
+        "start": 90.58,
+        "end": 91.18,
+        "spoken": true
+      },
+      {
+        "word": "all",
+        "start": 91.18,
+        "end": 91.63,
+        "spoken": true
+      },
+      {
+        "word": "of",
+        "start": 91.63,
+        "end": 91.93,
+        "spoken": true
+      },
+      {
+        "word": "your",
+        "start": 91.93,
+        "end": 92.53,
+        "spoken": true
+      },
+      {
+        "word": "rules",
+        "start": 92.53,
+        "end": 93.28
+      },
+      {
+        "word": "and",
+        "start": 93.28,
+        "end": 93.73,
+        "spoken": true
+      },
+      {
+        "word": "guidelines",
+        "start": 93.73,
+        "end": 95.23,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 95.39,
+    "text": "You shouldn't even be on the sidelines",
+    "words": [
+      {
+        "word": "You",
+        "start": 95.39,
+        "end": 95.84
+      },
+      {
+        "word": "shouldn't",
+        "start": 95.84,
+        "end": 97.19,
+        "sung": true
+      },
+      {
+        "word": "even",
+        "start": 97.19,
+        "end": 97.79,
+        "spoken": true
+      },
+      {
+        "word": "be",
+        "start": 97.79,
+        "end": 98.09
+      },
+      {
+        "word": "on",
+        "start": 98.09,
+        "end": 98.39,
+        "spoken": true
+      },
+      {
+        "word": "the",
+        "start": 98.39,
+        "end": 98.84,
+        "spoken": true
+      },
+      {
+        "word": "sidelines",
+        "start": 98.84,
+        "end": 100.19,
+        "sung": true
+      }
+    ]
+  },
+  {
+    "time": 102.22,
+    "text": "Can't you see that we're all hurting?",
+    "words": [
+      {
+        "word": "Can't",
+        "start": 102.22,
+        "end": 102.441,
+        "spoken": true
+      },
+      {
+        "word": "you",
+        "start": 102.441,
+        "end": 102.574,
+        "spoken": true
+      },
+      {
+        "word": "see",
+        "start": 102.574,
+        "end": 102.706
+      },
+      {
+        "word": "that",
+        "start": 102.706,
+        "end": 102.883,
+        "spoken": true
+      },
+      {
+        "word": "we're",
+        "start": 102.883,
+        "end": 103.104,
+        "spoken": true
+      },
+      {
+        "word": "all",
+        "start": 103.104,
+        "end": 103.236
+      },
+      {
+        "word": "hurting?",
+        "start": 103.236,
+        "end": 103.59,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 103.62,
+    "text": "If you're not teaching, we're not learning",
+    "words": [
+      {
+        "word": "If",
+        "start": 103.62,
+        "end": 103.756
+      },
+      {
+        "word": "you're",
+        "start": 103.756,
+        "end": 104.164,
+        "spoken": true
+      },
+      {
+        "word": "not",
+        "start": 104.164,
+        "end": 104.369,
+        "spoken": true
+      },
+      {
+        "word": "teaching,",
+        "start": 104.369,
+        "end": 104.981,
+        "spoken": true
+      },
+      {
+        "word": "we're",
+        "start": 104.981,
+        "end": 105.321,
+        "spoken": true
+      },
+      {
+        "word": "not",
+        "start": 105.321,
+        "end": 105.526
+      },
+      {
+        "word": "learning",
+        "start": 105.526,
+        "end": 106.07
+      }
+    ]
+  },
+  {
+    "time": 106.07,
+    "text": "Excuse me, how much are you earning?",
+    "words": [
+      {
+        "word": "Excuse",
+        "start": 106.07,
+        "end": 106.792,
+        "spoken": true
+      },
+      {
+        "word": "me,",
+        "start": 106.792,
+        "end": 107.153,
+        "spoken": true
+      },
+      {
+        "word": "how",
+        "start": 107.153,
+        "end": 107.514,
+        "spoken": true
+      },
+      {
+        "word": "much",
+        "start": 107.514,
+        "end": 107.995,
+        "spoken": true
+      },
+      {
+        "word": "are",
+        "start": 107.995,
+        "end": 108.356,
+        "spoken": true
+      },
+      {
+        "word": "you",
+        "start": 108.356,
+        "end": 108.717,
+        "spoken": true
+      },
+      {
+        "word": "earning?",
+        "start": 108.717,
+        "end": 109.68,
+        "sung": true
+      }
+    ]
+  },
+  {
+    "time": 109.68,
+    "text": "I've tried to make you listen",
+    "words": [
+      {
+        "word": "I've",
+        "start": 109.68,
+        "end": 110.063,
+        "spoken": true
+      },
+      {
+        "word": "tried",
+        "start": 110.063,
+        "end": 110.543,
+        "spoken": true
+      },
+      {
+        "word": "to",
+        "start": 110.543,
+        "end": 110.734
+      },
+      {
+        "word": "make",
+        "start": 110.734,
+        "end": 111.118,
+        "spoken": true
+      },
+      {
+        "word": "you",
+        "start": 111.118,
+        "end": 111.405,
+        "spoken": true
+      },
+      {
+        "word": "listen",
+        "start": 111.405,
+        "end": 111.98,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 111.98,
+    "text": "But you won't, it's your way, right?",
+    "words": [
+      {
+        "word": "But",
+        "start": 111.98,
+        "end": 112.272
+      },
+      {
+        "word": "you",
+        "start": 112.272,
+        "end": 112.564
+      },
+      {
+        "word": "won't,",
+        "start": 112.564,
+        "end": 113.148
+      },
+      {
+        "word": "it's",
+        "start": 113.148,
+        "end": 113.537,
+        "spoken": true
+      },
+      {
+        "word": "your",
+        "start": 113.537,
+        "end": 113.927,
+        "sung": true
+      },
+      {
+        "word": "way,",
+        "start": 113.927,
+        "end": 114.316,
+        "spoken": true
+      },
+      {
+        "word": "right?",
+        "start": 114.316,
+        "end": 114.9
+      }
+    ]
+  },
+  {
+    "time": 115.74,
+    "text": "Killing kids all day and night",
+    "words": [
+      {
+        "word": "Killing",
+        "start": 115.74,
+        "end": 116.185,
+        "spoken": true
+      },
+      {
+        "word": "kids",
+        "start": 116.185,
+        "end": 116.44,
+        "spoken": true
+      },
+      {
+        "word": "all",
+        "start": 116.44,
+        "end": 116.63,
+        "spoken": true
+      },
+      {
+        "word": "day",
+        "start": 116.63,
+        "end": 116.821,
+        "spoken": true
+      },
+      {
+        "word": "and",
+        "start": 116.821,
+        "end": 117.012,
+        "spoken": true
+      },
+      {
+        "word": "night",
+        "start": 117.012,
+        "end": 117.33,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 117.33,
+    "text": "Prescription pills and on-line fights",
+    "words": [
+      {
+        "word": "Prescription",
+        "start": 117.33,
+        "end": 118.254,
+        "spoken": true
+      },
+      {
+        "word": "pills",
+        "start": 118.254,
+        "end": 118.638,
+        "spoken": true
+      },
+      {
+        "word": "and",
+        "start": 118.638,
+        "end": 118.869,
+        "spoken": true
+      },
+      {
+        "word": "on-line",
+        "start": 118.869,
+        "end": 119.408,
+        "spoken": true
+      },
+      {
+        "word": "fights",
+        "start": 119.408,
+        "end": 119.87
+      }
+    ]
+  },
+  {
+    "time": 119.87,
+    "text": "Shooting at the angels while claiming you're the good guy",
+    "words": [
+      {
+        "word": "Shooting",
+        "start": 119.87,
+        "end": 120.702,
+        "spoken": true
+      },
+      {
+        "word": "at",
+        "start": 120.702,
+        "end": 120.91,
+        "spoken": true
+      },
+      {
+        "word": "the",
+        "start": 120.91,
+        "end": 121.221,
+        "spoken": true
+      },
+      {
+        "word": "angels",
+        "start": 121.221,
+        "end": 121.845,
+        "spoken": true
+      },
+      {
+        "word": "while",
+        "start": 121.845,
+        "end": 122.365,
+        "spoken": true
+      },
+      {
+        "word": "claiming",
+        "start": 122.365,
+        "end": 123.197,
+        "spoken": true
+      },
+      {
+        "word": "you're",
+        "start": 123.197,
+        "end": 123.82
+      },
+      {
+        "word": "the",
+        "start": 123.82,
+        "end": 124.132,
+        "spoken": true
+      },
+      {
+        "word": "good",
+        "start": 124.132,
+        "end": 124.548
+      },
+      {
+        "word": "guy",
+        "start": 124.548,
+        "end": 124.86
+      }
+    ]
+  },
+  {
+    "time": 124.86,
+    "text": "All you want is cash and hype",
+    "words": [
+      {
+        "word": "All",
+        "start": 124.86,
+        "end": 125.199,
+        "spoken": true
+      },
+      {
+        "word": "you",
+        "start": 125.199,
+        "end": 125.538,
+        "sung": true
+      },
+      {
+        "word": "want",
+        "start": 125.538,
+        "end": 125.99,
+        "spoken": true
+      },
+      {
+        "word": "is",
+        "start": 125.99,
+        "end": 126.217,
+        "spoken": true
+      },
+      {
+        "word": "cash",
+        "start": 126.217,
+        "end": 126.669,
+        "spoken": true
+      },
+      {
+        "word": "and",
+        "start": 126.669,
+        "end": 127.008,
+        "spoken": true
+      },
+      {
+        "word": "hype",
+        "start": 127.008,
+        "end": 127.46
+      }
+    ]
+  },
+  {
+    "time": 127.46,
+    "text": "\"Fuck our dreams\" and that's not right",
+    "words": [
+      {
+        "word": "\"Fuck",
+        "start": 127.46,
+        "end": 127.796
+      },
+      {
+        "word": "our",
+        "start": 127.796,
+        "end": 127.998,
+        "spoken": true
+      },
+      {
+        "word": "dreams\"",
+        "start": 127.998,
+        "end": 128.468
+      },
+      {
+        "word": "and",
+        "start": 128.468,
+        "end": 128.669
+      },
+      {
+        "word": "that's",
+        "start": 128.669,
+        "end": 129.073,
+        "spoken": true
+      },
+      {
+        "word": "not",
+        "start": 129.073,
+        "end": 129.274,
+        "spoken": true
+      },
+      {
+        "word": "right",
+        "start": 129.274,
+        "end": 129.61,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 129.61,
+    "text": "The principal, и, oh",
+    "words": [
+      {
+        "word": "The",
+        "start": 129.61,
+        "end": 130.06
+      },
+      {
+        "word": "principal,",
+        "start": 130.06,
+        "end": 131.56,
+        "spoken": true
+      },
+      {
+        "word": "и,",
+        "start": 131.56,
+        "end": 131.86,
+        "spoken": true
+      },
+      {
+        "word": "oh",
+        "start": 131.86,
+        "end": 132.16,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 133.85,
+    "text": "Where's the principle?",
+    "words": [
+      {
+        "word": "Where's",
+        "start": 133.85,
+        "end": 134.683,
+        "spoken": true
+      },
+      {
+        "word": "the",
+        "start": 134.683,
+        "end": 135.04,
+        "spoken": true
+      },
+      {
+        "word": "principle?",
+        "start": 135.04,
+        "end": 136.23,
+        "sung": true
+      }
+    ]
+  },
+  {
+    "time": 137.44,
+    "text": "Oh, where's the principle? Oh, where's the principle? Принцесс, oh Oh, where's the principle? Oh, where's the principle?",
+    "words": [
+      {
+        "word": "Oh,",
+        "start": 137.44,
+        "end": 137.54,
+        "spoken": true
+      },
+      {
+        "word": "where's",
+        "start": 137.54,
+        "end": 137.64,
+        "spoken": true
+      },
+      {
+        "word": "the",
+        "start": 137.64,
+        "end": 137.74,
+        "spoken": true
+      },
+      {
+        "word": "principle?",
+        "start": 137.74,
+        "end": 137.859,
+        "spoken": true
+      },
+      {
+        "word": "Oh,",
+        "start": 137.859,
+        "end": 137.959,
+        "spoken": true
+      },
+      {
+        "word": "where's",
+        "start": 137.959,
+        "end": 138.059,
+        "spoken": true
+      },
+      {
+        "word": "the",
+        "start": 138.059,
+        "end": 138.159
+      },
+      {
+        "word": "principle?",
+        "start": 138.159,
+        "end": 138.279
+      },
+      {
+        "word": "Принцесс,",
+        "start": 138.279,
+        "end": 138.386
+      },
+      {
+        "word": "oh",
+        "start": 138.386,
+        "end": 138.486
+      },
+      {
+        "word": "Oh,",
+        "start": 138.486,
+        "end": 138.586
+      },
+      {
+        "word": "where's",
+        "start": 138.586,
+        "end": 138.686
+      },
+      {
+        "word": "the",
+        "start": 138.686,
+        "end": 138.786,
+        "spoken": true
+      },
+      {
+        "word": "principle?",
+        "start": 138.786,
+        "end": 138.906,
+        "spoken": true
+      },
+      {
+        "word": "Oh,",
+        "start": 138.906,
+        "end": 139.006,
+        "spoken": true
+      },
+      {
+        "word": "where's",
+        "start": 139.006,
+        "end": 139.106,
+        "spoken": true
+      },
+      {
+        "word": "the",
+        "start": 139.106,
+        "end": 139.206,
+        "spoken": true
+      },
+      {
+        "word": "principle?",
+        "start": 139.206,
+        "end": 139.325,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 149.38,
+    "text": "You don't know the pain that you are causing",
+    "words": [
+      {
+        "word": "You",
+        "start": 149.38,
+        "end": 149.734,
+        "spoken": true
+      },
+      {
+        "word": "don't",
+        "start": 149.734,
+        "end": 150.324,
+        "spoken": true
+      },
+      {
+        "word": "know",
+        "start": 150.324,
+        "end": 150.797,
+        "spoken": true
+      },
+      {
+        "word": "the",
+        "start": 150.797,
+        "end": 151.151,
+        "spoken": true
+      },
+      {
+        "word": "pain",
+        "start": 151.151,
+        "end": 151.623,
+        "spoken": true
+      },
+      {
+        "word": "that",
+        "start": 151.623,
+        "end": 152.095,
+        "spoken": true
+      },
+      {
+        "word": "you",
+        "start": 152.095,
+        "end": 152.449,
+        "spoken": true
+      },
+      {
+        "word": "are",
+        "start": 152.449,
+        "end": 152.804,
+        "spoken": true
+      },
+      {
+        "word": "causing",
+        "start": 152.804,
+        "end": 153.63,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 154.2,
+    "text": "Yeah, your actions hurt, so do your words",
+    "words": [
+      {
+        "word": "Yeah,",
+        "start": 154.2,
+        "end": 154.875,
+        "spoken": true
+      },
+      {
+        "word": "your",
+        "start": 154.875,
+        "end": 155.415,
+        "spoken": true
+      },
+      {
+        "word": "actions",
+        "start": 155.415,
+        "end": 156.36
+      },
+      {
+        "word": "hurt,",
+        "start": 156.36,
+        "end": 157.035,
+        "spoken": true
+      },
+      {
+        "word": "so",
+        "start": 157.035,
+        "end": 157.305,
+        "spoken": true
+      },
+      {
+        "word": "do",
+        "start": 157.305,
+        "end": 157.575,
+        "spoken": true
+      },
+      {
+        "word": "your",
+        "start": 157.575,
+        "end": 158.115
+      },
+      {
+        "word": "words",
+        "start": 158.115,
+        "end": 158.79
+      }
+    ]
+  },
+  {
+    "time": 158.79,
+    "text": "The more you try to fuck us over",
+    "words": [
+      {
+        "word": "The",
+        "start": 158.79,
+        "end": 159.23,
+        "spoken": true
+      },
+      {
+        "word": "more",
+        "start": 159.23,
+        "end": 159.818,
+        "spoken": true
+      },
+      {
+        "word": "you",
+        "start": 159.818,
+        "end": 160.258,
+        "spoken": true
+      },
+      {
+        "word": "try",
+        "start": 160.258,
+        "end": 160.698,
+        "spoken": true
+      },
+      {
+        "word": "to",
+        "start": 160.698,
+        "end": 160.992,
+        "spoken": true
+      },
+      {
+        "word": "fuck",
+        "start": 160.992,
+        "end": 161.579,
+        "spoken": true
+      },
+      {
+        "word": "us",
+        "start": 161.579,
+        "end": 161.873,
+        "spoken": true
+      },
+      {
+        "word": "over",
+        "start": 161.873,
+        "end": 162.46,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 162.46,
+    "text": "We will be there yelling at your front door",
+    "words": [
+      {
+        "word": "We",
+        "start": 162.46,
+        "end": 162.76,
+        "spoken": true
+      },
+      {
+        "word": "will",
+        "start": 162.76,
+        "end": 163.36,
+        "spoken": true
+      },
+      {
+        "word": "be",
+        "start": 163.36,
+        "end": 163.66,
+        "spoken": true
+      },
+      {
+        "word": "there",
+        "start": 163.66,
+        "end": 164.41,
+        "spoken": true
+      },
+      {
+        "word": "yelling",
+        "start": 164.41,
+        "end": 165.46,
+        "spoken": true
+      },
+      {
+        "word": "at",
+        "start": 165.46,
+        "end": 165.76,
+        "spoken": true
+      },
+      {
+        "word": "your",
+        "start": 165.76,
+        "end": 166.36,
+        "spoken": true
+      },
+      {
+        "word": "front",
+        "start": 166.36,
+        "end": 167.11
+      },
+      {
+        "word": "door",
+        "start": 167.11,
+        "end": 167.71,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 168.36,
+    "text": "I've tried to make you listen",
+    "words": [
+      {
+        "word": "I've",
+        "start": 168.36,
+        "end": 168.768,
+        "spoken": true
+      },
+      {
+        "word": "tried",
+        "start": 168.768,
+        "end": 169.279,
+        "spoken": true
+      },
+      {
+        "word": "to",
+        "start": 169.279,
+        "end": 169.483,
+        "spoken": true
+      },
+      {
+        "word": "make",
+        "start": 169.483,
+        "end": 169.891,
+        "spoken": true
+      },
+      {
+        "word": "you",
+        "start": 169.891,
+        "end": 170.197,
+        "spoken": true
+      },
+      {
+        "word": "listen",
+        "start": 170.197,
+        "end": 170.81,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 170.81,
+    "text": "But you won't, it's your way, right?",
+    "words": [
+      {
+        "word": "But",
+        "start": 170.81,
+        "end": 171.26,
+        "spoken": true
+      },
+      {
+        "word": "you",
+        "start": 171.26,
+        "end": 171.71
+      },
+      {
+        "word": "won't,",
+        "start": 171.71,
+        "end": 172.61,
+        "spoken": true
+      },
+      {
+        "word": "it's",
+        "start": 172.61,
+        "end": 173.21,
+        "spoken": true
+      },
+      {
+        "word": "your",
+        "start": 173.21,
+        "end": 173.81,
+        "spoken": true
+      },
+      {
+        "word": "way,",
+        "start": 173.81,
+        "end": 174.41,
+        "whisper": true
+      },
+      {
+        "word": "right?",
+        "start": 174.41,
+        "end": 175.31,
+        "whisper": true
+      }
+    ]
+  }
+]

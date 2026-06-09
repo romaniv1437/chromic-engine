@@ -1,0 +1,2110 @@
+[
+  {
+    "time": 21.68,
+    "text": "You pull me by my hair, so I don't go nowhere",
+    "words": [
+      {
+        "word": "You",
+        "start": 21.68,
+        "end": 22.065,
+        "spoken": true
+      },
+      {
+        "word": "pull",
+        "start": 22.065,
+        "end": 22.578
+      },
+      {
+        "word": "me",
+        "start": 22.578,
+        "end": 22.835
+      },
+      {
+        "word": "by",
+        "start": 22.835,
+        "end": 23.091,
+        "spoken": true
+      },
+      {
+        "word": "my",
+        "start": 23.091,
+        "end": 23.348
+      },
+      {
+        "word": "hair,",
+        "start": 23.348,
+        "end": 23.989,
+        "spoken": true
+      },
+      {
+        "word": "so",
+        "start": 23.989,
+        "end": 24.246
+      },
+      {
+        "word": "I",
+        "start": 24.246,
+        "end": 24.374
+      },
+      {
+        "word": "don't",
+        "start": 24.374,
+        "end": 25.015,
+        "spoken": true
+      },
+      {
+        "word": "go",
+        "start": 25.015,
+        "end": 25.272,
+        "spoken": true
+      },
+      {
+        "word": "nowhere",
+        "start": 25.272,
+        "end": 26.17
+      }
+    ]
+  },
+  {
+    "time": 28.58,
+    "text": "Tell me you love me, but you treat me like I'm never there",
+    "words": [
+      {
+        "word": "Tell",
+        "start": 28.58,
+        "end": 28.743
+      },
+      {
+        "word": "me",
+        "start": 28.743,
+        "end": 28.843
+      },
+      {
+        "word": "you",
+        "start": 28.843,
+        "end": 28.965
+      },
+      {
+        "word": "love",
+        "start": 28.965,
+        "end": 29.127,
+        "spoken": true
+      },
+      {
+        "word": "me,",
+        "start": 29.127,
+        "end": 29.249,
+        "spoken": true
+      },
+      {
+        "word": "but",
+        "start": 29.249,
+        "end": 29.371,
+        "spoken": true
+      },
+      {
+        "word": "you",
+        "start": 29.371,
+        "end": 29.493,
+        "spoken": true
+      },
+      {
+        "word": "treat",
+        "start": 29.493,
+        "end": 29.696,
+        "spoken": true
+      },
+      {
+        "word": "me",
+        "start": 29.696,
+        "end": 29.796,
+        "spoken": true
+      },
+      {
+        "word": "like",
+        "start": 29.796,
+        "end": 29.959
+      },
+      {
+        "word": "I'm",
+        "start": 29.959,
+        "end": 30.081,
+        "spoken": true
+      },
+      {
+        "word": "never",
+        "start": 30.081,
+        "end": 30.284,
+        "spoken": true
+      },
+      {
+        "word": "there",
+        "start": 30.284,
+        "end": 30.44,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 30.45,
+    "text": "You say the cruelest words, you used to break my heart",
+    "words": [
+      {
+        "word": "You",
+        "start": 30.45,
+        "end": 30.766
+      },
+      {
+        "word": "say",
+        "start": 30.766,
+        "end": 31.083,
+        "spoken": true
+      },
+      {
+        "word": "the",
+        "start": 31.083,
+        "end": 31.399
+      },
+      {
+        "word": "cruelest",
+        "start": 31.399,
+        "end": 32.243
+      },
+      {
+        "word": "words,",
+        "start": 32.243,
+        "end": 32.875
+      },
+      {
+        "word": "you",
+        "start": 32.875,
+        "end": 33.192
+      },
+      {
+        "word": "used",
+        "start": 33.192,
+        "end": 33.614,
+        "spoken": true
+      },
+      {
+        "word": "to",
+        "start": 33.614,
+        "end": 33.825,
+        "spoken": true
+      },
+      {
+        "word": "break",
+        "start": 33.825,
+        "end": 34.352,
+        "spoken": true
+      },
+      {
+        "word": "my",
+        "start": 34.352,
+        "end": 34.563
+      },
+      {
+        "word": "heart",
+        "start": 34.563,
+        "end": 35.09,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 35.09,
+    "text": "'Cause I'm over here working my ass off",
+    "words": [
+      {
+        "word": "'Cause",
+        "start": 35.09,
+        "end": 35.791,
+        "spoken": true
+      },
+      {
+        "word": "I'm",
+        "start": 35.791,
+        "end": 36.142,
+        "spoken": true
+      },
+      {
+        "word": "over",
+        "start": 36.142,
+        "end": 36.609,
+        "spoken": true
+      },
+      {
+        "word": "here",
+        "start": 36.609,
+        "end": 37.077,
+        "spoken": true
+      },
+      {
+        "word": "working",
+        "start": 37.077,
+        "end": 37.895,
+        "spoken": true
+      },
+      {
+        "word": "my",
+        "start": 37.895,
+        "end": 38.129,
+        "spoken": true
+      },
+      {
+        "word": "ass",
+        "start": 38.129,
+        "end": 38.479,
+        "spoken": true
+      },
+      {
+        "word": "off",
+        "start": 38.479,
+        "end": 38.83,
+        "sung": true
+      }
+    ]
+  },
+  {
+    "time": 38.83,
+    "text": "Why is it so hard to see? (Why?)",
+    "words": [
+      {
+        "word": "Why",
+        "start": 38.83,
+        "end": 39.28,
+        "spoken": true
+      },
+      {
+        "word": "is",
+        "start": 39.28,
+        "end": 39.58,
+        "spoken": true
+      },
+      {
+        "word": "it",
+        "start": 39.58,
+        "end": 39.88,
+        "spoken": true
+      },
+      {
+        "word": "so",
+        "start": 39.88,
+        "end": 40.18,
+        "spoken": true
+      },
+      {
+        "word": "hard",
+        "start": 40.18,
+        "end": 40.78,
+        "spoken": true
+      },
+      {
+        "word": "to",
+        "start": 40.78,
+        "end": 41.08,
+        "sung": true
+      },
+      {
+        "word": "see?",
+        "start": 41.08,
+        "end": 41.68,
+        "spoken": true
+      },
+      {
+        "word": "(Why?)",
+        "start": 41.68,
+        "end": 42.58,
+        "adlib": true,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 43.07,
+    "text": "If I cut myself, I would bleed (kill me)",
+    "words": [
+      {
+        "word": "If",
+        "start": 43.07,
+        "end": 43.363,
+        "spoken": true
+      },
+      {
+        "word": "I",
+        "start": 43.363,
+        "end": 43.51,
+        "spoken": true
+      },
+      {
+        "word": "cut",
+        "start": 43.51,
+        "end": 43.949,
+        "spoken": true
+      },
+      {
+        "word": "myself,",
+        "start": 43.949,
+        "end": 44.975,
+        "sung": true
+      },
+      {
+        "word": "I",
+        "start": 44.975,
+        "end": 45.122
+      },
+      {
+        "word": "would",
+        "start": 45.122,
+        "end": 45.855
+      },
+      {
+        "word": "bleed",
+        "start": 45.855,
+        "end": 46.587,
+        "spoken": true
+      },
+      {
+        "word": "(kill",
+        "start": 46.587,
+        "end": 47.32,
+        "adlib": true,
+        "spoken": true
+      },
+      {
+        "word": "me)",
+        "start": 47.32,
+        "end": 47.76,
+        "adlib": true,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 47.76,
+    "text": "I'm just like you, you're like me",
+    "words": [
+      {
+        "word": "I'm",
+        "start": 47.76,
+        "end": 48.21
+      },
+      {
+        "word": "just",
+        "start": 48.21,
+        "end": 48.81,
+        "spoken": true
+      },
+      {
+        "word": "like",
+        "start": 48.81,
+        "end": 49.41,
+        "spoken": true
+      },
+      {
+        "word": "you,",
+        "start": 49.41,
+        "end": 50.01,
+        "sung": true
+      },
+      {
+        "word": "you're",
+        "start": 50.01,
+        "end": 50.91,
+        "sung": true
+      },
+      {
+        "word": "like",
+        "start": 50.91,
+        "end": 51.51,
+        "spoken": true
+      },
+      {
+        "word": "me",
+        "start": 51.51,
+        "end": 51.81,
+        "sung": true
+      }
+    ]
+  },
+  {
+    "time": 54.82,
+    "text": "Imperfect and human, are we?",
+    "words": [
+      {
+        "word": "Imperfect",
+        "start": 54.82,
+        "end": 55.349,
+        "spoken": true
+      },
+      {
+        "word": "and",
+        "start": 55.349,
+        "end": 55.525,
+        "whisper": true
+      },
+      {
+        "word": "human,",
+        "start": 55.525,
+        "end": 55.877,
+        "whisper": true
+      },
+      {
+        "word": "are",
+        "start": 55.877,
+        "end": 56.054,
+        "whisper": true
+      },
+      {
+        "word": "we?",
+        "start": 56.054,
+        "end": 56.23,
+        "whisper": true
+      }
+    ]
+  },
+  {
+    "time": 56.23,
+    "text": "Show and tell",
+    "words": [
+      {
+        "word": "Show",
+        "start": 56.23,
+        "end": 56.83,
+        "spoken": true
+      },
+      {
+        "word": "and",
+        "start": 56.83,
+        "end": 57.28,
+        "sung": true
+      },
+      {
+        "word": "tell",
+        "start": 57.28,
+        "end": 57.88,
+        "sung": true
+      }
+    ]
+  },
+  {
+    "time": 60.95,
+    "text": "I'm on display for all you fuckers to see",
+    "words": [
+      {
+        "word": "I'm",
+        "start": 60.95,
+        "end": 61.322,
+        "spoken": true
+      },
+      {
+        "word": "on",
+        "start": 61.322,
+        "end": 61.57,
+        "spoken": true
+      },
+      {
+        "word": "display",
+        "start": 61.57,
+        "end": 62.437,
+        "sung": true
+      },
+      {
+        "word": "for",
+        "start": 62.437,
+        "end": 62.809,
+        "sung": true
+      },
+      {
+        "word": "all",
+        "start": 62.809,
+        "end": 63.181,
+        "spoken": true
+      },
+      {
+        "word": "you",
+        "start": 63.181,
+        "end": 63.553,
+        "spoken": true
+      },
+      {
+        "word": "fuckers",
+        "start": 63.553,
+        "end": 64.42,
+        "sung": true
+      },
+      {
+        "word": "to",
+        "start": 64.42,
+        "end": 64.668,
+        "spoken": true
+      },
+      {
+        "word": "see",
+        "start": 64.668,
+        "end": 65.04
+      }
+    ]
+  },
+  {
+    "time": 65.04,
+    "text": "Show and tell",
+    "words": [
+      {
+        "word": "Show",
+        "start": 65.04,
+        "end": 65.64
+      },
+      {
+        "word": "and",
+        "start": 65.64,
+        "end": 66.09,
+        "spoken": true
+      },
+      {
+        "word": "tell",
+        "start": 66.09,
+        "end": 66.69,
+        "sung": true
+      }
+    ]
+  },
+  {
+    "time": 69.8,
+    "text": "Harsh words if you don't get a pic with me",
+    "words": [
+      {
+        "word": "Harsh",
+        "start": 69.8,
+        "end": 70.4,
+        "spoken": true
+      },
+      {
+        "word": "words",
+        "start": 70.4,
+        "end": 71.0,
+        "spoken": true
+      },
+      {
+        "word": "if",
+        "start": 71.0,
+        "end": 71.24
+      },
+      {
+        "word": "you",
+        "start": 71.24,
+        "end": 71.6,
+        "spoken": true
+      },
+      {
+        "word": "don't",
+        "start": 71.6,
+        "end": 72.2,
+        "spoken": true
+      },
+      {
+        "word": "get",
+        "start": 72.2,
+        "end": 72.56
+      },
+      {
+        "word": "a",
+        "start": 72.56,
+        "end": 72.68
+      },
+      {
+        "word": "pic",
+        "start": 72.68,
+        "end": 73.04
+      },
+      {
+        "word": "with",
+        "start": 73.04,
+        "end": 73.52
+      },
+      {
+        "word": "me",
+        "start": 73.52,
+        "end": 73.76
+      }
+    ]
+  },
+  {
+    "time": 73.76,
+    "text": "Buy and sell (buy and sell me, baby)",
+    "words": [
+      {
+        "word": "Buy",
+        "start": 73.76,
+        "end": 74.21
+      },
+      {
+        "word": "and",
+        "start": 74.21,
+        "end": 74.66
+      },
+      {
+        "word": "sell",
+        "start": 74.66,
+        "end": 75.26,
+        "sung": true
+      },
+      {
+        "word": "(buy",
+        "start": 75.26,
+        "end": 75.86,
+        "adlib": true,
+        "spoken": true
+      },
+      {
+        "word": "and",
+        "start": 75.86,
+        "end": 76.31,
+        "adlib": true
+      },
+      {
+        "word": "sell",
+        "start": 76.31,
+        "end": 76.91,
+        "adlib": true
+      },
+      {
+        "word": "me,",
+        "start": 76.91,
+        "end": 77.36,
+        "adlib": true,
+        "spoken": true
+      },
+      {
+        "word": "baby)",
+        "start": 77.36,
+        "end": 78.11,
+        "adlib": true,
+        "sung": true
+      }
+    ]
+  },
+  {
+    "time": 78.58,
+    "text": "Like I'm a product to society",
+    "words": [
+      {
+        "word": "Like",
+        "start": 78.58,
+        "end": 79.18,
+        "spoken": true
+      },
+      {
+        "word": "I'm",
+        "start": 79.18,
+        "end": 79.63,
+        "sung": true
+      },
+      {
+        "word": "a",
+        "start": 79.63,
+        "end": 79.78,
+        "spoken": true
+      },
+      {
+        "word": "product",
+        "start": 79.78,
+        "end": 80.83,
+        "sung": true
+      },
+      {
+        "word": "to",
+        "start": 80.83,
+        "end": 81.13,
+        "spoken": true
+      },
+      {
+        "word": "society",
+        "start": 81.13,
+        "end": 82.18,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 82.51,
+    "text": "Art don't sell",
+    "words": [
+      {
+        "word": "Art",
+        "start": 82.51,
+        "end": 82.96
+      },
+      {
+        "word": "don't",
+        "start": 82.96,
+        "end": 83.71,
+        "spoken": true
+      },
+      {
+        "word": "sell",
+        "start": 83.71,
+        "end": 84.31,
+        "sung": true
+      }
+    ]
+  },
+  {
+    "time": 88.58,
+    "text": "Unless you fucked every authority",
+    "words": [
+      {
+        "word": "Unless",
+        "start": 88.58,
+        "end": 89.215,
+        "spoken": true
+      },
+      {
+        "word": "you",
+        "start": 89.215,
+        "end": 89.533,
+        "spoken": true
+      },
+      {
+        "word": "fucked",
+        "start": 89.533,
+        "end": 90.168,
+        "sung": true
+      },
+      {
+        "word": "every",
+        "start": 90.168,
+        "end": 90.697,
+        "sung": true
+      },
+      {
+        "word": "authority",
+        "start": 90.697,
+        "end": 91.65,
+        "sung": true
+      }
+    ]
+  },
+  {
+    "time": 91.65,
+    "text": "You beg and cry for more, he had 'em on the floor",
+    "words": [
+      {
+        "word": "You",
+        "start": 91.65,
+        "end": 92.018
+      },
+      {
+        "word": "beg",
+        "start": 92.018,
+        "end": 92.386,
+        "spoken": true
+      },
+      {
+        "word": "and",
+        "start": 92.386,
+        "end": 92.754
+      },
+      {
+        "word": "cry",
+        "start": 92.754,
+        "end": 93.122
+      },
+      {
+        "word": "for",
+        "start": 93.122,
+        "end": 93.489
+      },
+      {
+        "word": "more,",
+        "start": 93.489,
+        "end": 94.103,
+        "spoken": true
+      },
+      {
+        "word": "he",
+        "start": 94.103,
+        "end": 94.348
+      },
+      {
+        "word": "had",
+        "start": 94.348,
+        "end": 94.716,
+        "spoken": true
+      },
+      {
+        "word": "'em",
+        "start": 94.716,
+        "end": 95.084,
+        "spoken": true
+      },
+      {
+        "word": "on",
+        "start": 95.084,
+        "end": 95.329,
+        "spoken": true
+      },
+      {
+        "word": "the",
+        "start": 95.329,
+        "end": 95.697
+      },
+      {
+        "word": "floor",
+        "start": 95.697,
+        "end": 96.31,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 96.31,
+    "text": "There are strangers takin' pictures of me when I ask, \"No more\"",
+    "words": [
+      {
+        "word": "There",
+        "start": 96.31,
+        "end": 96.697
+      },
+      {
+        "word": "are",
+        "start": 96.697,
+        "end": 96.928,
+        "spoken": true
+      },
+      {
+        "word": "strangers",
+        "start": 96.928,
+        "end": 97.624,
+        "spoken": true
+      },
+      {
+        "word": "takin'",
+        "start": 97.624,
+        "end": 98.088,
+        "spoken": true
+      },
+      {
+        "word": "pictures",
+        "start": 98.088,
+        "end": 98.707
+      },
+      {
+        "word": "of",
+        "start": 98.707,
+        "end": 98.861,
+        "spoken": true
+      },
+      {
+        "word": "me",
+        "start": 98.861,
+        "end": 99.016,
+        "spoken": true
+      },
+      {
+        "word": "when",
+        "start": 99.016,
+        "end": 99.325,
+        "spoken": true
+      },
+      {
+        "word": "I",
+        "start": 99.325,
+        "end": 99.425
+      },
+      {
+        "word": "ask,",
+        "start": 99.425,
+        "end": 99.734,
+        "spoken": true
+      },
+      {
+        "word": "\"No",
+        "start": 99.734,
+        "end": 99.966,
+        "spoken": true
+      },
+      {
+        "word": "more\"",
+        "start": 99.966,
+        "end": 100.32,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 100.33,
+    "text": "It's really hard for me to say just how I feel",
+    "words": [
+      {
+        "word": "It's",
+        "start": 100.33,
+        "end": 100.828
+      },
+      {
+        "word": "really",
+        "start": 100.828,
+        "end": 101.574,
+        "spoken": true
+      },
+      {
+        "word": "hard",
+        "start": 101.574,
+        "end": 102.072
+      },
+      {
+        "word": "for",
+        "start": 102.072,
+        "end": 102.446,
+        "spoken": true
+      },
+      {
+        "word": "me",
+        "start": 102.446,
+        "end": 102.694
+      },
+      {
+        "word": "to",
+        "start": 102.694,
+        "end": 102.943
+      },
+      {
+        "word": "say",
+        "start": 102.943,
+        "end": 103.317
+      },
+      {
+        "word": "just",
+        "start": 103.317,
+        "end": 103.814,
+        "spoken": true
+      },
+      {
+        "word": "how",
+        "start": 103.814,
+        "end": 104.188,
+        "spoken": true
+      },
+      {
+        "word": "I",
+        "start": 104.188,
+        "end": 104.312,
+        "spoken": true
+      },
+      {
+        "word": "feel",
+        "start": 104.312,
+        "end": 104.81,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 104.81,
+    "text": "I'm scared that I'll get thrown away like a banana peel",
+    "words": [
+      {
+        "word": "I'm",
+        "start": 104.81,
+        "end": 105.081
+      },
+      {
+        "word": "scared",
+        "start": 105.081,
+        "end": 105.622,
+        "spoken": true
+      },
+      {
+        "word": "that",
+        "start": 105.622,
+        "end": 105.983,
+        "spoken": true
+      },
+      {
+        "word": "I'll",
+        "start": 105.983,
+        "end": 106.344,
+        "spoken": true
+      },
+      {
+        "word": "get",
+        "start": 106.344,
+        "end": 106.614,
+        "spoken": true
+      },
+      {
+        "word": "thrown",
+        "start": 106.614,
+        "end": 107.156,
+        "spoken": true
+      },
+      {
+        "word": "away",
+        "start": 107.156,
+        "end": 107.517,
+        "spoken": true
+      },
+      {
+        "word": "like",
+        "start": 107.517,
+        "end": 107.878,
+        "spoken": true
+      },
+      {
+        "word": "a",
+        "start": 107.878,
+        "end": 107.978,
+        "spoken": true
+      },
+      {
+        "word": "banana",
+        "start": 107.978,
+        "end": 108.519,
+        "sung": true
+      },
+      {
+        "word": "peel",
+        "start": 108.519,
+        "end": 108.86
+      }
+    ]
+  },
+  {
+    "time": 110.82,
+    "text": "Why is it so hard to see? (Why?)",
+    "words": [
+      {
+        "word": "Why",
+        "start": 110.82,
+        "end": 111.068,
+        "spoken": true
+      },
+      {
+        "word": "is",
+        "start": 111.068,
+        "end": 111.234,
+        "spoken": true
+      },
+      {
+        "word": "it",
+        "start": 111.234,
+        "end": 111.4
+      },
+      {
+        "word": "so",
+        "start": 111.4,
+        "end": 111.565
+      },
+      {
+        "word": "hard",
+        "start": 111.565,
+        "end": 111.896,
+        "spoken": true
+      },
+      {
+        "word": "to",
+        "start": 111.896,
+        "end": 112.062,
+        "spoken": true
+      },
+      {
+        "word": "see?",
+        "start": 112.062,
+        "end": 112.393,
+        "spoken": true
+      },
+      {
+        "word": "(Why?)",
+        "start": 112.393,
+        "end": 112.89,
+        "adlib": true,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 112.89,
+    "text": "If I cut myself, I would bleed (kill me)",
+    "words": [
+      {
+        "word": "If",
+        "start": 112.89,
+        "end": 113.171,
+        "spoken": true
+      },
+      {
+        "word": "I",
+        "start": 113.171,
+        "end": 113.312,
+        "spoken": true
+      },
+      {
+        "word": "cut",
+        "start": 113.312,
+        "end": 113.734
+      },
+      {
+        "word": "myself,",
+        "start": 113.734,
+        "end": 114.718,
+        "sung": true
+      },
+      {
+        "word": "I",
+        "start": 114.718,
+        "end": 114.859
+      },
+      {
+        "word": "would",
+        "start": 114.859,
+        "end": 115.562,
+        "spoken": true
+      },
+      {
+        "word": "bleed",
+        "start": 115.562,
+        "end": 116.265,
+        "spoken": true
+      },
+      {
+        "word": "(kill",
+        "start": 116.265,
+        "end": 116.968,
+        "adlib": true
+      },
+      {
+        "word": "me)",
+        "start": 116.968,
+        "end": 117.39,
+        "adlib": true,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 117.39,
+    "text": "I'm just like you, you're like me",
+    "words": [
+      {
+        "word": "I'm",
+        "start": 117.39,
+        "end": 117.84
+      },
+      {
+        "word": "just",
+        "start": 117.84,
+        "end": 118.44,
+        "sung": true
+      },
+      {
+        "word": "like",
+        "start": 118.44,
+        "end": 119.04,
+        "spoken": true
+      },
+      {
+        "word": "you,",
+        "start": 119.04,
+        "end": 119.64,
+        "sung": true
+      },
+      {
+        "word": "you're",
+        "start": 119.64,
+        "end": 120.54,
+        "spoken": true
+      },
+      {
+        "word": "like",
+        "start": 120.54,
+        "end": 121.14,
+        "sung": true
+      },
+      {
+        "word": "me",
+        "start": 121.14,
+        "end": 121.44,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 121.89,
+    "text": "Imperfect and human, are we?",
+    "words": [
+      {
+        "word": "Imperfect",
+        "start": 121.89,
+        "end": 123.24,
+        "spoken": true
+      },
+      {
+        "word": "and",
+        "start": 123.24,
+        "end": 123.69,
+        "spoken": true
+      },
+      {
+        "word": "human,",
+        "start": 123.69,
+        "end": 124.59,
+        "spoken": true
+      },
+      {
+        "word": "are",
+        "start": 124.59,
+        "end": 125.04
+      },
+      {
+        "word": "we?",
+        "start": 125.04,
+        "end": 125.49,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 126.02,
+    "text": "Show and tell",
+    "words": [
+      {
+        "word": "Show",
+        "start": 126.02,
+        "end": 126.62,
+        "sung": true
+      },
+      {
+        "word": "and",
+        "start": 126.62,
+        "end": 127.07,
+        "spoken": true
+      },
+      {
+        "word": "tell",
+        "start": 127.07,
+        "end": 127.67,
+        "spoken": true
+      }
+    ],
+    "end": 127.67
+  },
+  {
+    "time": 127.67,
+    "text": "(show and tell)",
+    "words": [
+      {
+        "word": "(show",
+        "start": 127.67,
+        "end": 128.42,
+        "adlib": true,
+        "spoken": true
+      },
+      {
+        "word": "and",
+        "start": 128.42,
+        "end": 128.87,
+        "adlib": true,
+        "spoken": true
+      },
+      {
+        "word": "tell)",
+        "start": 128.87,
+        "end": 129.62,
+        "adlib": true,
+        "spoken": true
+      }
+    ],
+    "end": 129.62
+  },
+  {
+    "time": 130.93,
+    "text": "I'm on display for all you fuckers to see (fuckers to see)",
+    "words": [
+      {
+        "word": "I'm",
+        "start": 130.93,
+        "end": 131.189,
+        "spoken": true
+      },
+      {
+        "word": "on",
+        "start": 131.189,
+        "end": 131.362,
+        "spoken": true
+      },
+      {
+        "word": "display",
+        "start": 131.362,
+        "end": 131.967,
+        "spoken": true
+      },
+      {
+        "word": "for",
+        "start": 131.967,
+        "end": 132.226,
+        "spoken": true
+      },
+      {
+        "word": "all",
+        "start": 132.226,
+        "end": 132.485,
+        "spoken": true
+      },
+      {
+        "word": "you",
+        "start": 132.485,
+        "end": 132.744,
+        "spoken": true
+      },
+      {
+        "word": "fuckers",
+        "start": 132.744,
+        "end": 133.349,
+        "spoken": true
+      },
+      {
+        "word": "to",
+        "start": 133.349,
+        "end": 133.521
+      },
+      {
+        "word": "see",
+        "start": 133.521,
+        "end": 133.781
+      },
+      {
+        "word": "(fuckers",
+        "start": 133.781,
+        "end": 134.472,
+        "adlib": true,
+        "spoken": true
+      },
+      {
+        "word": "to",
+        "start": 134.472,
+        "end": 134.644,
+        "adlib": true
+      },
+      {
+        "word": "see)",
+        "start": 134.644,
+        "end": 134.99,
+        "adlib": true
+      }
+    ]
+  },
+  {
+    "time": 134.99,
+    "text": "Show and tell",
+    "words": [
+      {
+        "word": "Show",
+        "start": 134.99,
+        "end": 135.59
+      },
+      {
+        "word": "and",
+        "start": 135.59,
+        "end": 136.04,
+        "spoken": true
+      },
+      {
+        "word": "tell",
+        "start": 136.04,
+        "end": 136.64,
+        "sung": true
+      }
+    ],
+    "end": 136.64
+  },
+  {
+    "time": 136.64,
+    "text": "(show and tell)",
+    "words": [
+      {
+        "word": "(show",
+        "start": 136.64,
+        "end": 137.39,
+        "adlib": true,
+        "spoken": true
+      },
+      {
+        "word": "and",
+        "start": 137.39,
+        "end": 137.84,
+        "adlib": true,
+        "spoken": true
+      },
+      {
+        "word": "tell)",
+        "start": 137.84,
+        "end": 138.59,
+        "adlib": true
+      }
+    ],
+    "end": 138.59
+  },
+  {
+    "time": 139.66,
+    "text": "Harsh words if you don't get a pic with me",
+    "words": [
+      {
+        "word": "Harsh",
+        "start": 139.66,
+        "end": 140.248,
+        "spoken": true
+      },
+      {
+        "word": "words",
+        "start": 140.248,
+        "end": 140.836,
+        "spoken": true
+      },
+      {
+        "word": "if",
+        "start": 140.836,
+        "end": 141.071
+      },
+      {
+        "word": "you",
+        "start": 141.071,
+        "end": 141.424,
+        "spoken": true
+      },
+      {
+        "word": "don't",
+        "start": 141.424,
+        "end": 142.012,
+        "sung": true
+      },
+      {
+        "word": "get",
+        "start": 142.012,
+        "end": 142.364
+      },
+      {
+        "word": "a",
+        "start": 142.364,
+        "end": 142.482
+      },
+      {
+        "word": "pic",
+        "start": 142.482,
+        "end": 142.835,
+        "spoken": true
+      },
+      {
+        "word": "with",
+        "start": 142.835,
+        "end": 143.305,
+        "spoken": true
+      },
+      {
+        "word": "me",
+        "start": 143.305,
+        "end": 143.54,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 143.54,
+    "text": "Buy and sell",
+    "words": [
+      {
+        "word": "Buy",
+        "start": 143.54,
+        "end": 143.99
+      },
+      {
+        "word": "and",
+        "start": 143.99,
+        "end": 144.44
+      },
+      {
+        "word": "sell",
+        "start": 144.44,
+        "end": 145.04,
+        "spoken": true
+      }
+    ],
+    "end": 145.04
+  },
+  {
+    "time": 145.04,
+    "text": "(buy and sell)",
+    "words": [
+      {
+        "word": "(buy",
+        "start": 145.04,
+        "end": 145.64,
+        "adlib": true,
+        "spoken": true
+      },
+      {
+        "word": "and",
+        "start": 145.64,
+        "end": 146.09,
+        "adlib": true
+      },
+      {
+        "word": "sell)",
+        "start": 146.09,
+        "end": 146.84,
+        "adlib": true
+      }
+    ],
+    "end": 146.84
+  },
+  {
+    "time": 148.58,
+    "text": "Like I'm a product to society",
+    "words": [
+      {
+        "word": "Like",
+        "start": 148.58,
+        "end": 149.18,
+        "spoken": true
+      },
+      {
+        "word": "I'm",
+        "start": 149.18,
+        "end": 149.63,
+        "spoken": true
+      },
+      {
+        "word": "a",
+        "start": 149.63,
+        "end": 149.78
+      },
+      {
+        "word": "product",
+        "start": 149.78,
+        "end": 150.83,
+        "spoken": true
+      },
+      {
+        "word": "to",
+        "start": 150.83,
+        "end": 151.13,
+        "spoken": true
+      },
+      {
+        "word": "society",
+        "start": 151.13,
+        "end": 152.18
+      }
+    ]
+  },
+  {
+    "time": 152.39,
+    "text": "Art don't sell",
+    "words": [
+      {
+        "word": "Art",
+        "start": 152.39,
+        "end": 152.84
+      },
+      {
+        "word": "don't",
+        "start": 152.84,
+        "end": 153.59,
+        "spoken": true
+      },
+      {
+        "word": "sell",
+        "start": 153.59,
+        "end": 154.19,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 157.22,
+    "text": "Unless you fucked every authority",
+    "words": [
+      {
+        "word": "Unless",
+        "start": 157.22,
+        "end": 158.041,
+        "spoken": true
+      },
+      {
+        "word": "you",
+        "start": 158.041,
+        "end": 158.452
+      },
+      {
+        "word": "fucked",
+        "start": 158.452,
+        "end": 159.273
+      },
+      {
+        "word": "every",
+        "start": 159.273,
+        "end": 159.958,
+        "spoken": true
+      },
+      {
+        "word": "authority",
+        "start": 159.958,
+        "end": 161.19,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 166.66,
+    "text": "Show and tell",
+    "words": [
+      {
+        "word": "Show",
+        "start": 166.66,
+        "end": 167.093
+      },
+      {
+        "word": "and",
+        "start": 167.093,
+        "end": 167.417,
+        "whisper": true
+      },
+      {
+        "word": "tell",
+        "start": 167.417,
+        "end": 167.85,
+        "whisper": true
+      }
+    ]
+  },
+  {
+    "time": 167.85,
+    "text": "Why can't you fucking hear me?",
+    "words": [
+      {
+        "word": "Why",
+        "start": 167.85,
+        "end": 168.146
+      },
+      {
+        "word": "can't",
+        "start": 168.146,
+        "end": 168.64
+      },
+      {
+        "word": "you",
+        "start": 168.64,
+        "end": 168.937
+      },
+      {
+        "word": "fucking",
+        "start": 168.937,
+        "end": 169.628,
+        "spoken": true
+      },
+      {
+        "word": "hear",
+        "start": 169.628,
+        "end": 170.024
+      },
+      {
+        "word": "me?",
+        "start": 170.024,
+        "end": 170.32
+      }
+    ]
+  },
+  {
+    "time": 170.32,
+    "text": "Show and tell, um",
+    "words": [
+      {
+        "word": "Show",
+        "start": 170.32,
+        "end": 170.92
+      },
+      {
+        "word": "and",
+        "start": 170.92,
+        "end": 171.37,
+        "spoken": true
+      },
+      {
+        "word": "tell,",
+        "start": 171.37,
+        "end": 172.12,
+        "sung": true
+      },
+      {
+        "word": "um",
+        "start": 172.12,
+        "end": 172.42
+      }
+    ]
+  },
+  {
+    "time": 176.51,
+    "text": "Are you listening yet?",
+    "words": [
+      {
+        "word": "Are",
+        "start": 176.51,
+        "end": 176.827,
+        "spoken": true
+      },
+      {
+        "word": "you",
+        "start": 176.827,
+        "end": 177.145
+      },
+      {
+        "word": "listening",
+        "start": 177.145,
+        "end": 178.097,
+        "whisper": true
+      },
+      {
+        "word": "yet?",
+        "start": 178.097,
+        "end": 178.52,
+        "sung": true
+      }
+    ]
+  },
+  {
+    "time": 178.52,
+    "text": "Show and tell (show and tell, baby)",
+    "words": [
+      {
+        "word": "Show",
+        "start": 178.52,
+        "end": 179.12,
+        "spoken": true
+      },
+      {
+        "word": "and",
+        "start": 179.12,
+        "end": 179.57,
+        "spoken": true
+      },
+      {
+        "word": "tell",
+        "start": 179.57,
+        "end": 180.17,
+        "spoken": true
+      },
+      {
+        "word": "(show",
+        "start": 180.17,
+        "end": 180.92,
+        "adlib": true
+      },
+      {
+        "word": "and",
+        "start": 180.92,
+        "end": 181.37,
+        "adlib": true,
+        "spoken": true
+      },
+      {
+        "word": "tell,",
+        "start": 181.37,
+        "end": 182.12,
+        "adlib": true
+      },
+      {
+        "word": "baby)",
+        "start": 182.12,
+        "end": 182.87,
+        "adlib": true,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 183.29,
+    "text": "I'm on display for all you fuckers to see (fuckers to see)",
+    "words": [
+      {
+        "word": "I'm",
+        "start": 183.29,
+        "end": 183.538,
+        "spoken": true
+      },
+      {
+        "word": "on",
+        "start": 183.538,
+        "end": 183.703,
+        "spoken": true
+      },
+      {
+        "word": "display",
+        "start": 183.703,
+        "end": 184.281,
+        "spoken": true
+      },
+      {
+        "word": "for",
+        "start": 184.281,
+        "end": 184.528
+      },
+      {
+        "word": "all",
+        "start": 184.528,
+        "end": 184.776,
+        "spoken": true
+      },
+      {
+        "word": "you",
+        "start": 184.776,
+        "end": 185.024,
+        "spoken": true
+      },
+      {
+        "word": "fuckers",
+        "start": 185.024,
+        "end": 185.601,
+        "spoken": true
+      },
+      {
+        "word": "to",
+        "start": 185.601,
+        "end": 185.767
+      },
+      {
+        "word": "see",
+        "start": 185.767,
+        "end": 186.014
+      },
+      {
+        "word": "(fuckers",
+        "start": 186.014,
+        "end": 186.675,
+        "adlib": true
+      },
+      {
+        "word": "to",
+        "start": 186.675,
+        "end": 186.84,
+        "adlib": true
+      },
+      {
+        "word": "see)",
+        "start": 186.84,
+        "end": 187.17,
+        "adlib": true
+      }
+    ]
+  },
+  {
+    "time": 187.17,
+    "text": "Show and tell (oh)",
+    "words": [
+      {
+        "word": "Show",
+        "start": 187.17,
+        "end": 187.77
+      },
+      {
+        "word": "and",
+        "start": 187.77,
+        "end": 188.22,
+        "spoken": true
+      },
+      {
+        "word": "tell",
+        "start": 188.22,
+        "end": 188.82,
+        "sung": true
+      },
+      {
+        "word": "(oh)",
+        "start": 188.82,
+        "end": 189.42,
+        "adlib": true,
+        "sung": true
+      }
+    ]
+  },
+  {
+    "time": 192.25,
+    "text": "Harsh words if you don't get a pic with me",
+    "words": [
+      {
+        "word": "Harsh",
+        "start": 192.25,
+        "end": 192.824,
+        "spoken": true
+      },
+      {
+        "word": "words",
+        "start": 192.824,
+        "end": 193.398,
+        "spoken": true
+      },
+      {
+        "word": "if",
+        "start": 193.398,
+        "end": 193.628
+      },
+      {
+        "word": "you",
+        "start": 193.628,
+        "end": 193.973
+      },
+      {
+        "word": "don't",
+        "start": 193.973,
+        "end": 194.547,
+        "spoken": true
+      },
+      {
+        "word": "get",
+        "start": 194.547,
+        "end": 194.892
+      },
+      {
+        "word": "a",
+        "start": 194.892,
+        "end": 195.006
+      },
+      {
+        "word": "pic",
+        "start": 195.006,
+        "end": 195.351
+      },
+      {
+        "word": "with",
+        "start": 195.351,
+        "end": 195.81,
+        "spoken": true
+      },
+      {
+        "word": "me",
+        "start": 195.81,
+        "end": 196.04
+      }
+    ]
+  },
+  {
+    "time": 196.04,
+    "text": "Buy and sell",
+    "words": [
+      {
+        "word": "Buy",
+        "start": 196.04,
+        "end": 196.49
+      },
+      {
+        "word": "and",
+        "start": 196.49,
+        "end": 196.94,
+        "spoken": true
+      },
+      {
+        "word": "sell",
+        "start": 196.94,
+        "end": 197.54,
+        "sung": true
+      }
+    ]
+  },
+  {
+    "time": 200.71,
+    "text": "Like I'm a product to society",
+    "words": [
+      {
+        "word": "Like",
+        "start": 200.71,
+        "end": 201.31,
+        "spoken": true
+      },
+      {
+        "word": "I'm",
+        "start": 201.31,
+        "end": 201.76,
+        "spoken": true
+      },
+      {
+        "word": "a",
+        "start": 201.76,
+        "end": 201.91
+      },
+      {
+        "word": "product",
+        "start": 201.91,
+        "end": 202.96,
+        "spoken": true
+      },
+      {
+        "word": "to",
+        "start": 202.96,
+        "end": 203.26,
+        "spoken": true
+      },
+      {
+        "word": "society",
+        "start": 203.26,
+        "end": 204.31,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 208.28,
+    "text": "Art don't sell",
+    "words": [
+      {
+        "word": "Art",
+        "start": 208.28,
+        "end": 208.56
+      },
+      {
+        "word": "don't",
+        "start": 208.56,
+        "end": 209.027
+      },
+      {
+        "word": "sell",
+        "start": 209.027,
+        "end": 209.4,
+        "spoken": true
+      }
+    ]
+  },
+  {
+    "time": 214.54,
+    "text": "Unless you fucked every authority",
+    "words": [
+      {
+        "word": "Unless",
+        "start": 214.54,
+        "end": 214.836,
+        "whisper": true
+      },
+      {
+        "word": "you",
+        "start": 214.836,
+        "end": 214.985,
+        "whisper": true
+      },
+      {
+        "word": "fucked",
+        "start": 214.985,
+        "end": 215.281,
+        "whisper": true
+      },
+      {
+        "word": "every",
+        "start": 215.281,
+        "end": 215.528,
+        "whisper": true
+      },
+      {
+        "word": "authority",
+        "start": 215.528,
+        "end": 215.973,
+        "whisper": true
+      }
+    ]
+  }
+]

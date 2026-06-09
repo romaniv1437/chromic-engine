@@ -32,11 +32,12 @@ import { UnrealCinematographyScene } from '../scenes/UnrealCinematographyScene';
 import { CoralineTunnelScene } from '../scenes/CoralineTunnelScene';
 import { CinematographyEngine } from './CinematographyEngine';
 import { KineticRibbonSystem } from './KineticRibbonSystem';
+const DEFAULT_SCENE_INDEX = 5; // HyperbolicScene
 export class ThreeOrchestrator {
     constructor(options) {
         this.scenes = [];
         this.sceneFactories = [];
-        this.currentIdx = 0;
+        this.currentIdx = DEFAULT_SCENE_INDEX;
         this.running = false;
         this.frameId = 0;
         this.overlayOpacity = 1;
@@ -50,6 +51,7 @@ export class ThreeOrchestrator {
         this.lastFrameTime = 0;
         this._scrollPaused = false;
         this._loopDbg = 0;
+        this._resizeDbgCount = 0;
         // Time dilation for cinematic engine start
         this.timeScale = 1;
         this.timeScaleTarget = 1;
@@ -152,18 +154,22 @@ export class ThreeOrchestrator {
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.renderer.toneMappingExposure = 1.0;
         this.renderer.setPixelRatio(window.devicePixelRatio * this.resolutionScale);
-        // DOM placement: canvas fills the container via CSS
+        // Set renderer size — prefer viewport dimensions directly. In the SoundCloud
+        // extension, container.clientWidth can transiently report a tiny value during
+        // initial mount, which makes full-screen shaders render in the lower-left.
+        const initW = window.innerWidth || this.container.clientWidth || 1;
+        const initH = window.innerHeight || this.container.clientHeight || 1;
+        // DOM placement: set explicit pixel size so host-page CSS can't shrink the canvas.
         const canvas = this.renderer.domElement;
         canvas.style.position = 'absolute';
-        canvas.style.inset = '0';
-        canvas.style.width = '100%';
-        canvas.style.height = '100%';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.display = 'block';
+        canvas.style.width = initW + 'px';
+        canvas.style.height = initH + 'px';
         canvas.style.pointerEvents = 'none';
         canvas.style.zIndex = '0';
         this.container.appendChild(canvas);
-        // Set renderer size to match container (use actual dimensions or fallback)
-        const initW = this.container.clientWidth || window.innerWidth;
-        const initH = this.container.clientHeight || window.innerHeight;
         this.renderer.setSize(initW, initH, false);
         // Audio processor: hooks into existing analyser from AudioEngine
         this.audioProcessor = new AudioProcessor(options.analyser);
@@ -199,7 +205,7 @@ export class ThreeOrchestrator {
         ];
         this.scenes = new Array(this.sceneFactories.length).fill(null);
         // Only instantiate the initial scene
-        this.current = this.getOrCreateScene(0);
+        this.current = this.getOrCreateScene(DEFAULT_SCENE_INDEX);
         // Post-processing
         this.postProcessing = new PostProcessing(this.renderer, this.current.scene, this.current.camera);
         // GPU Typography (rendered on layer 1 - after blur pass stays sharp)
@@ -461,8 +467,8 @@ export class ThreeOrchestrator {
         if (unreal instanceof UnrealCinematographyScene) {
             unreal.regenerateSeed();
         }
-        // Auto-reset to Lava scene (blurred info view) on track change
-        this.setScene(0);
+        // Keep Hyperbolic as the default scene on track change
+        this.setScene(DEFAULT_SCENE_INDEX);
         this.setUiVisible(true);
     }
     /** Set color palette for all palette-aware scenes */
@@ -554,10 +560,25 @@ export class ThreeOrchestrator {
         this.renderer.domElement.remove();
     }
     handleResize() {
-        const w = this.container.clientWidth || window.innerWidth;
-        const h = this.container.clientHeight || window.innerHeight;
+        const w = window.innerWidth || this.container.clientWidth || 1;
+        const h = window.innerHeight || this.container.clientHeight || 1;
         if (w === 0 || h === 0)
             return;
+        // Explicitly set canvas CSS size in px so SoundCloud's CSS can't interfere
+        const canvas = this.renderer.domElement;
+        canvas.style.width = w + 'px';
+        canvas.style.height = h + 'px';
+        // Lightweight diagnostics: log the first few resizes and any mismatch where the
+        // host container reports a much smaller size than the viewport.
+        this._resizeDbgCount += 1;
+        const cw = this.container.clientWidth || 0;
+        const ch = this.container.clientHeight || 0;
+        const needsLog = this._resizeDbgCount <= 6 || cw < w * 0.9 || ch < h * 0.9;
+        if (needsLog) {
+            console.log(`[Orchestrator] handleResize #${this._resizeDbgCount}: ` +
+                `viewport=${w}x${h} container=${cw}x${ch} canvasCss=${canvas.style.width}x${canvas.style.height} ` +
+                `pixelRatio=${this.renderer.getPixelRatio().toFixed(2)} resScale=${this.resolutionScale}`);
+        }
         this.renderer.setSize(w, h, false);
         this.postProcessing.setSize(w, h);
         this.lyricsRenderer.setAspect(w, h);

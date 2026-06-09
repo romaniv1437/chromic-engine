@@ -1,0 +1,247 @@
+/* ============================================================================
+   Chromic Visualizer for SoundCloud — content styles
+   ========================================================================== */
+
+/* ─── Launch button (2.3) — compact, sits in the play-controls bar ─────────── */
+.vibe-launch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 10px;
+  margin: 0 10px;
+  align-self: center;
+  flex: 0 0 auto;
+  vertical-align: middle;
+  background: linear-gradient(95deg, #6d4bff 0%, #b14bff 100%);
+  color: #fff;
+  border: none;
+  border-radius: 11px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 1px 6px rgba(120, 70, 255, 0.4);
+  transition: filter 0.18s ease, transform 0.1s ease;
+}
+
+.vibe-launch-btn:hover { filter: brightness(1.15); }
+.vibe-launch-btn:active { transform: scale(0.95); }
+
+.vibe-launch-btn.vibe-launch-active {
+  background: linear-gradient(95deg, #ff4b7a 0%, #ff7a4b 100%);
+}
+
+.vibe-launch-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #ffffff, #c9b6ff 55%, #7a4bff);
+  box-shadow: 0 0 6px rgba(180, 120, 255, 0.95);
+  flex: 0 0 auto;
+}
+
+.vibe-launch-label { line-height: 1; }
+
+/* Fallback floating placement when the badge isn't found */
+.vibe-launch-btn.vibe-floating {
+  position: fixed;
+  right: var(--vibe-floating-right, 14px);
+  bottom: var(--vibe-floating-bottom, 14px);
+  height: 26px;
+  padding: 0 12px;
+  z-index: 999998;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.vibe-launch-btn.vibe-floating.vibe-compact {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 999px;
+  justify-content: center;
+}
+
+.vibe-launch-btn.vibe-floating.vibe-compact .vibe-launch-label {
+  display: none;
+}
+
+html.vibe-open .vibe-launch-btn.vibe-floating,
+body.vibe-open .vibe-launch-btn.vibe-floating {
+  z-index: 2147483647;
+}
+
+/* ─── Fullscreen visualizer overlay ────────────────────────────────────────── */
+#vibe-fullscreen-player {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  width: 100dvw;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 999999;
+  background: #000;
+  display: none;
+  overflow: hidden;
+}
+
+#vibe-visualizer-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: auto;
+  overflow: hidden;
+  display: block;
+}
+
+#vibe-visualizer-container canvas {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+  display: block;
+}
+
+/* ─── Artwork + metadata panel (2.1) — bigger art, nudged toward middle ─────── */
+#vibe-meta {
+  position: absolute;
+  left: 9vw;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  max-width: 50vw;
+  min-width: 40vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;     /* center the art + text as a column */
+  text-align: center;      /* text positioned by middle */
+  gap: 20px;
+  pointer-events: none;    /* never block lyric click-to-seek */
+  color: #fff;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  transition: opacity 0.4s ease;
+}
+
+#vibe-meta-art {
+  width: clamp(250px, 23vw, 370px);
+  aspect-ratio: 1 / 1;
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.07);
+}
+
+#vibe-meta-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Hide the art frame entirely until a real image is set */
+#vibe-meta-art img:not([src]),
+#vibe-meta-art img[src=""] { opacity: 0; }
+
+#vibe-meta-title {
+  font-size: clamp(15px, 1.5vw, 30px);
+  font-weight: 800;
+  line-height: 1.15;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.65);
+  max-width: 25vw;
+}
+
+#vibe-meta-artist {
+  font-size: clamp(14px, 1.3vw, 20px);
+  font-weight: 600;
+  opacity: 0.82;
+  margin-top: 8px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+}
+
+#vibe-meta-brand {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  opacity: 0.38;
+  margin-top: 4px;
+  color: inherit;
+  text-decoration: none;
+  pointer-events: auto;
+}
+
+#vibe-meta-brand:hover { opacity: 0.58; }
+
+/* ─── Close button ─────────────────────────────────────────────────────────── */
+.vibe-close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 5;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  cursor: pointer;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, opacity 0.35s ease;
+}
+
+.vibe-close-btn:hover { background: rgba(255, 255, 255, 0.3); }
+
+/* ─── Keep SoundCloud play controls usable while the visualizer is open (2.6) ─ */
+html.vibe-open .playControls,
+body.vibe-open .playControls {
+  z-index: 2147483647 !important; /* overlay root uses 2147483646 */
+}
+
+/* ─── Idle mode (2.5) — hide cursor + chrome, keep artwork/metadata/lyrics ──── */
+html.vibe-idle,
+html.vibe-idle *,
+body.vibe-idle,
+body.vibe-idle * {
+  cursor: none !important;
+}
+
+html.vibe-open.vibe-idle .vibe-close-btn,
+body.vibe-open.vibe-idle .vibe-close-btn {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+html.vibe-open.vibe-idle .playControls,
+body.vibe-open.vibe-idle .playControls {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+html.vibe-open.vibe-idle .vibe-launch-btn.vibe-floating,
+body.vibe-open.vibe-idle .vibe-launch-btn.vibe-floating {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+html.vibe-open .playControls,
+body.vibe-open .playControls {
+  transition: opacity 0.3s ease;
+}
+
+/* In idle, fade the brand tag too — keep title/artist/art readable */
+html.vibe-open.vibe-idle #vibe-meta-brand,
+body.vibe-open.vibe-idle #vibe-meta-brand {
+  opacity: 0;
+  visibility: hidden;
+}
+

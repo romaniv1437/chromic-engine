@@ -71,8 +71,19 @@ const PREVIEW_SIDECAR_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.
 const ALBUM_COVER_BASENAMES = ['cover', 'folder', 'album', 'front', 'artwork'];
 const MOVIE_EXTENSIONS = ['.mp4', '.mkv', '.webm', '.mov', '.avi', '.m4v'];
 const MUSIC_EXTENSIONS = ['.mp3', '.wav', '.flac', '.m4a', '.ogg', '.aac', '.aiff'];
+const AUDIO_MIME_BY_EXT = {
+  '.mp3': 'audio/mpeg',
+  '.wav': 'audio/wav',
+  '.ogg': 'audio/ogg',
+  '.m4a': 'audio/mp4',
+  '.aac': 'audio/aac',
+  '.aiff': 'audio/aiff',
+  '.flac': 'audio/flac',
+};
+const AUDIO_COMPAT_TRANSCODE_CODECS = new Set(['alac']);
 const HIDDEN_SYSTEM_NAMES = new Set(['.ds_store', 'thumbs.db', 'desktop.ini', '__macosx']);
 const TRANSCODE_MOVFLAGS = 'frag_keyframe+empty_moov+default_base_moof';
+const audioPlaybackProfileCache = new Map();
 
 
 function sanitizeFilenamePart(value) {
@@ -1045,6 +1056,104 @@ const toForwardSlashes = (value) => String(value || '').split(path.sep).join('/'
 
 const buildMediaUrl = (category, relativePath) =>
   `/media/${category}/${encodeURIComponent(toForwardSlashes(relativePath))}`;
+
+const normalizeTrackPath = (value) => {
+  const normalized = toForwardSlashes(String(value || '').trim()).replace(/^\/+/, '');
+  if (!normalized) {
+    return null;
+  }
+  return normalized.startsWith('music/') ? normalized : `music/${normalized}`;
+};
+
+const resolveMusicTrackRequest = (rawPath) => {
+  let decoded;
+  try {
+    decoded = decodeURIComponent(String(rawPath || ''));
+  } catch (_error) {
+    return null;
+  }
+
+  const trackPath = normalizeTrackPath(decoded);
+  if (!trackPath) {
+    return null;
+  }
+
+  const fullPath = resolveTrackFullPath(trackPath);
+  if (!fullPath || !fs.existsSync(fullPath)) {
+    return null;
+  }
+
+  return { trackPath, fullPath };
+};
+
+const getDirectMusicTrackUrl = (trackPath) => {
+  const normalizedTrackPath = normalizeTrackPath(trackPath);
+  if (!normalizedTrackPath) {
+    return null;
+  }
+
+  try {
+    const row = tracksDb.prepare('SELECT absolute_path, source FROM tracks WHERE path = ?').get(normalizedTrackPath);
+    if (row?.source === 'linked' && row.absolute_path) {
+      return `/api/stream?path=${encodeURIComponent(row.absolute_path)}`;
+    }
+  } catch (_error) {
+    // Fall back to local media URL below.
+  }
+
+  return buildMediaUrl('music', normalizedTrackPath.replace(/^music\//, ''));
+};
+
+async function inspectAudioPlaybackProfile(fullPath) {
+  const stat = fs.statSync(fullPath);
+  const cacheKey = `${fullPath}:${stat.mtimeMs}:${stat.size}`;
+  const cached = audioPlaybackProfileCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const mm = await import('music-metadata');
+  const metadata = await mm.parseFile(fullPath, { duration: false, skipCovers: true });
+  const codec = String(metadata.format.codec || '').trim().toLowerCase() || null;
+  const container = String(metadata.format.container || '').trim() || null;
+  const ext = path.extname(fullPath).toLowerCase();
+  const needsTranscode = codec ? AUDIO_COMPAT_TRANSCODE_CODECS.has(codec) : false;
+
+  const profile = {
+    codec,
+    container,
+    lossless: Boolean(metadata.format.lossless),
+    mimeType: needsTranscode ? 'audio/mpeg' : (AUDIO_MIME_BY_EXT[ext] || 'audio/mpeg'),
+    needsTranscode,
+  };
+
+  audioPlaybackProfileCache.clear();
+  audioPlaybackProfileCache.set(cacheKey, profile);
+  return profile;
+}
+
+const buildResolvedAudioPlayback = async (trackPath) => {
+  const resolved = resolveMusicTrackRequest(trackPath);
+  if (!resolved) {
+    return null;
+  }
+
+  const playback = await inspectAudioPlaybackProfile(resolved.fullPath);
+  const directUrl = getDirectMusicTrackUrl(resolved.trackPath);
+  return {
+    trackPath: resolved.trackPath,
+    fullPath: resolved.fullPath,
+    codec: playback.codec,
+    container: playback.container,
+    lossless: playback.lossless,
+    transcoded: playback.needsTranscode,
+    mimeType: playback.mimeType,
+    directUrl,
+    url: playback.needsTranscode
+      ? `/api/audio/transcode?path=${encodeURIComponent(resolved.trackPath)}`
+      : directUrl,
+  };
+};
 
 const getCategoryFromExt = (ext) => {
   const normalized = ext.toLowerCase();
@@ -2253,6 +2362,98 @@ app.get('/api/stream', (req, res) => {
   }
 
   return res.sendFile(normalized);
+});
+
+app.get('/api/audio/resolve', async (req, res) => {
+  try {
+    const playback = await buildResolvedAudioPlayback(req.query.path);
+    if (!playback) {
+      return res.status(404).json({ error: 'Track not found' });
+    }
+
+    return res.json({
+      path: playback.trackPath,
+      url: playback.url,
+      directUrl: playback.directUrl,
+      codec: playback.codec,
+      container: playback.container,
+      lossless: playback.lossless,
+      transcoded: playback.transcoded,
+      mimeType: playback.mimeType,
+    });
+  } catch (error) {
+    console.error('[audio/resolve] failed:', error?.message || error);
+    return res.status(500).json({ error: error?.message || 'Failed to resolve audio playback' });
+  }
+});
+
+app.get('/api/audio/transcode', async (req, res) => {
+  let ffmpegProc = null;
+
+  try {
+    const playback = await buildResolvedAudioPlayback(req.query.path);
+    if (!playback) {
+      return res.status(404).json({ error: 'Track not found' });
+    }
+
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Accept-Ranges', 'none');
+
+    ffmpegProc = spawn('ffmpeg', [
+      '-v', 'error',
+      '-i', playback.fullPath,
+      '-map', '0:a:0',
+      '-vn',
+      '-acodec', 'libmp3lame',
+      '-q:a', '2',
+      '-f', 'mp3',
+      'pipe:1',
+    ], {
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    let stderr = '';
+    ffmpegProc.stderr.on('data', (chunk) => {
+      stderr += chunk.toString();
+    });
+
+    ffmpegProc.on('error', (error) => {
+      console.error('[audio/transcode] ffmpeg spawn failed:', error?.message || error);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to start audio transcoder' });
+      } else if (!res.writableEnded) {
+        res.end();
+      }
+    });
+
+    ffmpegProc.on('close', (code) => {
+      if (code === 0 || res.writableEnded) {
+        return;
+      }
+
+      console.error('[audio/transcode] ffmpeg exited:', code, stderr.trim());
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Audio transcode failed' });
+      } else {
+        res.end();
+      }
+    });
+
+    req.on('close', () => {
+      if (ffmpegProc && !ffmpegProc.killed) {
+        ffmpegProc.kill('SIGKILL');
+      }
+    });
+
+    ffmpegProc.stdout.pipe(res);
+  } catch (error) {
+    if (ffmpegProc && !ffmpegProc.killed) {
+      ffmpegProc.kill('SIGKILL');
+    }
+    console.error('[audio/transcode] failed:', error?.message || error);
+    return res.status(500).json({ error: error?.message || 'Failed to transcode audio' });
+  }
 });
 
 // Get linked library folders

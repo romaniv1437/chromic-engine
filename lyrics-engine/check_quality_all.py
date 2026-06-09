@@ -2,7 +2,7 @@
 """Comprehensive quality check across ALL tracks in the music library."""
 import json, os, glob, sys
 
-MUSIC_ROOT = '/path/to/project/media/music'
+MUSIC_ROOT = '/Users/illiaromaniv/WebstormProjects/claudecode/media/music'
 
 # Find all directories with lyrics files
 all_dirs = set()

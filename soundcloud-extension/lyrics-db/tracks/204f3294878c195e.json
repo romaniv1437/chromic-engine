@@ -1,0 +1,2932 @@
+{
+  "source": "genius-lrc-whisper",
+  "lines": [
+    {
+      "time": 13.58,
+      "text": "Don't cut me, punch me, just let me go",
+      "words": [
+        {
+          "word": "Don't",
+          "start": 13.58,
+          "end": 14.493
+        },
+        {
+          "word": "cut",
+          "start": 14.503,
+          "end": 14.672
+        },
+        {
+          "word": "me,",
+          "start": 14.682,
+          "end": 15.208
+        },
+        {
+          "word": "punch",
+          "start": 15.526,
+          "end": 15.665
+        },
+        {
+          "word": "me,",
+          "start": 15.675,
+          "end": 16.161
+        },
+        {
+          "word": "just",
+          "start": 16.171,
+          "end": 16.519
+        },
+        {
+          "word": "let",
+          "start": 16.529,
+          "end": 16.797
+        },
+        {
+          "word": "me",
+          "start": 16.807,
+          "end": 17.293
+        },
+        {
+          "word": "go",
+          "start": 17.303,
+          "end": 17.86
+        }
+      ]
+    },
+    {
+      "time": 17.86,
+      "text": "Into the nurse's office where I float away",
+      "words": [
+        {
+          "word": "Into",
+          "start": 17.86,
+          "end": 18.319
+        },
+        {
+          "word": "the",
+          "start": 18.329,
+          "end": 18.957
+        },
+        {
+          "word": "nurse's",
+          "start": 18.967,
+          "end": 19.715
+        },
+        {
+          "word": "office",
+          "start": 19.725,
+          "end": 19.855
+        },
+        {
+          "word": "where",
+          "start": 19.865,
+          "end": 20.314
+        },
+        {
+          "word": "I",
+          "start": 20.324,
+          "end": 20.613
+        },
+        {
+          "word": "float",
+          "start": 20.623,
+          "end": 21.132
+        },
+        {
+          "word": "away",
+          "start": 21.142,
+          "end": 21.89
+        }
+      ]
+    },
+    {
+      "time": 21.89,
+      "text": "I'm pale as the loose-leaf paper they grow",
+      "words": [
+        {
+          "word": "I'm",
+          "start": 21.89,
+          "end": 22.531
+        },
+        {
+          "word": "pale",
+          "start": 22.622,
+          "end": 22.911
+        },
+        {
+          "word": "as",
+          "start": 22.921,
+          "end": 23.393
+        },
+        {
+          "word": "the",
+          "start": 23.489,
+          "end": 23.817
+        },
+        {
+          "word": "loose-leaf",
+          "start": 23.827,
+          "end": 24.318
+        },
+        {
+          "word": "paper",
+          "start": 24.328,
+          "end": 24.53
+        },
+        {
+          "word": "they",
+          "start": 24.54,
+          "end": 24.915
+        },
+        {
+          "word": "grow",
+          "start": 24.925,
+          "end": 25.77,
+          "stretch": true
+        }
+      ]
+    },
+    {
+      "time": 25.77,
+      "text": "From hollowing out all my lungs in the snow",
+      "words": [
+        {
+          "word": "From",
+          "start": 25.77,
+          "end": 26.176
+        },
+        {
+          "word": "hollowing",
+          "start": 26.186,
+          "end": 26.972
+        },
+        {
+          "word": "out",
+          "start": 26.982,
+          "end": 27.231
+        },
+        {
+          "word": "all",
+          "start": 27.241,
+          "end": 27.394
+        },
+        {
+          "word": "my",
+          "start": 27.404,
+          "end": 27.767
+        },
+        {
+          "word": "lungs",
+          "start": 27.777,
+          "end": 27.946
+        },
+        {
+          "word": "in",
+          "start": 27.956,
+          "end": 28.254
+        },
+        {
+          "word": "the",
+          "start": 28.264,
+          "end": 28.449
+        },
+        {
+          "word": "snow",
+          "start": 28.459,
+          "end": 29.05
+        }
+      ]
+    },
+    {
+      "time": 29.05,
+      "text": "Yeah, I'm coughing, I'm bleeding",
+      "words": [
+        {
+          "word": "Yeah,",
+          "start": 29.05,
+          "end": 29.308
+        },
+        {
+          "word": "I'm",
+          "start": 29.318,
+          "end": 29.686
+        },
+        {
+          "word": "coughing,",
+          "start": 29.721,
+          "end": 30.133
+        },
+        {
+          "word": "I'm",
+          "start": 30.143,
+          "end": 30.735
+        },
+        {
+          "word": "bleeding",
+          "start": 31.405,
+          "end": 33.68,
+          "stretch": true
+        }
+      ]
+    },
+    {
+      "time": 33.68,
+      "text": "Band-Aids won't heal it",
+      "words": [
+        {
+          "word": "Band-Aids",
+          "start": 33.68,
+          "end": 34.991
+        },
+        {
+          "word": "won't",
+          "start": 35.001,
+          "end": 35.598
+        },
+        {
+          "word": "heal",
+          "start": 35.608,
+          "end": 36.302
+        },
+        {
+          "word": "it",
+          "start": 36.312,
+          "end": 36.94,
+          "stretch": true
+        }
+      ]
+    },
+    {
+      "time": 36.94,
+      "text": "'Cause they hate me, so I'm fakin'",
+      "words": [
+        {
+          "word": "'Cause",
+          "start": 36.94,
+          "end": 37.267
+        },
+        {
+          "word": "they",
+          "start": 37.277,
+          "end": 37.66
+        },
+        {
+          "word": "hate",
+          "start": 37.67,
+          "end": 38.085
+        },
+        {
+          "word": "me,",
+          "start": 38.095,
+          "end": 38.641
+        },
+        {
+          "word": "so",
+          "start": 38.651,
+          "end": 39.034
+        },
+        {
+          "word": "I'm",
+          "start": 39.044,
+          "end": 39.525
+        },
+        {
+          "word": "fakin'",
+          "start": 39.535,
+          "end": 40.92,
+          "stretch": true
+        }
+      ]
+    },
+    {
+      "time": 40.92,
+      "text": "All of this so they take-take me",
+      "words": [
+        {
+          "word": "All",
+          "start": 40.92,
+          "end": 41.855
+        },
+        {
+          "word": "of",
+          "start": 42.22,
+          "end": 42.284
+        },
+        {
+          "word": "this",
+          "start": 42.294,
+          "end": 42.625
+        },
+        {
+          "word": "so",
+          "start": 42.635,
+          "end": 43.249
+        },
+        {
+          "word": "they",
+          "start": 43.265,
+          "end": 43.691
+        },
+        {
+          "word": "take-take",
+          "start": 43.701,
+          "end": 44.096
+        },
+        {
+          "word": "me",
+          "start": 44.106,
+          "end": 44.72,
+          "stretch": true
+        }
+      ]
+    },
+    {
+      "time": 44.72,
+      "text": "Take me home, home, home",
+      "words": [
+        {
+          "word": "Take",
+          "start": 44.72,
+          "end": 45.115
+        },
+        {
+          "word": "me",
+          "start": 45.125,
+          "end": 45.659
+        },
+        {
+          "word": "home,",
+          "start": 45.669,
+          "end": 46.284
+        },
+        {
+          "word": "home,",
+          "start": 46.294,
+          "end": 47.108
+        },
+        {
+          "word": "home",
+          "start": 47.118,
+          "end": 48.28,
+          "stretch": true
+        }
+      ]
+    },
+    {
+      "time": 48.28,
+      "text": "Give me that pink slip of permission",
+      "words": [
+        {
+          "word": "Give",
+          "start": 48.28,
+          "end": 48.548
+        },
+        {
+          "word": "me",
+          "start": 48.558,
+          "end": 48.95
+        },
+        {
+          "word": "that",
+          "start": 48.96,
+          "end": 49.302
+        },
+        {
+          "word": "pink",
+          "start": 49.312,
+          "end": 49.738
+        },
+        {
+          "word": "slip",
+          "start": 49.748,
+          "end": 50.274
+        },
+        {
+          "word": "of",
+          "start": 50.284,
+          "end": 50.726
+        },
+        {
+          "word": "permission",
+          "start": 50.736,
+          "end": 52.77,
+          "stretch": true
+        }
+      ]
+    },
+    {
+      "time": 52.77,
+      "text": "This is old, old, old",
+      "words": [
+        {
+          "word": "This",
+          "start": 52.77,
+          "end": 53.318
+        },
+        {
+          "word": "is",
+          "start": 53.328,
+          "end": 53.745
+        },
+        {
+          "word": "old,",
+          "start": 53.755,
+          "end": 54.369
+        },
+        {
+          "word": "old,",
+          "start": 54.379,
+          "end": 55.161
+        },
+        {
+          "word": "old",
+          "start": 55.171,
+          "end": 56.04,
+          "stretch": true
+        }
+      ]
+    },
+    {
+      "time": 56.04,
+      "text": "I'm tired of wishing I was ditching",
+      "words": [
+        {
+          "word": "I'm",
+          "start": 56.04,
+          "end": 56.473
+        },
+        {
+          "word": "tired",
+          "start": 56.483,
+          "end": 56.926
+        },
+        {
+          "word": "of",
+          "start": 56.936,
+          "end": 57.359
+        },
+        {
+          "word": "wishing",
+          "start": 57.369,
+          "end": 57.989
+        },
+        {
+          "word": "I",
+          "start": 57.999,
+          "end": 58.481
+        },
+        {
+          "word": "was",
+          "start": 58.717,
+          "end": 59.446
+        },
+        {
+          "word": "ditching",
+          "start": 59.456,
+          "end": 61.06,
+          "stretch": true
+        }
+      ]
+    },
+    {
+      "time": 61.06,
+      "text": "Ooh, ooh, ooh-ooh",
+      "words": [
+        {
+          "word": "Ooh,",
+          "start": 61.06,
+          "end": 62.584
+        },
+        {
+          "word": "ooh,",
+          "start": 62.594,
+          "end": 62.731
+        },
+        {
+          "word": "ooh-ooh",
+          "start": 62.746,
+          "end": 66.85,
+          "stretch": true
+        }
+      ]
+    },
+    {
+      "time": 66.85,
+      "text": "Ooh, ooh-ooh",
+      "words": [
+        {
+          "word": "Ooh,",
+          "start": 66.85,
+          "end": 67.28
+        },
+        {
+          "word": "ooh-ooh",
+          "start": 67.315,
+          "end": 69.14,
+          "stretch": true
+        }
+      ]
+    },
+    {
+      "time": 69.14,
+      "text": "Teacher, can I sit right there?",
+      "words": [
+        {
+          "word": "Teacher,",
+          "start": 69.14,
+          "end": 69.529
+        },
+        {
+          "word": "can",
+          "start": 69.617,
+          "end": 69.706
+        },
+        {
+          "word": "I",
+          "start": 69.776,
+          "end": 69.865
+        },
+        {
+          "word": "sit",
+          "start": 69.873,
+          "end": 70.289
+        },
+        {
+          "word": "right",
+          "start": 71.261,
+          "end": 71.367
+        },
+        {
+          "word": "there?",
+          "start": 71.377,
+          "end": 72.9,
+          "stretch": true
+        }
+      ]
+    },
+    {
+      "time": 72.9,
+      "text": "This bitch behind me is cutting my hair",
+      "words": [
+        {
+          "word": "This",
+          "start": 72.9,
+          "end": 73.189
+        },
+        {
+          "word": "bitch",
+          "start": 73.199,
+          "end": 73.442
+        },
+        {
+          "word": "behind",
+          "start": 73.452,
+          "end": 73.948
+        },
+        {
+          "word": "me",
+          "start": 73.958,
+          "end": 74.345
+        },
+        {
+          "word": "is",
+          "start": 74.355,
+          "end": 74.652
+        },
+        {
+          "word": "cutting",
+          "start": 74.662,
+          "end": 74.995
+        },
+        {
+          "word": "my",
+          "start": 75.005,
+          "end": 75.447
+        },
+        {
+          "word": "hair",
+          "start": 75.501,
+          "end": 76.26
+        }
+      ]
+    },
+    {
+      "time": 76.26,
+      "text": "\"No, just sit your ass down at the chalkboard, you stare\"",
+      "words": [
+        {
+          "word": "\"No,",
+          "start": 76.26,
+          "end": 76.583
+        },
+        {
+          "word": "just",
+          "start": 76.593,
+          "end": 76.773
+        },
+        {
+          "word": "sit",
+          "start": 76.783,
+          "end": 77.152
+        },
+        {
+          "word": "your",
+          "start": 77.162,
+          "end": 77.418
+        },
+        {
+          "word": "ass",
+          "start": 77.428,
+          "end": 77.76
+        },
+        {
+          "word": "down",
+          "start": 77.77,
+          "end": 77.931
+        },
+        {
+          "word": "at",
+          "start": 77.941,
+          "end": 78.405
+        },
+        {
+          "word": "the",
+          "start": 78.538,
+          "end": 78.918
+        },
+        {
+          "word": "chalkboard,",
+          "start": 78.928,
+          "end": 79.203
+        },
+        {
+          "word": "you",
+          "start": 79.213,
+          "end": 79.487
+        },
+        {
+          "word": "stare\"",
+          "start": 79.497,
+          "end": 80.52,
+          "stretch": true
+        }
+      ]
+    },
+    {
+      "time": 80.52,
+      "text": "I faked up a seizure and left then and there",
+      "words": [
+        {
+          "word": "I",
+          "start": 80.52,
+          "end": 80.81
+        },
+        {
+          "word": "faked",
+          "start": 81.085,
+          "end": 81.262
+        },
+        {
+          "word": "up",
+          "start": 81.272,
+          "end": 81.488
+        },
+        {
+          "word": "a",
+          "start": 81.498,
+          "end": 81.827
+        },
+        {
+          "word": "seizure",
+          "start": 81.837,
+          "end": 81.988
+        },
+        {
+          "word": "and",
+          "start": 81.998,
+          "end": 82.456
+        },
+        {
+          "word": "left",
+          "start": 82.466,
+          "end": 82.828
+        },
+        {
+          "word": "then",
+          "start": 82.838,
+          "end": 83.053
+        },
+        {
+          "word": "and",
+          "start": 83.063,
+          "end": 83.263
+        },
+        {
+          "word": "there",
+          "start": 83.273,
+          "end": 84.07
+        }
+      ]
+    },
+    {
+      "time": 84.07,
+      "text": "Yeah, I'm coughing, I'm bleeding",
+      "words": [
+        {
+          "word": "Yeah,",
+          "start": 84.07,
+          "end": 84.556
+        },
+        {
+          "word": "I'm",
+          "start": 84.566,
+          "end": 84.777
+        },
+        {
+          "word": "coughing,",
+          "start": 84.888,
+          "end": 85.175
+        },
+        {
+          "word": "I'm",
+          "start": 85.185,
+          "end": 85.75
+        },
+        {
+          "word": "bleeding",
+          "start": 85.76,
+          "end": 88.63,
+          "stretch": true
+        }
+      ]
+    },
+    {
+      "time": 88.63,
+      "text": "Band-Aids won't heal it",
+      "words": [
+        {
+          "word": "Band-Aids",
+          "start": 88.63,
+          "end": 90.036
+        },
+        {
+          "word": "won't",
+          "start": 90.046,
+          "end": 90.603
+        },
+        {
+          "word": "heal",
+          "start": 90.613,
+          "end": 91.326
+        },
+        {
+          "word": "it",
+          "start": 91.336,
+          "end": 91.98,
+          "stretch": true
+        }
+      ]
+    },
+    {
+      "time": 91.98,
+      "text": "'Cause they hate me, so I'm fakin'",
+      "words": [
+        {
+          "word": "'Cause",
+          "start": 91.98,
+          "end": 92.368
+        },
+        {
+          "word": "they",
+          "start": 92.378,
+          "end": 92.72
+        },
+        {
+          "word": "hate",
+          "start": 92.73,
+          "end": 93.182
+        },
+        {
+          "word": "me,",
+          "start": 93.192,
+          "end": 93.645
+        },
+        {
+          "word": "so",
+          "start": 93.655,
+          "end": 94.204
+        },
+        {
+          "word": "I'm",
+          "start": 94.218,
+          "end": 94.533
+        },
+        {
+          "word": "fakin'",
+          "start": 94.543,
+          "end": 96.21,
+          "stretch": true
+        }
+      ]
+    },
+    {
+      "time": 96.21,
+      "text": "All of this so they take-take me",
+      "words": [
+        {
+          "word": "All",
+          "start": 96.21,
+          "end": 97.017
+        },
+        {
+          "word": "of",
+          "start": 97.022,
+          "end": 97.518
+        },
+        {
+          "word": "this",
+          "start": 97.528,
+          "end": 97.835
+        },
+        {
+          "word": "so",
+          "start": 97.845,
+          "end": 98.37
+        },
+        {
+          "word": "they",
+          "start": 98.38,
+          "end": 98.885
+        },
+        {
+          "word": "take-take",
+          "start": 98.895,
+          "end": 99.202
+        },
+        {
+          "word": "me",
+          "start": 99.212,
+          "end": 99.74,
+          "stretch": true
+        }
+      ]
+    },
+    {
+      "time": 99.74,
+      "text": "Take me home, home, home",
+      "words": [
+        {
+          "word": "Take",
+          "start": 99.74,
+          "end": 100.183
+        },
+        {
+          "word": "me",
+          "start": 100.193,
+          "end": 100.586
+        },
+        {
+          "word": "home,",
+          "start": 100.596,
+          "end": 101.211
+        },
+        {
+          "word": "home,",
+          "start": 101.221,
+          "end": 101.997
+        },
+        {
+          "word": "home",
+          "start": 102.007,
+          "end": 103.52,
+          "stretch": true
+        }
+      ]
+    },
+    {
+      "time": 103.52,
+      "text": "Give me that pink slip of permission",
+      "words": [
+        {
+          "word": "Give",
+          "start": 103.52,
+          "end": 103.945
+        },
+        {
+          "word": "me",
+          "start": 103.955,
+          "end": 104.273
+        },
+        {
+          "word": "that",
+          "start": 104.283,
+          "end": 104.649
+        },
+        {
+          "word": "pink",
+          "start": 104.659,
+          "end": 105.041
+        },
+        {
+          "word": "slip",
+          "start": 105.051,
+          "end": 105.565
+        },
+        {
+          "word": "of",
+          "start": 105.575,
+          "end": 106.007
+        },
+        {
+          "word": "permission",
+          "start": 106.017,
+          "end": 107.61,
+          "stretch": true
+        }
+      ]
+    },
+    {
+      "time": 107.61,
+      "text": "This is old, old, old",
+      "words": [
+        {
+          "word": "This",
+          "start": 107.61,
+          "end": 108.238
+        },
+        {
+          "word": "is",
+          "start": 108.248,
+          "end": 108.717
+        },
+        {
+          "word": "old,",
+          "start": 108.727,
+          "end": 109.377
+        },
+        {
+          "word": "old,",
+          "start": 109.387,
+          "end": 110.236
+        },
+        {
+          "word": "old",
+          "start": 110.269,
+          "end": 111.26,
+          "stretch": true
+        }
+      ]
+    },
+    {
+      "time": 111.26,
+      "text": "I'm tired of wishing I was ditching",
+      "words": [
+        {
+          "word": "I'm",
+          "start": 111.26,
+          "end": 111.597
+        },
+        {
+          "word": "tired",
+          "start": 111.607,
+          "end": 112.073
+        },
+        {
+          "word": "of",
+          "start": 112.083,
+          "end": 112.51
+        },
+        {
+          "word": "wishing",
+          "start": 112.52,
+          "end": 113.065
+        },
+        {
+          "word": "I",
+          "start": 113.075,
+          "end": 113.561
+        },
+        {
+          "word": "was",
+          "start": 113.879,
+          "end": 114.632
+        },
+        {
+          "word": "ditching",
+          "start": 114.642,
+          "end": 116.16,
+          "stretch": true
+        }
+      ]
+    },
+    {
+      "time": 116.16,
+      "text": "Ooh, ooh, ooh-ooh",
+      "words": [
+        {
+          "word": "Ooh,",
+          "start": 116.16,
+          "end": 117.651
+        },
+        {
+          "word": "ooh,",
+          "start": 117.651,
+          "end": 119.141
+        },
+        {
+          "word": "ooh-ooh",
+          "start": 119.141,
+          "end": 121.75
+        }
+      ]
+    },
+    {
+      "time": 121.75,
+      "text": "Ooh, ooh-ooh",
+      "words": [
+        {
+          "word": "Ooh,",
+          "start": 121.75,
+          "end": 124.39
+        },
+        {
+          "word": "ooh-ooh",
+          "start": 124.4,
+          "end": 127.03
+        }
+      ]
+    },
+    {
+      "type": "vocal_cue",
+      "time": 124.05,
+      "end": 154.51
+    },
+    {
+      "time": 154.81,
+      "text": "Take me home, home, home",
+      "words": [
+        {
+          "word": "Take",
+          "start": 154.81,
+          "end": 155.838
+        },
+        {
+          "word": "me",
+          "start": 155.848,
+          "end": 156.408
+        },
+        {
+          "word": "home,",
+          "start": 156.648,
+          "end": 157.208
+        },
+        {
+          "word": "home,",
+          "start": 157.218,
+          "end": 157.8
+        },
+        {
+          "word": "home",
+          "start": 157.81,
+          "end": 158.47
+        }
+      ]
+    },
+    {
+      "time": 158.47,
+      "text": "Give me that pink slip of permission",
+      "words": [
+        {
+          "word": "Give",
+          "start": 158.47,
+          "end": 158.853
+        },
+        {
+          "word": "me",
+          "start": 158.863,
+          "end": 159.218
+        },
+        {
+          "word": "that",
+          "start": 159.228,
+          "end": 159.549
+        },
+        {
+          "word": "pink",
+          "start": 159.559,
+          "end": 160.071
+        },
+        {
+          "word": "slip",
+          "start": 160.081,
+          "end": 160.559
+        },
+        {
+          "word": "of",
+          "start": 160.569,
+          "end": 160.942
+        },
+        {
+          "word": "permission",
+          "start": 160.952,
+          "end": 162.63,
+          "stretch": true
+        }
+      ]
+    },
+    {
+      "time": 162.63,
+      "text": "This is old, old, old",
+      "words": [
+        {
+          "word": "This",
+          "start": 162.63,
+          "end": 163.312
+        },
+        {
+          "word": "is",
+          "start": 163.322,
+          "end": 163.977
+        },
+        {
+          "word": "old,",
+          "start": 164.144,
+          "end": 164.277
+        },
+        {
+          "word": "old,",
+          "start": 164.287,
+          "end": 165.292
+        },
+        {
+          "word": "old",
+          "start": 165.342,
+          "end": 166.19,
+          "stretch": true
+        }
+      ]
+    },
+    {
+      "time": 166.19,
+      "text": "I'm tired of wishing I was ditching",
+      "words": [
+        {
+          "word": "I'm",
+          "start": 166.19,
+          "end": 166.559
+        },
+        {
+          "word": "tired",
+          "start": 166.569,
+          "end": 167.008
+        },
+        {
+          "word": "of",
+          "start": 167.018,
+          "end": 167.329
+        },
+        {
+          "word": "wishing",
+          "start": 167.339,
+          "end": 167.763
+        },
+        {
+          "word": "I",
+          "start": 167.773,
+          "end": 168.164
+        },
+        {
+          "word": "was",
+          "start": 168.405,
+          "end": 168.998
+        },
+        {
+          "word": "ditching",
+          "start": 169.008,
+          "end": 171.23,
+          "stretch": true
+        }
+      ]
+    },
+    {
+      "time": 171.23,
+      "text": "Home, home, home",
+      "words": [
+        {
+          "word": "Home,",
+          "start": 171.23,
+          "end": 172.989
+        },
+        {
+          "word": "home,",
+          "start": 173.661,
+          "end": 175.899
+        },
+        {
+          "word": "home",
+          "start": 176.379,
+          "end": 179.12,
+          "stretch": true
+        }
+      ]
+    },
+    {
+      "type": "vocal_cue",
+      "time": 173.53,
+      "end": 178.82
+    },
+    {
+      "time": 179.12,
+      "text": "Old, old, old",
+      "words": [
+        {
+          "word": "Old,",
+          "start": 179.12,
+          "end": 180.48
+        },
+        {
+          "word": "old,",
+          "start": 180.56,
+          "end": 182.48
+        },
+        {
+          "word": "old",
+          "start": 183.04,
+          "end": 186.312,
+          "stretch": true
+        }
+      ]
+    }
+  ],
+  "raw_whisper": [
+    {
+      "text": "Don't  cut  me,  punch  me,  just  let  me  goInto  the  nurse's  office  where  I  float  away",
+      "start": 13.4,
+      "end": 21.86,
+      "words": [
+        {
+          "word": "Don't",
+          "start": 13.4,
+          "end": 14.32
+        },
+        {
+          "word": "cut",
+          "start": 14.32,
+          "end": 14.5
+        },
+        {
+          "word": "me,",
+          "start": 14.5,
+          "end": 15.04
+        },
+        {
+          "word": "punch",
+          "start": 15.36,
+          "end": 15.5
+        },
+        {
+          "word": "me,",
+          "start": 15.5,
+          "end": 16.0
+        },
+        {
+          "word": "just",
+          "start": 16.0,
+          "end": 16.36
+        },
+        {
+          "word": "let",
+          "start": 16.36,
+          "end": 16.64
+        },
+        {
+          "word": "me",
+          "start": 16.64,
+          "end": 17.14
+        },
+        {
+          "word": "goInto",
+          "start": 17.14,
+          "end": 18.58
+        },
+        {
+          "word": "the",
+          "start": 18.58,
+          "end": 19.04
+        },
+        {
+          "word": "nurse's",
+          "start": 19.04,
+          "end": 19.68
+        },
+        {
+          "word": "office",
+          "start": 19.68,
+          "end": 20.44
+        },
+        {
+          "word": "where",
+          "start": 20.44,
+          "end": 20.58
+        },
+        {
+          "word": "I",
+          "start": 20.58,
+          "end": 21.04
+        },
+        {
+          "word": "float",
+          "start": 21.04,
+          "end": 21.34
+        },
+        {
+          "word": "away",
+          "start": 21.34,
+          "end": 21.86
+        }
+      ]
+    },
+    {
+      "text": "As  the  loose  leaf  paint  where  they  grow",
+      "start": 21.86,
+      "end": 25.48,
+      "words": [
+        {
+          "word": "As",
+          "start": 21.86,
+          "end": 22.62
+        },
+        {
+          "word": "the",
+          "start": 22.62,
+          "end": 22.92
+        },
+        {
+          "word": "loose",
+          "start": 22.92,
+          "end": 23.52
+        },
+        {
+          "word": "leaf",
+          "start": 23.52,
+          "end": 23.86
+        },
+        {
+          "word": "paint",
+          "start": 23.86,
+          "end": 24.38
+        },
+        {
+          "word": "where",
+          "start": 24.38,
+          "end": 24.6
+        },
+        {
+          "word": "they",
+          "start": 24.6,
+          "end": 25.0
+        },
+        {
+          "word": "grow",
+          "start": 25.0,
+          "end": 25.48
+        }
+      ]
+    },
+    {
+      "text": "From  hollowing  out  all  my  lungs  in  the  snow",
+      "start": 25.48,
+      "end": 29.08,
+      "words": [
+        {
+          "word": "From",
+          "start": 25.48,
+          "end": 25.98
+        },
+        {
+          "word": "hollowing",
+          "start": 25.98,
+          "end": 26.96
+        },
+        {
+          "word": "out",
+          "start": 26.96,
+          "end": 27.28
+        },
+        {
+          "word": "all",
+          "start": 27.28,
+          "end": 27.48
+        },
+        {
+          "word": "my",
+          "start": 27.48,
+          "end": 27.94
+        },
+        {
+          "word": "lungs",
+          "start": 27.94,
+          "end": 28.16
+        },
+        {
+          "word": "in",
+          "start": 28.16,
+          "end": 28.54
+        },
+        {
+          "word": "the",
+          "start": 28.54,
+          "end": 28.78
+        },
+        {
+          "word": "snow",
+          "start": 28.78,
+          "end": 29.08
+        }
+      ]
+    },
+    {
+      "text": "Yeah,  I'm  coughing,  I'm  bleeding",
+      "start": 29.08,
+      "end": 33.2,
+      "words": [
+        {
+          "word": "Yeah,",
+          "start": 29.08,
+          "end": 29.52
+        },
+        {
+          "word": "I'm",
+          "start": 29.56,
+          "end": 30.04
+        },
+        {
+          "word": "coughing,",
+          "start": 30.04,
+          "end": 30.74
+        },
+        {
+          "word": "I'm",
+          "start": 31.52,
+          "end": 31.84
+        },
+        {
+          "word": "bleeding",
+          "start": 31.84,
+          "end": 33.2
+        }
+      ]
+    },
+    {
+      "text": "Band -aids  won't  heal  it",
+      "start": 33.2,
+      "end": 36.9,
+      "words": [
+        {
+          "word": "Band",
+          "start": 33.2,
+          "end": 34.54
+        },
+        {
+          "word": "-aids",
+          "start": 34.54,
+          "end": 35.16
+        },
+        {
+          "word": "won't",
+          "start": 35.16,
+          "end": 35.88
+        },
+        {
+          "word": "heal",
+          "start": 35.88,
+          "end": 36.38
+        },
+        {
+          "word": "it",
+          "start": 36.38,
+          "end": 36.9
+        }
+      ]
+    },
+    {
+      "text": "Cause  they  hate  me,  so  I'm  faking  all  of  this",
+      "start": 36.9,
+      "end": 42.74,
+      "words": [
+        {
+          "word": "Cause",
+          "start": 36.9,
+          "end": 37.3
+        },
+        {
+          "word": "they",
+          "start": 37.3,
+          "end": 37.78
+        },
+        {
+          "word": "hate",
+          "start": 37.78,
+          "end": 38.3
+        },
+        {
+          "word": "me,",
+          "start": 38.3,
+          "end": 38.98
+        },
+        {
+          "word": "so",
+          "start": 38.98,
+          "end": 39.46
+        },
+        {
+          "word": "I'm",
+          "start": 39.46,
+          "end": 40.06
+        },
+        {
+          "word": "faking",
+          "start": 40.06,
+          "end": 41.14
+        },
+        {
+          "word": "all",
+          "start": 41.14,
+          "end": 42.36
+        },
+        {
+          "word": "of",
+          "start": 42.36,
+          "end": 42.42
+        },
+        {
+          "word": "this",
+          "start": 42.42,
+          "end": 42.74
+        }
+      ]
+    },
+    {
+      "text": "So  they  take  me,  take  me  home,  home,  home",
+      "start": 42.74,
+      "end": 48.36,
+      "words": [
+        {
+          "word": "So",
+          "start": 42.74,
+          "end": 43.34
+        },
+        {
+          "word": "they",
+          "start": 43.34,
+          "end": 43.74
+        },
+        {
+          "word": "take",
+          "start": 43.74,
+          "end": 44.12
+        },
+        {
+          "word": "me,",
+          "start": 44.12,
+          "end": 44.74
+        },
+        {
+          "word": "take",
+          "start": 44.74,
+          "end": 45.22
+        },
+        {
+          "word": "me",
+          "start": 45.22,
+          "end": 45.88
+        },
+        {
+          "word": "home,",
+          "start": 45.88,
+          "end": 46.64
+        },
+        {
+          "word": "home,",
+          "start": 46.64,
+          "end": 47.64
+        },
+        {
+          "word": "home",
+          "start": 47.64,
+          "end": 48.36
+        }
+      ]
+    },
+    {
+      "text": "Give  me  that  pink  slip  of  permission",
+      "start": 48.36,
+      "end": 52.44,
+      "words": [
+        {
+          "word": "Give",
+          "start": 48.36,
+          "end": 48.68
+        },
+        {
+          "word": "me",
+          "start": 48.68,
+          "end": 49.16
+        },
+        {
+          "word": "that",
+          "start": 49.16,
+          "end": 49.58
+        },
+        {
+          "word": "pink",
+          "start": 49.58,
+          "end": 50.1
+        },
+        {
+          "word": "slip",
+          "start": 50.1,
+          "end": 50.74
+        },
+        {
+          "word": "of",
+          "start": 50.74,
+          "end": 51.28
+        },
+        {
+          "word": "permission",
+          "start": 51.28,
+          "end": 52.44
+        }
+      ]
+    },
+    {
+      "text": "This  is  all,  all,  all",
+      "start": 52.44,
+      "end": 56.02,
+      "words": [
+        {
+          "word": "This",
+          "start": 52.44,
+          "end": 53.16
+        },
+        {
+          "word": "is",
+          "start": 53.16,
+          "end": 53.72
+        },
+        {
+          "word": "all,",
+          "start": 53.72,
+          "end": 54.54
+        },
+        {
+          "word": "all,",
+          "start": 54.54,
+          "end": 55.58
+        },
+        {
+          "word": "all",
+          "start": 55.58,
+          "end": 56.02
+        }
+      ]
+    },
+    {
+      "text": "I'm  tired  of  wishing  I  was  ditching",
+      "start": 56.02,
+      "end": 60.68,
+      "words": [
+        {
+          "word": "I'm",
+          "start": 56.02,
+          "end": 56.48
+        },
+        {
+          "word": "tired",
+          "start": 56.48,
+          "end": 56.92
+        },
+        {
+          "word": "of",
+          "start": 56.92,
+          "end": 57.56
+        },
+        {
+          "word": "wishing",
+          "start": 57.56,
+          "end": 58.3
+        },
+        {
+          "word": "I",
+          "start": 58.3,
+          "end": 59.04
+        },
+        {
+          "word": "was",
+          "start": 59.04,
+          "end": 59.46
+        },
+        {
+          "word": "ditching",
+          "start": 59.46,
+          "end": 60.68
+        }
+      ]
+    },
+    {
+      "text": "Oww",
+      "start": 61.92,
+      "end": 62.96,
+      "words": [
+        {
+          "word": "Oww",
+          "start": 61.92,
+          "end": 62.96
+        }
+      ]
+    },
+    {
+      "text": "Ooh,  ooh,  ooh,  ooh,  ooh,  ooh",
+      "start": 62.96,
+      "end": 66.44,
+      "words": [
+        {
+          "word": "Ooh,",
+          "start": 62.96,
+          "end": 62.96
+        },
+        {
+          "word": "ooh,",
+          "start": 62.96,
+          "end": 64.28
+        },
+        {
+          "word": "ooh,",
+          "start": 64.28,
+          "end": 64.96
+        },
+        {
+          "word": "ooh,",
+          "start": 64.96,
+          "end": 65.62
+        },
+        {
+          "word": "ooh,",
+          "start": 65.62,
+          "end": 65.92
+        },
+        {
+          "word": "ooh",
+          "start": 65.92,
+          "end": 66.44
+        }
+      ]
+    },
+    {
+      "text": "Ooh,  ooh,  ooh,  ooh,  ooh",
+      "start": 67.3,
+      "end": 69.38,
+      "words": [
+        {
+          "word": "Ooh,",
+          "start": 67.3,
+          "end": 67.8
+        },
+        {
+          "word": "ooh,",
+          "start": 67.84,
+          "end": 68.66
+        },
+        {
+          "word": "ooh,",
+          "start": 68.66,
+          "end": 69.1
+        },
+        {
+          "word": "ooh,",
+          "start": 69.2,
+          "end": 69.2
+        },
+        {
+          "word": "ooh",
+          "start": 69.38,
+          "end": 69.38
+        }
+      ]
+    },
+    {
+      "text": "Teacher,  can  I  sit  right  there?",
+      "start": 69.38,
+      "end": 72.84,
+      "words": [
+        {
+          "word": "Teacher,",
+          "start": 69.38,
+          "end": 69.96
+        },
+        {
+          "word": "can",
+          "start": 71.06,
+          "end": 71.18
+        },
+        {
+          "word": "I",
+          "start": 71.18,
+          "end": 71.48
+        },
+        {
+          "word": "sit",
+          "start": 71.48,
+          "end": 71.74
+        },
+        {
+          "word": "right",
+          "start": 71.74,
+          "end": 72.32
+        },
+        {
+          "word": "there?",
+          "start": 72.32,
+          "end": 72.84
+        }
+      ]
+    },
+    {
+      "text": "This  bitch  behind  me  is  cutting  my  hair",
+      "start": 73.12,
+      "end": 76.34,
+      "words": [
+        {
+          "word": "This",
+          "start": 73.12,
+          "end": 73.44
+        },
+        {
+          "word": "bitch",
+          "start": 73.44,
+          "end": 73.72
+        },
+        {
+          "word": "behind",
+          "start": 73.72,
+          "end": 74.28
+        },
+        {
+          "word": "me",
+          "start": 74.28,
+          "end": 74.72
+        },
+        {
+          "word": "is",
+          "start": 74.72,
+          "end": 75.06
+        },
+        {
+          "word": "cutting",
+          "start": 75.06,
+          "end": 75.44
+        },
+        {
+          "word": "my",
+          "start": 75.44,
+          "end": 76.0
+        },
+        {
+          "word": "hair",
+          "start": 76.0,
+          "end": 76.34
+        }
+      ]
+    },
+    {
+      "text": "No  one's  just  a  rest  down  at  the  shop",
+      "start": 76.34,
+      "end": 79.4,
+      "words": [
+        {
+          "word": "No",
+          "start": 76.34,
+          "end": 76.54
+        },
+        {
+          "word": "one's",
+          "start": 76.54,
+          "end": 76.94
+        },
+        {
+          "word": "just",
+          "start": 76.94,
+          "end": 77.22
+        },
+        {
+          "word": "a",
+          "start": 77.22,
+          "end": 77.58
+        },
+        {
+          "word": "rest",
+          "start": 77.58,
+          "end": 77.76
+        },
+        {
+          "word": "down",
+          "start": 77.76,
+          "end": 78.4
+        },
+        {
+          "word": "at",
+          "start": 78.4,
+          "end": 78.8
+        },
+        {
+          "word": "the",
+          "start": 78.8,
+          "end": 79.1
+        },
+        {
+          "word": "shop",
+          "start": 79.1,
+          "end": 79.4
+        }
+      ]
+    },
+    {
+      "text": "Would  you  stare?",
+      "start": 79.4,
+      "end": 80.54,
+      "words": [
+        {
+          "word": "Would",
+          "start": 79.4,
+          "end": 79.72
+        },
+        {
+          "word": "you",
+          "start": 79.72,
+          "end": 80.18
+        },
+        {
+          "word": "stare?",
+          "start": 80.18,
+          "end": 80.54
+        }
+      ]
+    },
+    {
+      "text": "I  faked  up  a  seizure",
+      "start": 80.88,
+      "end": 82.58,
+      "words": [
+        {
+          "word": "I",
+          "start": 80.88,
+          "end": 81.1
+        },
+        {
+          "word": "faked",
+          "start": 81.1,
+          "end": 81.38
+        },
+        {
+          "word": "up",
+          "start": 81.38,
+          "end": 81.8
+        },
+        {
+          "word": "a",
+          "start": 81.8,
+          "end": 82.0
+        },
+        {
+          "word": "seizure",
+          "start": 82.0,
+          "end": 82.58
+        }
+      ]
+    },
+    {
+      "text": "And  life  done  and  there,  yeah,  I'm  talking",
+      "start": 82.58,
+      "end": 85.82,
+      "words": [
+        {
+          "word": "And",
+          "start": 82.58,
+          "end": 83.04
+        },
+        {
+          "word": "life",
+          "start": 83.04,
+          "end": 83.32
+        },
+        {
+          "word": "done",
+          "start": 83.32,
+          "end": 83.58
+        },
+        {
+          "word": "and",
+          "start": 83.58,
+          "end": 84.02
+        },
+        {
+          "word": "there,",
+          "start": 84.02,
+          "end": 84.22
+        },
+        {
+          "word": "yeah,",
+          "start": 84.32,
+          "end": 84.58
+        },
+        {
+          "word": "I'm",
+          "start": 84.58,
+          "end": 85.1
+        },
+        {
+          "word": "talking",
+          "start": 85.1,
+          "end": 85.82
+        }
+      ]
+    },
+    {
+      "text": "I'm  bleeding",
+      "start": 85.82,
+      "end": 88.22,
+      "words": [
+        {
+          "word": "I'm",
+          "start": 85.82,
+          "end": 87.0
+        },
+        {
+          "word": "bleeding",
+          "start": 87.0,
+          "end": 88.22
+        }
+      ]
+    },
+    {
+      "text": "And  days  won't  heal  it",
+      "start": 88.22,
+      "end": 92.02,
+      "words": [
+        {
+          "word": "And",
+          "start": 88.22,
+          "end": 89.66
+        },
+        {
+          "word": "days",
+          "start": 89.66,
+          "end": 90.24
+        },
+        {
+          "word": "won't",
+          "start": 90.24,
+          "end": 90.98
+        },
+        {
+          "word": "heal",
+          "start": 90.98,
+          "end": 91.6
+        },
+        {
+          "word": "it",
+          "start": 91.6,
+          "end": 92.02
+        }
+      ]
+    },
+    {
+      "text": "Cause  they  hate  me",
+      "start": 92.02,
+      "end": 94.02,
+      "words": [
+        {
+          "word": "Cause",
+          "start": 92.02,
+          "end": 92.4
+        },
+        {
+          "word": "they",
+          "start": 92.4,
+          "end": 92.9
+        },
+        {
+          "word": "hate",
+          "start": 92.9,
+          "end": 93.4
+        },
+        {
+          "word": "me",
+          "start": 93.4,
+          "end": 94.02
+        }
+      ]
+    },
+    {
+      "text": "So  I'm  faking  all  of  this",
+      "start": 94.02,
+      "end": 97.84,
+      "words": [
+        {
+          "word": "So",
+          "start": 94.02,
+          "end": 94.36
+        },
+        {
+          "word": "I'm",
+          "start": 94.36,
+          "end": 94.86
+        },
+        {
+          "word": "faking",
+          "start": 94.86,
+          "end": 96.2
+        },
+        {
+          "word": "all",
+          "start": 96.2,
+          "end": 97.02
+        },
+        {
+          "word": "of",
+          "start": 97.02,
+          "end": 97.52
+        },
+        {
+          "word": "this",
+          "start": 97.52,
+          "end": 97.84
+        }
+      ]
+    },
+    {
+      "text": "So  they  can't  hate  me",
+      "start": 97.84,
+      "end": 99.92,
+      "words": [
+        {
+          "word": "So",
+          "start": 97.84,
+          "end": 98.38
+        },
+        {
+          "word": "they",
+          "start": 98.38,
+          "end": 98.9
+        },
+        {
+          "word": "can't",
+          "start": 98.9,
+          "end": 99.22
+        },
+        {
+          "word": "hate",
+          "start": 99.22,
+          "end": 99.48
+        },
+        {
+          "word": "me",
+          "start": 99.48,
+          "end": 99.92
+        }
+      ]
+    },
+    {
+      "text": "Take  me  up,  up,  up",
+      "start": 99.92,
+      "end": 103.3,
+      "words": [
+        {
+          "word": "Take",
+          "start": 99.92,
+          "end": 100.32
+        },
+        {
+          "word": "me",
+          "start": 100.32,
+          "end": 100.94
+        },
+        {
+          "word": "up,",
+          "start": 100.94,
+          "end": 101.72
+        },
+        {
+          "word": "up,",
+          "start": 101.72,
+          "end": 102.72
+        },
+        {
+          "word": "up",
+          "start": 102.72,
+          "end": 103.3
+        }
+      ]
+    },
+    {
+      "text": "Give  me  that  pink  slip  of  permission",
+      "start": 103.3,
+      "end": 107.54,
+      "words": [
+        {
+          "word": "Give",
+          "start": 103.3,
+          "end": 103.82
+        },
+        {
+          "word": "me",
+          "start": 103.82,
+          "end": 104.22
+        },
+        {
+          "word": "that",
+          "start": 104.22,
+          "end": 104.68
+        },
+        {
+          "word": "pink",
+          "start": 104.68,
+          "end": 105.16
+        },
+        {
+          "word": "slip",
+          "start": 105.16,
+          "end": 105.8
+        },
+        {
+          "word": "of",
+          "start": 105.8,
+          "end": 106.34
+        },
+        {
+          "word": "permission",
+          "start": 106.34,
+          "end": 107.54
+        }
+      ]
+    },
+    {
+      "text": "This  is  all,  all,  all",
+      "start": 107.54,
+      "end": 111.1,
+      "words": [
+        {
+          "word": "This",
+          "start": 107.54,
+          "end": 108.3
+        },
+        {
+          "word": "is",
+          "start": 108.3,
+          "end": 108.88
+        },
+        {
+          "word": "all,",
+          "start": 108.88,
+          "end": 109.68
+        },
+        {
+          "word": "all,",
+          "start": 109.68,
+          "end": 110.72
+        },
+        {
+          "word": "all",
+          "start": 110.76,
+          "end": 111.1
+        }
+      ]
+    },
+    {
+      "text": "I'm  tired  of  wishing  I  was  ditchin'",
+      "start": 111.1,
+      "end": 115.7,
+      "words": [
+        {
+          "word": "I'm",
+          "start": 111.1,
+          "end": 111.58
+        },
+        {
+          "word": "tired",
+          "start": 111.58,
+          "end": 112.02
+        },
+        {
+          "word": "of",
+          "start": 112.02,
+          "end": 112.58
+        },
+        {
+          "word": "wishing",
+          "start": 112.58,
+          "end": 113.4
+        },
+        {
+          "word": "I",
+          "start": 113.4,
+          "end": 114.16
+        },
+        {
+          "word": "was",
+          "start": 114.16,
+          "end": 114.56
+        },
+        {
+          "word": "ditchin'",
+          "start": 114.56,
+          "end": 115.7
+        }
+      ]
+    },
+    {
+      "text": "Take  me  on,  on,  on",
+      "start": 153.32,
+      "end": 158.48,
+      "words": [
+        {
+          "word": "Take",
+          "start": 153.32,
+          "end": 154.64
+        },
+        {
+          "word": "me",
+          "start": 154.64,
+          "end": 155.96
+        },
+        {
+          "word": "on,",
+          "start": 155.96,
+          "end": 157.0
+        },
+        {
+          "word": "on,",
+          "start": 157.0,
+          "end": 157.72
+        },
+        {
+          "word": "on",
+          "start": 157.72,
+          "end": 158.48
+        }
+      ]
+    },
+    {
+      "text": "Give  me  that  pink  slip  of  permission",
+      "start": 158.48,
+      "end": 162.44,
+      "words": [
+        {
+          "word": "Give",
+          "start": 158.48,
+          "end": 158.92
+        },
+        {
+          "word": "me",
+          "start": 158.92,
+          "end": 159.34
+        },
+        {
+          "word": "that",
+          "start": 159.34,
+          "end": 159.72
+        },
+        {
+          "word": "pink",
+          "start": 159.72,
+          "end": 160.32
+        },
+        {
+          "word": "slip",
+          "start": 160.32,
+          "end": 160.88
+        },
+        {
+          "word": "of",
+          "start": 160.88,
+          "end": 161.32
+        },
+        {
+          "word": "permission",
+          "start": 161.32,
+          "end": 162.44
+        }
+      ]
+    },
+    {
+      "text": "This  is  all,  all,  all",
+      "start": 162.44,
+      "end": 166.16,
+      "words": [
+        {
+          "word": "This",
+          "start": 162.44,
+          "end": 163.26
+        },
+        {
+          "word": "is",
+          "start": 163.26,
+          "end": 164.26
+        },
+        {
+          "word": "all,",
+          "start": 164.26,
+          "end": 164.42
+        },
+        {
+          "word": "all,",
+          "start": 164.42,
+          "end": 165.64
+        },
+        {
+          "word": "all",
+          "start": 165.7,
+          "end": 166.16
+        }
+      ]
+    },
+    {
+      "text": "I'm  tired  of  wishing  I  was  ditching",
+      "start": 166.16,
+      "end": 170.44,
+      "words": [
+        {
+          "word": "I'm",
+          "start": 166.16,
+          "end": 166.72
+        },
+        {
+          "word": "tired",
+          "start": 166.72,
+          "end": 167.12
+        },
+        {
+          "word": "of",
+          "start": 167.12,
+          "end": 167.66
+        },
+        {
+          "word": "wishing",
+          "start": 167.66,
+          "end": 168.46
+        },
+        {
+          "word": "I",
+          "start": 168.46,
+          "end": 169.2
+        },
+        {
+          "word": "was",
+          "start": 169.2,
+          "end": 169.6
+        },
+        {
+          "word": "ditching",
+          "start": 169.6,
+          "end": 170.44
+        }
+      ]
+    },
+    {
+      "text": "Oh,  oh,  oh",
+      "start": 171.06,
+      "end": 177.58,
+      "words": [
+        {
+          "word": "Oh,",
+          "start": 171.06,
+          "end": 172.16
+        },
+        {
+          "word": "oh,",
+          "start": 172.58,
+          "end": 173.98
+        },
+        {
+          "word": "oh",
+          "start": 177.58,
+          "end": 177.58
+        }
+      ]
+    },
+    {
+      "text": "It's  all,  all,  all",
+      "start": 178.44,
+      "end": 182.1,
+      "words": [
+        {
+          "word": "It's",
+          "start": 178.44,
+          "end": 179.74
+        },
+        {
+          "word": "all,",
+          "start": 179.74,
+          "end": 180.42
+        },
+        {
+          "word": "all,",
+          "start": 180.46,
+          "end": 181.42
+        },
+        {
+          "word": "all",
+          "start": 181.7,
+          "end": 182.1
+        }
+      ]
+    },
+    {
+      "text": "you",
+      "start": 195.38,
+      "end": 196.78,
+      "words": [
+        {
+          "word": "you",
+          "start": 195.38,
+          "end": 196.78
+        }
+      ]
+    }
+  ],
+  "reference_text": [
+    {
+      "text": "Don't cut me, punch me, just let me go",
+      "words": [
+        "Don't",
+        "cut",
+        "me,",
+        "punch",
+        "me,",
+        "just",
+        "let",
+        "me",
+        "go"
+      ]
+    },
+    {
+      "text": "Into the nurse's office where I float away",
+      "words": [
+        "Into",
+        "the",
+        "nurse's",
+        "office",
+        "where",
+        "I",
+        "float",
+        "away"
+      ]
+    },
+    {
+      "text": "I'm pale as the loose-leaf paper they grow",
+      "words": [
+        "I'm",
+        "pale",
+        "as",
+        "the",
+        "loose-leaf",
+        "paper",
+        "they",
+        "grow"
+      ]
+    },
+    {
+      "text": "From hollowing out all my lungs in the snow",
+      "words": [
+        "From",
+        "hollowing",
+        "out",
+        "all",
+        "my",
+        "lungs",
+        "in",
+        "the",
+        "snow"
+      ]
+    },
+    {
+      "text": "Yeah, I'm coughing, I'm bleeding",
+      "words": [
+        "Yeah,",
+        "I'm",
+        "coughing,",
+        "I'm",
+        "bleeding"
+      ]
+    },
+    {
+      "text": "Band-Aids won't heal it",
+      "words": [
+        "Band-Aids",
+        "won't",
+        "heal",
+        "it"
+      ]
+    },
+    {
+      "text": "'Cause they hate me, so I'm fakin'",
+      "words": [
+        "'Cause",
+        "they",
+        "hate",
+        "me,",
+        "so",
+        "I'm",
+        "fakin'"
+      ]
+    },
+    {
+      "text": "All of this so they take-take me",
+      "words": [
+        "All",
+        "of",
+        "this",
+        "so",
+        "they",
+        "take-take",
+        "me"
+      ]
+    },
+    {
+      "text": "Take me home, home, home",
+      "words": [
+        "Take",
+        "me",
+        "home,",
+        "home,",
+        "home"
+      ]
+    },
+    {
+      "text": "Give me that pink slip of permission",
+      "words": [
+        "Give",
+        "me",
+        "that",
+        "pink",
+        "slip",
+        "of",
+        "permission"
+      ]
+    },
+    {
+      "text": "This is old, old, old",
+      "words": [
+        "This",
+        "is",
+        "old,",
+        "old,",
+        "old"
+      ]
+    },
+    {
+      "text": "I'm tired of wishing I was ditching",
+      "words": [
+        "I'm",
+        "tired",
+        "of",
+        "wishing",
+        "I",
+        "was",
+        "ditching"
+      ]
+    },
+    {
+      "text": "Ooh, ooh, ooh-ooh",
+      "words": [
+        "Ooh,",
+        "ooh,",
+        "ooh-ooh"
+      ]
+    },
+    {
+      "text": "Ooh, ooh-ooh",
+      "words": [
+        "Ooh,",
+        "ooh-ooh"
+      ]
+    },
+    {
+      "text": "Teacher, can I sit right there?",
+      "words": [
+        "Teacher,",
+        "can",
+        "I",
+        "sit",
+        "right",
+        "there?"
+      ]
+    },
+    {
+      "text": "This bitch behind me is cutting my hair",
+      "words": [
+        "This",
+        "bitch",
+        "behind",
+        "me",
+        "is",
+        "cutting",
+        "my",
+        "hair"
+      ]
+    },
+    {
+      "text": "\"No, just sit your ass down at the chalkboard, you stare\"",
+      "words": [
+        "\"No,",
+        "just",
+        "sit",
+        "your",
+        "ass",
+        "down",
+        "at",
+        "the",
+        "chalkboard,",
+        "you",
+        "stare\""
+      ]
+    },
+    {
+      "text": "I faked up a seizure and left then and there",
+      "words": [
+        "I",
+        "faked",
+        "up",
+        "a",
+        "seizure",
+        "and",
+        "left",
+        "then",
+        "and",
+        "there"
+      ]
+    },
+    {
+      "text": "Yeah, I'm coughing, I'm bleeding",
+      "words": [
+        "Yeah,",
+        "I'm",
+        "coughing,",
+        "I'm",
+        "bleeding"
+      ]
+    },
+    {
+      "text": "Band-Aids won't heal it",
+      "words": [
+        "Band-Aids",
+        "won't",
+        "heal",
+        "it"
+      ]
+    },
+    {
+      "text": "'Cause they hate me, so I'm fakin'",
+      "words": [
+        "'Cause",
+        "they",
+        "hate",
+        "me,",
+        "so",
+        "I'm",
+        "fakin'"
+      ]
+    },
+    {
+      "text": "All of this so they take-take me",
+      "words": [
+        "All",
+        "of",
+        "this",
+        "so",
+        "they",
+        "take-take",
+        "me"
+      ]
+    },
+    {
+      "text": "Take me home, home, home",
+      "words": [
+        "Take",
+        "me",
+        "home,",
+        "home,",
+        "home"
+      ]
+    },
+    {
+      "text": "Give me that pink slip of permission",
+      "words": [
+        "Give",
+        "me",
+        "that",
+        "pink",
+        "slip",
+        "of",
+        "permission"
+      ]
+    },
+    {
+      "text": "This is old, old, old",
+      "words": [
+        "This",
+        "is",
+        "old,",
+        "old,",
+        "old"
+      ]
+    },
+    {
+      "text": "I'm tired of wishing I was ditching",
+      "words": [
+        "I'm",
+        "tired",
+        "of",
+        "wishing",
+        "I",
+        "was",
+        "ditching"
+      ]
+    },
+    {
+      "text": "Ooh, ooh, ooh-ooh",
+      "words": [
+        "Ooh,",
+        "ooh,",
+        "ooh-ooh"
+      ]
+    },
+    {
+      "text": "Ooh, ooh-ooh",
+      "words": [
+        "Ooh,",
+        "ooh-ooh"
+      ]
+    },
+    {
+      "text": "Take me home, home, home",
+      "words": [
+        "Take",
+        "me",
+        "home,",
+        "home,",
+        "home"
+      ]
+    },
+    {
+      "text": "Give me that pink slip of permission",
+      "words": [
+        "Give",
+        "me",
+        "that",
+        "pink",
+        "slip",
+        "of",
+        "permission"
+      ]
+    },
+    {
+      "text": "This is old, old, old",
+      "words": [
+        "This",
+        "is",
+        "old,",
+        "old,",
+        "old"
+      ]
+    },
+    {
+      "text": "I'm tired of wishing I was ditching",
+      "words": [
+        "I'm",
+        "tired",
+        "of",
+        "wishing",
+        "I",
+        "was",
+        "ditching"
+      ]
+    },
+    {
+      "text": "Home, home, home",
+      "words": [
+        "Home,",
+        "home,",
+        "home"
+      ]
+    },
+    {
+      "text": "Old, old, old",
+      "words": [
+        "Old,",
+        "old,",
+        "old"
+      ]
+    }
+  ]
+}

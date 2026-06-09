@@ -1,0 +1,38 @@
+[
+  {
+    "time": 0.0,
+    "text": "Субтитры сделал DimaTorzok Субтитры сделал DimaTorzok",
+    "words": [
+      {
+        "word": "Субтитры",
+        "start": 0.0,
+        "end": 27.14
+      },
+      {
+        "word": "сделал",
+        "start": 27.14,
+        "end": 27.14
+      },
+      {
+        "word": "DimaTorzok",
+        "start": 37.14,
+        "end": 108.62
+      },
+      {
+        "word": "Субтитры",
+        "start": 100.0,
+        "end": 115.0
+      },
+      {
+        "word": "сделал",
+        "start": 115.0,
+        "end": 115.0
+      },
+      {
+        "word": "DimaTorzok",
+        "start": 115.0,
+        "end": 120.26
+      }
+    ]
+  }
+]

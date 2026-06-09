@@ -1,0 +1,778 @@
+[
+  {
+    "time": 0.0,
+    "text": "Подобавил субтитры сделал DimaTorzok I don't understand nobody Keep these fuckboys from around me I feel like my world is drowning Somehow manage to stay grounded I think that I need somebody To hug and hold and stay right by meBut I feel like I'm set on fire Редактор субтитров А .Семкин Корректор А .Егорова I think I'm going home and turning on my phone I wanna be alone, I wanna be alone Like he's moving on, even when you're gone Give a fuck about you, don't wanna hear your song I think I'm going home and turning on my phone I wanna be alone, I wanna be alone Like he a song, I wanna be a songII can move it on, even when you gone Give a fuck about you, don't wanna hear your song I think I'm going home, and turning on my phone I wanna be alone, I wanna be alone",
+    "words": [
+      {
+        "word": "Подобавил",
+        "start": 0.0,
+        "end": 12.38
+      },
+      {
+        "word": "субтитры",
+        "start": 12.38,
+        "end": 28.44
+      },
+      {
+        "word": "сделал",
+        "start": 21.68,
+        "end": 21.68
+      },
+      {
+        "word": "DimaTorzok",
+        "start": 21.68,
+        "end": 63.24
+      },
+      {
+        "word": "I",
+        "start": 80.0,
+        "end": 81.26
+      },
+      {
+        "word": "don't",
+        "start": 81.26,
+        "end": 89.12
+      },
+      {
+        "word": "understand",
+        "start": 89.12,
+        "end": 90.02
+      },
+      {
+        "word": "nobody",
+        "start": 90.02,
+        "end": 91.16
+      },
+      {
+        "word": "Keep",
+        "start": 91.16,
+        "end": 91.88
+      },
+      {
+        "word": "these",
+        "start": 91.88,
+        "end": 92.2
+      },
+      {
+        "word": "fuckboys",
+        "start": 92.2,
+        "end": 92.92
+      },
+      {
+        "word": "from",
+        "start": 92.92,
+        "end": 93.36
+      },
+      {
+        "word": "around",
+        "start": 93.36,
+        "end": 94.02
+      },
+      {
+        "word": "me",
+        "start": 94.02,
+        "end": 94.44
+      },
+      {
+        "word": "I",
+        "start": 94.78,
+        "end": 95.02
+      },
+      {
+        "word": "feel",
+        "start": 95.02,
+        "end": 95.34
+      },
+      {
+        "word": "like",
+        "start": 95.34,
+        "end": 95.72
+      },
+      {
+        "word": "my",
+        "start": 95.72,
+        "end": 96.06
+      },
+      {
+        "word": "world",
+        "start": 96.06,
+        "end": 96.54
+      },
+      {
+        "word": "is",
+        "start": 96.54,
+        "end": 96.96
+      },
+      {
+        "word": "drowning",
+        "start": 96.96,
+        "end": 97.4
+      },
+      {
+        "word": "Somehow",
+        "start": 97.4,
+        "end": 98.36
+      },
+      {
+        "word": "manage",
+        "start": 98.36,
+        "end": 99.04
+      },
+      {
+        "word": "to",
+        "start": 99.04,
+        "end": 99.6
+      },
+      {
+        "word": "stay",
+        "start": 99.6,
+        "end": 100.0
+      },
+      {
+        "word": "grounded",
+        "start": 100.0,
+        "end": 100.56
+      },
+      {
+        "word": "I",
+        "start": 101.02,
+        "end": 101.32
+      },
+      {
+        "word": "think",
+        "start": 101.32,
+        "end": 101.64
+      },
+      {
+        "word": "that",
+        "start": 101.64,
+        "end": 102.02
+      },
+      {
+        "word": "I",
+        "start": 102.02,
+        "end": 102.38
+      },
+      {
+        "word": "need",
+        "start": 102.38,
+        "end": 102.8
+      },
+      {
+        "word": "somebody",
+        "start": 102.8,
+        "end": 103.58
+      },
+      {
+        "word": "To",
+        "start": 103.58,
+        "end": 104.26
+      },
+      {
+        "word": "hug",
+        "start": 104.26,
+        "end": 104.58
+      },
+      {
+        "word": "and",
+        "start": 104.58,
+        "end": 104.88
+      },
+      {
+        "word": "hold",
+        "start": 104.88,
+        "end": 105.16
+      },
+      {
+        "word": "and",
+        "start": 105.16,
+        "end": 105.56
+      },
+      {
+        "word": "stay",
+        "start": 105.56,
+        "end": 105.94
+      },
+      {
+        "word": "right",
+        "start": 105.94,
+        "end": 106.34
+      },
+      {
+        "word": "by",
+        "start": 106.34,
+        "end": 106.7
+      },
+      {
+        "word": "meBut",
+        "start": 106.7,
+        "end": 107.46
+      },
+      {
+        "word": "I",
+        "start": 107.46,
+        "end": 107.66
+      },
+      {
+        "word": "feel",
+        "start": 107.66,
+        "end": 107.98
+      },
+      {
+        "word": "like",
+        "start": 107.98,
+        "end": 108.38
+      },
+      {
+        "word": "I'm",
+        "start": 108.38,
+        "end": 108.8
+      },
+      {
+        "word": "set",
+        "start": 108.8,
+        "end": 109.14
+      },
+      {
+        "word": "on",
+        "start": 109.14,
+        "end": 109.54
+      },
+      {
+        "word": "fire",
+        "start": 109.54,
+        "end": 109.98
+      },
+      {
+        "word": "Редактор",
+        "start": 100.0,
+        "end": 102.72
+      },
+      {
+        "word": "субтитров",
+        "start": 102.72,
+        "end": 110.1
+      },
+      {
+        "word": "А",
+        "start": 110.1,
+        "end": 110.1
+      },
+      {
+        "word": ".Семкин",
+        "start": 110.1,
+        "end": 113.78
+      },
+      {
+        "word": "Корректор",
+        "start": 113.78,
+        "end": 115.88
+      },
+      {
+        "word": "А",
+        "start": 115.88,
+        "end": 115.88
+      },
+      {
+        "word": ".Егорова",
+        "start": 115.88,
+        "end": 117.42
+      },
+      {
+        "word": "I",
+        "start": 120.0,
+        "end": 120.0
+      },
+      {
+        "word": "think",
+        "start": 120.0,
+        "end": 120.0
+      },
+      {
+        "word": "I'm",
+        "start": 120.0,
+        "end": 120.0
+      },
+      {
+        "word": "going",
+        "start": 120.0,
+        "end": 120.0
+      },
+      {
+        "word": "home",
+        "start": 120.0,
+        "end": 120.28
+      },
+      {
+        "word": "and",
+        "start": 120.28,
+        "end": 120.9
+      },
+      {
+        "word": "turning",
+        "start": 120.9,
+        "end": 121.2
+      },
+      {
+        "word": "on",
+        "start": 121.2,
+        "end": 121.5
+      },
+      {
+        "word": "my",
+        "start": 121.5,
+        "end": 121.64
+      },
+      {
+        "word": "phone",
+        "start": 121.64,
+        "end": 121.94
+      },
+      {
+        "word": "I",
+        "start": 122.16,
+        "end": 122.44
+      },
+      {
+        "word": "wanna",
+        "start": 122.44,
+        "end": 122.74
+      },
+      {
+        "word": "be",
+        "start": 122.74,
+        "end": 123.04
+      },
+      {
+        "word": "alone,",
+        "start": 123.04,
+        "end": 123.86
+      },
+      {
+        "word": "I",
+        "start": 123.86,
+        "end": 124.02
+      },
+      {
+        "word": "wanna",
+        "start": 124.02,
+        "end": 124.3
+      },
+      {
+        "word": "be",
+        "start": 124.3,
+        "end": 124.62
+      },
+      {
+        "word": "alone",
+        "start": 124.62,
+        "end": 125.04
+      },
+      {
+        "word": "Like",
+        "start": 125.6,
+        "end": 125.88
+      },
+      {
+        "word": "he's",
+        "start": 125.88,
+        "end": 126.08
+      },
+      {
+        "word": "moving",
+        "start": 126.08,
+        "end": 126.34
+      },
+      {
+        "word": "on,",
+        "start": 126.34,
+        "end": 127.18
+      },
+      {
+        "word": "even",
+        "start": 127.18,
+        "end": 127.54
+      },
+      {
+        "word": "when",
+        "start": 127.54,
+        "end": 127.8
+      },
+      {
+        "word": "you're",
+        "start": 127.8,
+        "end": 128.16
+      },
+      {
+        "word": "gone",
+        "start": 128.16,
+        "end": 128.26
+      },
+      {
+        "word": "Give",
+        "start": 128.44,
+        "end": 128.6
+      },
+      {
+        "word": "a",
+        "start": 128.6,
+        "end": 128.8
+      },
+      {
+        "word": "fuck",
+        "start": 128.8,
+        "end": 129.02
+      },
+      {
+        "word": "about",
+        "start": 129.02,
+        "end": 129.44
+      },
+      {
+        "word": "you,",
+        "start": 129.44,
+        "end": 130.22
+      },
+      {
+        "word": "don't",
+        "start": 130.22,
+        "end": 130.44
+      },
+      {
+        "word": "wanna",
+        "start": 130.44,
+        "end": 130.68
+      },
+      {
+        "word": "hear",
+        "start": 130.68,
+        "end": 130.94
+      },
+      {
+        "word": "your",
+        "start": 130.94,
+        "end": 131.14
+      },
+      {
+        "word": "song",
+        "start": 131.14,
+        "end": 131.46
+      },
+      {
+        "word": "I",
+        "start": 131.66,
+        "end": 131.94
+      },
+      {
+        "word": "think",
+        "start": 131.94,
+        "end": 132.16
+      },
+      {
+        "word": "I'm",
+        "start": 132.16,
+        "end": 132.36
+      },
+      {
+        "word": "going",
+        "start": 132.36,
+        "end": 132.64
+      },
+      {
+        "word": "home",
+        "start": 132.64,
+        "end": 133.06
+      },
+      {
+        "word": "and",
+        "start": 133.06,
+        "end": 133.5
+      },
+      {
+        "word": "turning",
+        "start": 133.5,
+        "end": 133.82
+      },
+      {
+        "word": "on",
+        "start": 133.82,
+        "end": 134.12
+      },
+      {
+        "word": "my",
+        "start": 134.12,
+        "end": 134.3
+      },
+      {
+        "word": "phone",
+        "start": 134.3,
+        "end": 134.56
+      },
+      {
+        "word": "I",
+        "start": 134.84,
+        "end": 135.08
+      },
+      {
+        "word": "wanna",
+        "start": 135.08,
+        "end": 135.38
+      },
+      {
+        "word": "be",
+        "start": 135.38,
+        "end": 135.68
+      },
+      {
+        "word": "alone,",
+        "start": 135.68,
+        "end": 136.44
+      },
+      {
+        "word": "I",
+        "start": 136.44,
+        "end": 136.66
+      },
+      {
+        "word": "wanna",
+        "start": 136.66,
+        "end": 136.96
+      },
+      {
+        "word": "be",
+        "start": 136.96,
+        "end": 137.26
+      },
+      {
+        "word": "alone",
+        "start": 137.26,
+        "end": 137.68
+      },
+      {
+        "word": "Like",
+        "start": 138.22,
+        "end": 138.5
+      },
+      {
+        "word": "he",
+        "start": 138.5,
+        "end": 138.66
+      },
+      {
+        "word": "a",
+        "start": 149.1,
+        "end": 149.1
+      },
+      {
+        "word": "song,",
+        "start": 149.1,
+        "end": 149.1
+      },
+      {
+        "word": "I",
+        "start": 149.1,
+        "end": 149.32
+      },
+      {
+        "word": "wanna",
+        "start": 149.32,
+        "end": 149.54
+      },
+      {
+        "word": "be",
+        "start": 149.54,
+        "end": 149.92
+      },
+      {
+        "word": "a",
+        "start": 149.92,
+        "end": 150.14
+      },
+      {
+        "word": "songII",
+        "start": 150.14,
+        "end": 163.7
+      },
+      {
+        "word": "can",
+        "start": 163.7,
+        "end": 163.96
+      },
+      {
+        "word": "move",
+        "start": 163.96,
+        "end": 164.2
+      },
+      {
+        "word": "it",
+        "start": 164.2,
+        "end": 164.34
+      },
+      {
+        "word": "on,",
+        "start": 164.34,
+        "end": 165.0
+      },
+      {
+        "word": "even",
+        "start": 165.0,
+        "end": 165.44
+      },
+      {
+        "word": "when",
+        "start": 165.44,
+        "end": 165.7
+      },
+      {
+        "word": "you",
+        "start": 165.7,
+        "end": 165.84
+      },
+      {
+        "word": "gone",
+        "start": 165.84,
+        "end": 166.18
+      },
+      {
+        "word": "Give",
+        "start": 166.4,
+        "end": 166.48
+      },
+      {
+        "word": "a",
+        "start": 166.48,
+        "end": 166.68
+      },
+      {
+        "word": "fuck",
+        "start": 166.68,
+        "end": 166.92
+      },
+      {
+        "word": "about",
+        "start": 166.92,
+        "end": 167.32
+      },
+      {
+        "word": "you,",
+        "start": 167.32,
+        "end": 168.02
+      },
+      {
+        "word": "don't",
+        "start": 168.02,
+        "end": 168.32
+      },
+      {
+        "word": "wanna",
+        "start": 168.32,
+        "end": 168.56
+      },
+      {
+        "word": "hear",
+        "start": 168.56,
+        "end": 168.84
+      },
+      {
+        "word": "your",
+        "start": 168.84,
+        "end": 169.02
+      },
+      {
+        "word": "song",
+        "start": 169.02,
+        "end": 169.34
+      },
+      {
+        "word": "I",
+        "start": 169.6,
+        "end": 169.8
+      },
+      {
+        "word": "think",
+        "start": 169.8,
+        "end": 170.04
+      },
+      {
+        "word": "I'm",
+        "start": 170.04,
+        "end": 170.26
+      },
+      {
+        "word": "going",
+        "start": 170.26,
+        "end": 170.52
+      },
+      {
+        "word": "home,",
+        "start": 170.52,
+        "end": 171.22
+      },
+      {
+        "word": "and",
+        "start": 171.22,
+        "end": 171.46
+      },
+      {
+        "word": "turning",
+        "start": 171.46,
+        "end": 171.72
+      },
+      {
+        "word": "on",
+        "start": 171.72,
+        "end": 172.02
+      },
+      {
+        "word": "my",
+        "start": 172.02,
+        "end": 172.16
+      },
+      {
+        "word": "phone",
+        "start": 172.16,
+        "end": 172.48
+      },
+      {
+        "word": "I",
+        "start": 172.76,
+        "end": 172.96
+      },
+      {
+        "word": "wanna",
+        "start": 172.96,
+        "end": 173.26
+      },
+      {
+        "word": "be",
+        "start": 173.26,
+        "end": 173.56
+      },
+      {
+        "word": "alone,",
+        "start": 173.56,
+        "end": 174.32
+      },
+      {
+        "word": "I",
+        "start": 174.32,
+        "end": 174.54
+      },
+      {
+        "word": "wanna",
+        "start": 174.54,
+        "end": 174.84
+      },
+      {
+        "word": "be",
+        "start": 174.84,
+        "end": 175.14
+      },
+      {
+        "word": "alone",
+        "start": 175.14,
+        "end": 175.58
+      }
+    ]
+  }
+]

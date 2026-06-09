@@ -14,9 +14,20 @@ export class HyperbolicScene extends BaseScene {
                 u_rms: { value: 0 },
                 u_mid: { value: 0 },
                 u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+                u_debug: { value: false },
+                u_colors: {
+                    value: [
+                        new THREE.Color(0x080a16),
+                        new THREE.Color(0x3e5bff),
+                        new THREE.Color(0x89f0ff),
+                    ],
+                },
             },
         });
         this.scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.material));
+    }
+    setPalette(colors) {
+        this.material.uniforms.u_colors.value = colors;
     }
     update(audio, time) {
         this.material.uniforms.u_time.value = time;

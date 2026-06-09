@@ -4,7 +4,7 @@ import os
 import re
 import subprocess
 
-ROOT = '/path/to/project'
+ROOT = '/Users/illiaromaniv/WebstormProjects/claudecode'
 ALBUM_DIR = os.path.join(ROOT, 'media/music/2018-11-20 - flac')
 WANTED_TRACK_PREFIXES = {'03', '05', '06', '09', '10'}
 OUT_PATH = os.path.join(ROOT, 'data/decl_smoke_report.json')

@@ -1,0 +1,56 @@
+{
+  "manifest_version": 3,
+  "name": "Chromic Visualizer for SoundCloud",
+  "version": "1.0.0",
+  "description": "Chromic engine — GPU music visualizer with synced lyrics, injected into the SoundCloud player.",
+  "permissions": [],
+  "host_permissions": [
+    "*://soundcloud.com/*",
+    "*://*.soundcloud.com/*",
+    "https://*.sndcdn.com/*",
+    "https://raw.githubusercontent.com/*",
+    "https://cdn.jsdelivr.net/*",
+    "https://fonts.gstatic.com/*",
+    "https://fonts.googleapis.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://soundcloud.com/*",
+        "*://*.soundcloud.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "styles.css"
+      ],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "injected.js",
+        "visualizer.worker.js",
+        "visualizer.main.js",
+        "lyrics-db/**",
+        "vendor/**"
+      ],
+      "matches": [
+        "*://soundcloud.com/*",
+        "*://*.soundcloud.com/*"
+      ]
+    }
+  ]
+}
+
+
+
+
+
+
+
+
+
+

@@ -350,7 +350,17 @@ export class MusicPlayer {
       if (idx >= 0) {
         await this.playTrack(idx, { autoplay: true, expand: this.isPlayerExpanded, startTime });
       } else {
-        await this.audioEngine.setSource(encodedUrl, { autoplay: true });
+        let playbackUrl = encodedUrl;
+        try {
+          const res = await fetch(`/api/audio/resolve?path=${encodeURIComponent(trackPath)}`);
+          if (res.ok) {
+            const data = await res.json();
+            playbackUrl = data.url || playbackUrl;
+          }
+        } catch (_error) {
+          // Fall back to the direct encoded media URL below.
+        }
+        await this.audioEngine.setSource(playbackUrl, { autoplay: true });
         if (startTime > 0) this.audioEngine.audioElement.currentTime = startTime;
       }
     });
@@ -2471,7 +2481,56 @@ export class MusicPlayer {
   }
 
   canPlayTrack(track) {
+    if (track?._resolvedPlaybackTranscoded) {
+      return true;
+    }
     return this.audioEngine.canPlayMime(mimeForTrack(track));
+  }
+
+  async resolveTrackPlayback(track) {
+    if (!track) {
+      return { url: '', transcoded: false, codec: null };
+    }
+
+    if (track._resolvedPlaybackUrl) {
+      return {
+        url: track._resolvedPlaybackUrl,
+        transcoded: Boolean(track._resolvedPlaybackTranscoded),
+        codec: track._resolvedPlaybackCodec || null,
+      };
+    }
+
+    const trackPath = track.path || '';
+    if (!trackPath) {
+      return { url: track.url || '', transcoded: false, codec: null };
+    }
+
+    try {
+      const res = await fetch(`/api/audio/resolve?path=${encodeURIComponent(trackPath)}`);
+      if (!res.ok) {
+        throw new Error(`resolve failed: ${res.status}`);
+      }
+
+      const data = await res.json();
+      track._resolvedPlaybackUrl = data.url || track.url || '';
+      track._resolvedPlaybackTranscoded = Boolean(data.transcoded);
+      track._resolvedPlaybackCodec = data.codec || null;
+      return {
+        url: track._resolvedPlaybackUrl,
+        transcoded: track._resolvedPlaybackTranscoded,
+        codec: track._resolvedPlaybackCodec,
+      };
+    } catch (error) {
+      _dbgWarn('[audio] playback resolve failed:', error?.message || error);
+      track._resolvedPlaybackUrl = track.url || '';
+      track._resolvedPlaybackTranscoded = false;
+      track._resolvedPlaybackCodec = null;
+      return {
+        url: track._resolvedPlaybackUrl,
+        transcoded: false,
+        codec: null,
+      };
+    }
   }
 
   async restoreAudioPosition(seconds, { isRestore = false } = {}) {
@@ -3412,7 +3471,8 @@ export class MusicPlayer {
       audio.pause();
     }
 
-    await this.audioEngine.setSource(track.url, { autoplay: startTime > 0 ? false : autoplay });
+    const playback = await this.resolveTrackPlayback(track);
+    await this.audioEngine.setSource(playback.url || track.url, { autoplay: startTime > 0 ? false : autoplay });
     if (startTime > 0) {
       await this.restoreAudioPosition(startTime, { isRestore });
       if (autoplay) {
@@ -3437,9 +3497,11 @@ export class MusicPlayer {
     this.updatePlayButtons();
     this.updateQueueUi();
     this.setTrackWarning(
-      this.canPlayTrack(track)
-        ? ''
-        : 'This browser may not support this audio format. Use direct open/download fallback.',
+      playback.transcoded
+        ? `Using compatibility playback for ${playback.codec || track.ext || 'this track'}.`
+        : (this.canPlayTrack(track)
+            ? ''
+            : 'This browser may not support this audio format. Use direct open/download fallback.'),
     );
     this.persistPlayerState({ immediate: true });
     // Now DOM is ready — display pre-fetched lyrics (skip if already loaded by onExpand)
@@ -4097,6 +4159,15 @@ export class MusicPlayer {
 
     const audio = this.audioEngine.audioElement;
     const wasPaused = audio.paused;
+    const track = this.items[this.currentTrackIndex] || null;
+
+    if (wasPaused && track && (!audio.src || audio.error)) {
+      const playback = await this.resolveTrackPlayback(track);
+      const expectedUrl = playback.url ? new URL(playback.url, window.location.origin).href : '';
+      if (expectedUrl && audio.src !== expectedUrl) {
+        await this.audioEngine.setSource(playback.url, { autoplay: false });
+      }
+    }
 
     // If resuming from a restored position (first play after page reload), re-affirm the seek
     // ONLY do this if _restoredFromReload is true - don't touch currentTime on normal pause/play
